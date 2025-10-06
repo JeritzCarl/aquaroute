@@ -1,0 +1,143 @@
+/* Cart Header */
+.cart-header {
+  background: linear-gradient(180deg, #2b6ef6, #3c8ff9);
+  border-radius: 0 0 20px 20px;
+  text-align: center;
+  padding: 16px;
+  color: #fff;
+  position: relative;
+
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .back-btn {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+  }
+}
+
+/* Station Header */
+.station-header {
+  background: #f8f9fa;
+  font-weight: 700;
+  margin-top: 12px;
+  border-radius: 6px;
+}
+
+/* Cart Items */
+ion-item {
+  --border-radius: 10px;
+  margin: 6px 12px;
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.06);
+
+  ion-label h2 {
+    font-size: 16px;
+    font-weight: 600;
+  }
+
+  ion-label p {
+    font-size: 14px;
+    color: #444;
+  }
+}
+
+ion-thumbnail img {
+  border-radius: 8px;
+}
+
+/* Quantity Stepper */
+.qty-ctrl {
+  display: flex;
+  align-items: center;
+  background: #f5f5f5;
+  padding: 4px;
+  border-radius: 8px;
+  height: 36px;
+  min-width: 110px;
+}
+
+.qty-ctrl ion-button {
+  width: 36px;
+  height: 36px;
+  font-weight: 700;
+}
+
+.qty-number {
+  width: 40px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 700;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 0 6px;
+  background: #fff;
+}
+
+/* Trash Icon */
+ion-button[color="danger"] ion-icon {
+  font-size: 22px;
+  color: #cc0000;
+}
+
+/* Footer */
+.footer-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 12px;
+  background: #fff;
+}
+
+.select-all {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  span {
+    font-size: 16px;
+    font-weight: 700;
+  }
+}
+
+.subtotal {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .label {
+    font-size: 14px;
+    color: #666;
+  }
+
+  .amount {
+    font-size: 16px;
+    font-weight: 700;
+    color: #000;
+  }
+}
+
+/* Empty Cart */
+.empty {
+  text-align: center;
+  margin-top: 50px;
+  color: #777;
+
+  img {
+    width: 120px;
+    opacity: 0.8;
+    margin-bottom: 12px;
+  }
+
+  p {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+}

@@ -1,0 +1,187 @@
+<!-- src/app/track-order/track-order.page.html -->
+<ion-header class="orders-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/orders"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="page-title">Track Order</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- 🔄 Loading -->
+  <div class="center-content" *ngIf="loading">
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading order details...</p>
+  </div>
+
+  <!-- ⚠️ Error -->
+  <div class="center-content" *ngIf="!loading && error">
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- ✅ Main Content -->
+  <ng-container *ngIf="order && !loading && !error">
+
+    <!-- 🔹 Timeline -->
+    <div class="modern-timeline">
+      <div
+        class="timeline-step"
+        *ngFor="let step of statusHistory; let i = index"
+        [class.active]="isActive(i)"
+        [class.completed]="isCompleted(i)"
+      >
+        <div class="circle">{{ i + 1 }}</div>
+        <div class="label">{{ step.status }}</div>
+        <div class="sub-label">
+          <small *ngIf="step.changedAt">
+            {{
+              (step.changedAt.toDate ? step.changedAt.toDate() : step.changedAt)
+                | date: 'M/d/yy, h:mm a'
+            }}
+          </small>
+          <small *ngIf="step.by"> • {{ step.by }}</small>
+        </div>
+        <div class="line" *ngIf="i < statusHistory.length - 1"></div>
+      </div>
+    </div>
+
+    <!-- 🔹 ETA Section -->
+    <div class="eta-container">
+      <div class="eta-pill" *ngIf="eta; else etaFallback">
+        <span class="eta-icon">⏱</span>
+        <span class="eta-text">ETA</span>
+        <span class="eta-value">{{ eta.duration }}</span>
+        <span class="eta-distance">({{ eta.distance }})</span>
+      </div>
+      <ng-template #etaFallback>
+        <div class="eta-pill eta-fallback">
+          <span class="eta-icon">⏱</span>
+          <span class="eta-text">ETA</span>
+          <span class="eta-distance">Calculating...</span>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- 🔹 Map Section -->
+    <div class="map-container">
+      <div id="track-map"></div>
+
+      <!-- 🔘 Fit to Route Button -->
+      <ion-fab vertical="top" horizontal="end" edge="false" class="fit-route-fab">
+        <ion-fab-button color="primary" size="small" (click)="fitAllRoutes()">
+          <ion-icon name="locate-outline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
+
+      <!-- ⚠️ Location fallback banners -->
+      <ion-note
+        *ngIf="order.delivery?.needsPin"
+        color="warning"
+        class="muted small"
+      >
+        📍 Exact delivery location not pinned — courier will confirm with you by
+        call or chat.
+      </ion-note>
+
+      <ion-note
+        *ngIf="order.approximateLocation && !order.delivery?.needsPin"
+        color="medium"
+        class="muted small"
+      >
+        📍 Location estimated from address. Courier may confirm for accuracy.
+      </ion-note>
+    </div>
+
+    <!-- 🔹 Order Summary -->
+    <ion-card class="order-summary-card">
+      <ion-card-header *ngIf="order.stations && order.stations.length > 0">
+        <ion-card-title>{{ order.stations[0].stationName }}</ion-card-title>
+        <ion-card-subtitle>
+          {{ order.stations[0].stationAddress }}
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <div class="address-row">
+          <span><strong>Order ID:</strong></span>
+        </div>
+        <div class="address-block">
+          <p class="delivery-details">#{{ order.id }}</p>
+        </div>
+
+        <div class="address-row">
+          <span><strong>Delivery Address:</strong></span>
+        </div>
+        <div class="address-block">
+          <p class="delivery-label">{{ deliveryLabel }}</p>
+          <p class="delivery-details">
+            {{ deliveryDetails || 'No address' }}
+          </p>
+        </div>
+
+        <div class="address-row">
+          <span><strong>Notes:</strong></span>
+        </div>
+        <div class="address-block">
+          <p class="delivery-details">{{ order.delivery.notes || '—' }}</p>
+        </div>
+
+        <div class="address-row">
+          <span><strong>Gallons:</strong></span>
+        </div>
+        <div class="address-block">
+          <p class="delivery-details">{{ getTotalGallons() }}</p>
+        </div>
+
+        <div class="address-row">
+          <span><strong>Total:</strong></span>
+        </div>
+        <div class="address-block">
+          <p class="delivery-details">₱{{ order.charges.total || 0 }}</p>
+        </div>
+
+        <div class="items-section" *ngIf="order.items && order.items.length">
+          <h4>Items Ordered</h4>
+          <ion-list>
+            <ion-item *ngFor="let it of order.items">
+              <ion-label>
+                {{ it.name }}
+                <p>x{{ it.quantity }} • ₱{{ it.price }}</p>
+              </ion-label>
+              <ion-note slot="end">
+                ₱{{ (it.price || 0) * (it.quantity || 1) }}
+              </ion-note>
+            </ion-item>
+          </ion-list>
+        </div>
+
+        <div class="status-container" *ngIf="order.status">
+          <ion-badge
+            [color]="getStatusColor(order.status)"
+            class="status-badge"
+          >
+            {{ order.status }}
+          </ion-badge>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- 🔹 Actions -->
+    <div class="actions">
+      <ion-button expand="block" color="primary" (click)="contactStation()">
+        📞 Contact Station
+      </ion-button>
+      <ion-button
+        expand="block"
+        color="danger"
+        *ngIf="order.status === 'Pending'"
+        (click)="cancelOrder()"
+      >
+        ❌ Cancel Order
+      </ion-button>
+    </div>
+
+  </ng-container>
+</ion-content>

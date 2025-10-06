@@ -1,0 +1,74 @@
+<ion-header>
+  <ion-toolbar>
+<ion-buttons slot="start">
+  <ion-button fill="clear" (click)="goBack()">
+    <ion-icon name="arrow-back-outline"></ion-icon>
+  </ion-button>
+</ion-buttons>
+
+
+    <ion-title>
+      <div class="header-station">
+        <img *ngIf="stationLogo" [src]="stationLogo" alt="logo" class="logo" />
+        <div class="meta">
+          <div class="name">{{ stationName || 'Station' }}</div>
+          <div class="status">
+            <span class="dot" [class.online]="isOnline"></span>
+            {{ isOnline ? 'Online' : 'Offline' }}
+          </div>
+        </div>
+      </div>
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" #content>
+  <div class="day-divider" *ngFor="let block of dayBlocks">
+    <div class="date-chip">{{ block.label }}</div>
+
+    <div *ngFor="let msg of block.items" class="row" [class.me]="msg.sender==='user'">
+      <div class="bubble" [class.me]="msg.sender==='user'">
+        <div class="text">{{ msg.text }}</div>
+        <div class="meta-line">
+          <span class="time">{{ msg.createdAt | date:'shortTime' }}</span>
+          <span *ngIf="msg.sender==='user'" class="ticks" [title]="msg.status | titlecase">
+            {{ msg.status === 'seen' ? '✓✓' : (msg.status === 'delivered' ? '✓✓' : '✓') }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="typing" *ngIf="typingFromStation">
+    <span class="dot1"></span><span class="dot2"></span><span class="dot3"></span>
+    <span class="typing-label">{{ stationName || 'Station' }} is typing…</span>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <div class="composer">
+    <!-- Attach button -->
+    <ion-button fill="clear" class="attach" (click)="pickAttachment()">
+      <ion-icon slot="icon-only" name="attach-outline"></ion-icon>
+    </ion-button>
+
+    <!-- Expandable message input -->
+    <ion-textarea
+      class="chat-input"
+      placeholder="Type message..."
+      autoGrow="true"
+      rows="1"
+      maxlength="1000"
+      [(ngModel)]="draft"
+      (keydown.enter)="maybeSend($event)"
+    ></ion-textarea>
+
+    <!-- Send button -->
+    <ion-button class="send" [disabled]="!canSend()" (click)="send()">
+      <ion-icon slot="icon-only" name="paper-plane-outline"></ion-icon>
+    </ion-button>
+
+    <input type="file" accept="image/*,.pdf" hidden #fileInput (change)="onFileChosen($event)" />
+  </div>
+</ion-footer>
+

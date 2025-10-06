@@ -1,0 +1,123 @@
+<ion-toolbar>
+  <div class="top-bar">
+    <!-- Logo -->
+    <img src="assets/AquaRoute Word Logo.png" alt="AquaRoute" class="logo" />
+
+    <!-- Icons right -->
+    <div class="icons-right">
+      <!-- Cart -->
+      <div class="cart-wrapper">
+        <ion-button fill="clear" routerLink="/cart" routerDirection="forward">
+          <ion-icon name="cart-outline" class="cart-icon"></ion-icon>
+        </ion-button>
+        <div class="cart-badge" *ngIf="cartCount > 0">{{ cartCount }}</div>
+      </div>
+
+      <!-- Settings -->
+      <div class="settings-wrapper">
+        <ion-button fill="clear" routerLink="/settings" routerDirection="forward">
+          <ion-icon name="settings-outline" class="settings-icon"></ion-icon>
+        </ion-button>
+      </div>
+    </div>
+  </div>
+</ion-toolbar>
+
+<ion-content>
+  <!-- Search Bar -->
+  <div class="search-wrapper">
+    <ion-searchbar
+      placeholder="Search for Stations"
+      (ionInput)="filterStations($event)"
+      (ionClear)="resetSearch()">
+    </ion-searchbar>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <ion-chip (click)="applyFilter('nearest')">
+      <ion-icon name="navigate"></ion-icon>
+      <ion-label>Nearest</ion-label>
+    </ion-chip>
+    <ion-chip (click)="applyFilter('rating')">
+      <ion-icon name="star"></ion-icon>
+      <ion-label>Top Rated</ion-label>
+    </ion-chip>
+  </div>
+
+  <ion-text class="section-title">
+    <h2>Water Stations</h2>
+  </ion-text>
+
+  <!-- No results -->
+  <div *ngIf="filteredStations.length === 0 && searchQuery">
+    <ion-text color="medium" class="no-results">
+      <p>No stations match your search.</p>
+    </ion-text>
+  </div>
+
+  <!-- Station Cards -->
+  <ion-card *ngFor="let station of filteredStations">
+    <ion-item lines="none">
+      <ion-avatar slot="start">
+        <img [src]="station.logoUrl || 'assets/station1.png'" alt="Station Logo" />
+      </ion-avatar>
+      <ion-label>
+        <h2>{{ station.stationName }}</h2>
+
+        <!-- ✅ Open/Closed status -->
+        <p class="status" [ngClass]="station.status === 'closed' ? 'closed' : 'open'">
+          <ion-icon [name]="station.status === 'closed' ? 'close-circle' : 'checkmark-circle'"></ion-icon>
+          {{ station.status === 'closed' ? 'Closed' : 'Open' }}
+        </p>
+
+        <p>
+          <ion-icon name="star" color="warning"></ion-icon>
+          {{ station.rating }} ({{ station.reviewCount }} reviews)
+        </p>
+        <p>
+          <ion-icon name="location-outline"></ion-icon>
+          {{ station.address }}
+        </p>
+        <p *ngIf="station.distanceKm !== undefined">
+          <ion-icon name="navigate-outline"></ion-icon>
+          {{ station.distanceKm | number:'1.1-1' }} km away
+        </p>
+        <p>
+          <ion-icon name="time-outline"></ion-icon>
+          {{ station.deliveryEstimate || '30–45 mins' }}
+        </p>
+      </ion-label>
+    </ion-item>
+
+    <!-- ✅ Centered ORDER button -->
+    <div class="order-btn-wrapper">
+      <ion-button 
+        class="order-btn"
+        [routerLink]="['/station', station.id]"
+        [disabled]="station.status === 'closed'">
+        {{ station.status === 'closed' ? 'Closed' : 'Order' }}
+      </ion-button>
+    </div>
+  </ion-card>
+</ion-content>
+
+<!-- Bottom Tabs -->
+<ion-footer>
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button [routerLink]="['/landing-page']" routerDirection="root" routerLinkActive="tab-selected">
+      <ion-icon name="location"></ion-icon>
+      <ion-label>Stations</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button [routerLink]="['/notifications']" routerDirection="root" routerLinkActive="tab-selected">
+      <ion-icon name="notifications"></ion-icon>
+      <ion-label>Notifications</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button [routerLink]="['/account']" routerDirection="root" routerLinkActive="tab-selected">
+      <ion-icon name="person"></ion-icon>
+      <ion-label>Account</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-footer>

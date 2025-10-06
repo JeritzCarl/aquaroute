@@ -1,0 +1,125 @@
+<ion-header class="orders-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/account"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="page-title">My Orders</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refreshOrders()">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Skeleton Loader -->
+  <ng-container *ngIf="loading; else ordersContent">
+    <ion-list>
+      <ion-card *ngFor="let i of [1,2,3]">
+        <ion-card-header>
+          <ion-skeleton-text animated class="skeleton-line w-60"></ion-skeleton-text>
+          <ion-skeleton-text animated class="skeleton-line w-40"></ion-skeleton-text>
+        </ion-card-header>
+        <ion-card-content>
+          <ion-skeleton-text animated class="skeleton-line w-80"></ion-skeleton-text>
+          <ion-skeleton-text animated class="skeleton-line w-70"></ion-skeleton-text>
+          <ion-skeleton-text animated class="skeleton-line w-50"></ion-skeleton-text>
+        </ion-card-content>
+      </ion-card>
+    </ion-list>
+  </ng-container>
+
+  <ng-template #ordersContent>
+    <!-- Tabs -->
+    <ion-segment [(ngModel)]="selectedTab" value="current" color="primary">
+      <ion-segment-button value="current">
+        <ion-label>Current Orders</ion-label>
+      </ion-segment-button>
+      <ion-segment-button value="history">
+        <ion-label>Order History</ion-label>
+      </ion-segment-button>
+    </ion-segment>
+
+    <!-- Current Orders -->
+    <ng-container *ngIf="selectedTab === 'current'">
+      <ion-list *ngIf="currentOrders.length > 0; else noCurrent">
+        <ion-card *ngFor="let order of currentOrders">
+          <ion-card-header>
+            <ion-card-title>{{ getStationTitle(order) }}</ion-card-title>
+            <ion-card-subtitle>
+              ORD-{{ order.id }} • {{ order.createdAt | date:'short' }}
+            </ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <p>📦 {{ order.items.length }} items</p>
+            <p>📍 {{ order.delivery.address }}</p>
+            <p>
+              Status:
+              <ion-badge [color]="getStatusColor(order.status)">
+                {{ order.status }}
+              </ion-badge>
+            </p>
+            <p><strong>Total: ₱{{ order.charges.total }}</strong></p>
+
+            <!-- ✅ Track Order button -->
+            <ion-button expand="block" fill="outline" color="primary"
+                        (click)="goToOrder(order)">
+              Track Order
+            </ion-button>
+
+            <!-- ✅ Cancel Order button -->
+            <ion-button expand="block" fill="solid" color="danger"
+                        *ngIf="order.status === 'Pending'"
+                        (click)="confirmCancel(order)">
+              ❌ Cancel Order
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-list>
+      <ng-template #noCurrent>
+        <div class="empty-orders">
+          <ion-icon name="water-outline"></ion-icon>
+          <p>No current orders.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+
+    <!-- Order History -->
+    <ng-container *ngIf="selectedTab === 'history'">
+      <ion-list *ngIf="orderHistory.length > 0; else noHistory">
+        <ion-card *ngFor="let order of orderHistory">
+          <ion-card-header>
+            <ion-card-title>{{ getStationTitle(order) }}</ion-card-title>
+            <ion-card-subtitle>
+              ORD-{{ order.id }} • {{ order.createdAt | date:'short' }}
+            </ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <p>📦 {{ order.items.length }} items</p>
+            <p>📍 {{ order.delivery.address }}</p>
+            <p>
+              Status:
+              <ion-badge [color]="getStatusColor(order.status)">
+                {{ order.status }}
+              </ion-badge>
+            </p>
+            <p><strong>Total: ₱{{ order.charges.total }}</strong></p>
+
+            <ion-button expand="block" fill="outline" color="medium"
+                        (click)="goToOrder(order)">
+              View Order
+            </ion-button>
+          </ion-card-content>
+        </ion-card>
+      </ion-list>
+      <ng-template #noHistory>
+        <div class="empty-orders">
+          <ion-icon name="time-outline"></ion-icon>
+          <p>No past orders yet.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </ng-template>
+</ion-content>

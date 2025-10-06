@@ -1,0 +1,50 @@
+.aqua-bg {
+  --background: #f9fbfc;
+}
+
+.aqua-header {
+  --background: #007bff;  /* AquaRoute blue */
+  --color: #fff;          /* White text/icons */
+  position: relative;
+  text-align: center;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #fff;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* ✅ ensures proper centering */
+  margin: 0;
+}
+
+.aqua-header ion-back-button {
+  --color: #fff; /* back button white */
+}
+
+
+.station-form ion-item {
+  border-radius: 12px;
+  margin-bottom: 14px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+ion-item.valid {
+  --highlight-color-focused: #2a9d8f;
+}
+ion-item.invalid {
+  --highlight-color-focused: #e63946;
+}
+
+ion-note {
+  margin-left: 16px;
+  font-size: 13px;
+}
+
+.register-btn {
+  margin-top: 20px;
+  border-radius: 12px;
+  font-weight: 600;
+}

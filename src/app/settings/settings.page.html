@@ -1,0 +1,65 @@
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/landing-page"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Settings</ion-title>
+  </ion-toolbar>
+
+<ion-content class="ion-padding settings-page">
+
+  <!-- General -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>General</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item lines="none">
+        <ion-icon name="moon-outline" slot="start" color="medium"></ion-icon>
+        <ion-label>Dark Theme</ion-label>
+        <ion-toggle [(ngModel)]="darkTheme" (ionChange)="toggleTheme()"></ion-toggle>
+      </ion-item>
+
+      <ion-item lines="none">
+        <ion-icon name="speedometer-outline" slot="start" color="medium"></ion-icon>
+        <ion-label>Units</ion-label>
+        <ion-select [(ngModel)]="unit" interface="popover">
+          <ion-select-option value="kmh">km/h</ion-select-option>
+          <ion-select-option value="mph">mph</ion-select-option>
+        </ion-select>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Notifications -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Notifications</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item lines="none">
+        <ion-icon name="notifications-outline" slot="start" color="medium"></ion-icon>
+        <ion-label>Push Notifications</ion-label>
+        <ion-toggle [(ngModel)]="pushNotifications" (ionChange)="toggleNotifications()"></ion-toggle>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Support -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Support</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item button lines="full">
+        <ion-icon name="help-circle-outline" slot="start" color="medium"></ion-icon>
+        <ion-label>Help</ion-label>
+      </ion-item>
+
+      <ion-item button lines="none">
+        <ion-icon name="mail-outline" slot="start" color="medium"></ion-icon>
+        <ion-label>Contact Us</ion-label>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

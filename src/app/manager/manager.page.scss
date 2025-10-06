@@ -1,0 +1,255 @@
+/* ─────────────── Header ─────────────── */
+.logo-title {
+  display: flex;
+  align-items: center;
+
+  .logo {
+    height: 70px;
+    margin: 0 auto;
+  }
+}
+
+.header-icon {
+  font-size: 26px;
+  margin: 0 4px;
+  transition: transform 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+}
+.notifications-icon { color: #ff9800; }
+.profile-icon { color: #007bff; }
+.settings-icon { color: #4caf50; }
+
+/* ─────────────── Card styling ─────────────── */
+ion-card {
+  border-radius: 14px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  margin: 12px 0;
+  overflow: hidden;
+
+  ion-card-title {
+    font-size: 19px;
+    font-weight: 800;
+    color: #2c3e50;
+  }
+
+  ion-card-subtitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: #666;
+  }
+
+  ion-card-content p {
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    margin: 4px 0;
+  }
+}
+
+.editStation {
+  --background: #28a745;
+  --color: #fff;
+  font-weight: 700;
+  border-radius: 8px;
+  margin-top: 8px;
+}
+
+/* ─────────────── Stats grid ─────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin: 18px 0;
+
+  ion-card {
+    text-align: center;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.07);
+
+    ion-card-content {
+      padding: 16px;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 800;
+      margin: 6px 0;
+      color: #222;
+    }
+    p {
+      font-size: 14px;
+      margin: 0;
+      color: #555;
+    }
+  }
+}
+
+.stat-icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+}
+.stat-icon.new { color: #007bff; }
+.stat-icon.transit { color: #ff9800; }
+.stat-icon.completed { color: #4caf50; }
+.stat-icon.efficiency { color: #9c27b0; }
+
+/* ─────────────── Route card ─────────────── */
+.route-card {
+  text-align: center;
+  margin-bottom: 18px;
+
+  ion-list-header {
+    font-weight: 700;
+    font-size: 15px;
+    color: #007bff;
+  }
+}
+
+/* ─────────────── Delivery Area Map ─────────────── */
+#manager-map {
+  height: 300px; 
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin-top: 8px;
+}
+
+.map-section {
+  margin-top: 16px;
+
+  .map-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    color: #2c3e50;
+  }
+}
+
+/* ─────────────── Delivery schedule ─────────────── */
+.delivery-icon {
+  color: #007bff;
+  font-size: 22px;
+}
+
+ion-chip {
+  font-weight: 600;
+  font-size: 13px;
+  border-radius: 8px;
+  padding: 0 6px;
+}
+
+/* ─────────────── Orders Tab ─────────────── */
+.no-courier {
+  font-size: 13px;
+  color: #e53935;
+  font-weight: 600;
+}
+
+/* Courier buttons */
+ion-button[color="medium"] {
+  --background: #6c757d;
+  --color: #fff;
+}
+ion-button[color="success"] {
+  --background: #28a745;
+  --color: #fff;
+}
+ion-button[color="tertiary"] {
+  --background: #17a2b8;
+  --color: #fff;
+}
+ion-button[color="dark"] {
+  --background: #343a40;
+  --color: #fff;
+}
+
+/* ─────────────── Couriers Tab ─────────────── */
+ion-card {
+  &.courier-card {
+    margin-top: 12px;
+    border-radius: 14px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  }
+}
+
+ion-item.courier-item {
+  --padding-start: 12px;
+  --inner-padding-end: 12px;
+  align-items: center;
+
+  ion-icon {
+    font-size: 28px;
+    color: #007bff; /* Aqua blue */
+    margin-right: 10px;
+  }
+
+  ion-label {
+    h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 2px;
+    }
+
+    p {
+      font-size: 14px;
+      font-weight: 500;
+      color: #555;
+      margin: 2px 0;
+    }
+
+    ion-badge {
+      margin-top: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 6px;
+    }
+  }
+
+  ion-toggle {
+    margin-left: auto;
+    --handle-background-checked: #007bff;
+    --background-checked: rgba(0, 123, 255, 0.3);
+  }
+}
+
+/* Empty state */
+.no-couriers {
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: #888;
+  margin: 16px 0;
+}
+
+/* Add Courier button */
+.add-courier-btn {
+  --background: #007bff;
+  --color: #fff;
+  font-weight: 700;
+  margin: 14px 16px;
+  border-radius: 10px;
+}
+
+/* ─────────────── Market Tab ─────────────── */
+.market-label h2 {
+  font-size: 18px;
+  font-weight: 800;
+  color: #2c3e50;
+}
+.market-label p {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+}
+
+/* ─────────────── Active tab ─────────────── */
+ion-tab-button.active {
+  --color: #007bff;
+  font-weight: 700;
+  border-top: 2px solid #007bff;
+}

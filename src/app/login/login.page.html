@@ -1,0 +1,47 @@
+<ion-content [fullscreen]="true" class="home-background">
+  <ion-buttons>
+    <ion-back-button type="button" icon="chevron-back" defaultHref="/home"></ion-back-button>
+  </ion-buttons>
+
+  <div class="container">
+    <div class="logo-section">
+      <img src="assets/AquaRoute Word Logo.png" alt="AquaRoute Logo" />
+      <p class="tagline">Deliver Smarter. Hydrate Faster.</p>
+    </div>
+
+    <div class="card-section">
+      <ion-card class="login-card">
+        <!-- Google -->
+        <ion-button expand="block" fill="outline" class="custom-btn google-btn" (click)="loginWithGoogle()">
+          <img src="assets/google.png" alt="Google Logo" class="btn-icon" />
+          Continue with Google
+        </ion-button>
+
+        <!-- Facebook -->
+        <ion-button expand="block" fill="outline" class="custom-btn facebook-btn" (click)="loginWithFacebook()">
+          <img src="assets/communication.png" alt="Facebook Logo" class="btn-icon" />
+          Continue with Facebook
+        </ion-button>
+
+        <!-- Email -->
+        <ion-button expand="block" fill="outline" class="custom-btn email-btn" (click)="loginWithEmail()">
+          <ion-icon name="mail-outline" slot="start"></ion-icon>
+          Continue with Email
+        </ion-button>
+
+        <div class="or-text">or</div>
+
+        <!-- Mobile Number -->
+        <ion-button expand="block" fill="outline" class="custom-btn mobile-btn" [routerLink]="['/number-input']">
+          Continue with Mobile Number
+        </ion-button>
+
+        <p class="terms-text">
+          By continuing, you agree to our
+          <a href="#">Terms and Conditions</a> and
+          <a href="#">Privacy Policy</a>
+        </p>
+      </ion-card>
+    </div>
+  </div>
+</ion-content>

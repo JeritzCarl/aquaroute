@@ -1,0 +1,92 @@
+<ion-header class="aqua-header-wrap">
+  <ion-toolbar class="aqua-header">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/account" color="light"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="page-title">Register Station</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding aqua-bg">
+
+  <form [formGroup]="stationForm" (ngSubmit)="registerStation()" autocomplete="off" class="station-form">
+
+    <!-- Owner Name -->
+    <ion-item [class.valid]="isValid('ownerName')" [class.invalid]="isInvalid('ownerName')">
+      <ion-label position="stacked">Owner Name</ion-label>
+      <ion-input formControlName="ownerName"></ion-input>
+    </ion-item>
+    <ion-note *ngIf="isInvalid('ownerName')" color="danger">Owner name is required</ion-note>
+
+    <!-- Station Name -->
+    <ion-item [class.valid]="isValid('stationName')" [class.invalid]="isInvalid('stationName')">
+      <ion-label position="stacked">Station Name</ion-label>
+      <ion-input formControlName="stationName"></ion-input>
+    </ion-item>
+    <ion-note *ngIf="isInvalid('stationName')" color="danger">Station name is required</ion-note>
+
+    <!-- Email -->
+    <ion-item [class.valid]="isValid('email')" [class.invalid]="isInvalid('email')">
+      <ion-label position="stacked">Email</ion-label>
+      <ion-input type="email" formControlName="email"></ion-input>
+    </ion-item>
+    <ion-note *ngIf="isInvalid('email')" color="danger">Enter a valid email address</ion-note>
+
+    <!-- Phone -->
+    <ion-item [class.valid]="isValid('phone')" [class.invalid]="isInvalid('phone')">
+      <ion-label position="stacked">Phone</ion-label>
+      <ion-input type="tel" formControlName="phone" placeholder="+639123456789"></ion-input>
+    </ion-item>
+    <ion-note *ngIf="isInvalid('phone')" color="danger">Enter a valid phone number</ion-note>
+
+    <!-- Address -->
+    <ion-item [class.valid]="isValid('address')" [class.invalid]="isInvalid('address')">
+      <ion-label position="stacked">Address</ion-label>
+      <ion-input formControlName="address"></ion-input>
+    </ion-item>
+    <ion-note *ngIf="isInvalid('address')" color="danger">Address is required</ion-note>
+
+    <!-- Station Type -->
+    <ion-item>
+      <ion-label position="stacked">Station Type</ion-label>
+      <ion-select formControlName="stationType" placeholder="Select">
+        <ion-select-option value="Purified">Purified</ion-select-option>
+        <ion-select-option value="Alkaline">Alkaline</ion-select-option>
+        <ion-select-option value="Mineral">Mineral</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Operating Hours -->
+    <ion-item>
+      <ion-label position="stacked">Operating Hours</ion-label>
+      <ion-input formControlName="operatingHours" placeholder="e.g. 8:00 AM - 6:00 PM"></ion-input>
+    </ion-item>
+
+    <!-- Vehicles -->
+    <ion-item>
+      <ion-label position="stacked">Number of Vehicles</ion-label>
+      <ion-input type="number" formControlName="vehicles"></ion-input>
+    </ion-item>
+
+    <!-- Max Gallons -->
+    <ion-item>
+      <ion-label position="stacked">Max Gallons per Trip</ion-label>
+      <ion-input type="number" formControlName="maxGallonsPerTrip"></ion-input>
+    </ion-item>
+
+    <!-- Payment Options -->
+    <ion-item>
+      <ion-label position="stacked">Payment Options</ion-label>
+      <ion-select multiple="true" formControlName="paymentOptions" placeholder="Select">
+        <ion-select-option value="Cash">Cash</ion-select-option>
+        <ion-select-option value="GCash">GCash</ion-select-option>
+        <!-- ❌ Removed PayMaya -->
+      </ion-select>
+    </ion-item>
+
+    <!-- Submit -->
+    <ion-button expand="block" color="primary" type="submit" [disabled]="stationForm.invalid" class="register-btn">
+      Register Station
+    </ion-button>
+  </form>
+</ion-content>

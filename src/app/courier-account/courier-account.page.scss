@@ -1,0 +1,109 @@
+/* ────────────────────────────────
+   Header
+────────────────────────────────── */
+.account-header {
+  ion-toolbar {
+    --background: linear-gradient(90deg, #2f80ed, #0099ff);
+    --color: #fff;
+  }
+
+  ion-title {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  ion-buttons ion-icon {
+    font-size: 22px;
+    color: #fff;
+  }
+}
+
+/* ────────────────────────────────
+   Profile Section
+────────────────────────────────── */
+.profile-section {
+  text-align: center;
+  margin: 32px 0 24px;
+
+  .profile-avatar {
+    margin: 0 auto 14px;
+    width: 100px;
+    height: 100px;
+    border: 3px solid #2f80ed;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    ion-icon {
+      font-size: 64px;
+      color: #9ca3af;
+    }
+  }
+
+  .username {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 6px 0;
+    color: #111827;
+  }
+
+  .email,
+  .station {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 2px 0;
+  }
+
+  .station {
+    font-weight: 500;
+    color: #374151;
+  }
+}
+
+/* ────────────────────────────────
+   Settings List
+────────────────────────────────── */
+.settings-list {
+  margin: 24px 0;
+
+  ion-item {
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+
+    ion-icon {
+      color: #2f80ed;
+      font-size: 20px;
+    }
+
+    ion-label {
+      font-weight: 500;
+      font-size: 15px;
+    }
+  }
+}
+
+/* ────────────────────────────────
+   Logout Button
+────────────────────────────────── */
+.logout-btn {
+  margin-top: 24px;
+  font-weight: 600;
+  border-radius: 12px;
+  --background: #ef4444;
+  --color: #fff;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+
+  ion-icon {
+    font-size: 18px;
+  }
+}

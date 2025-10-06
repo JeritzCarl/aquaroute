@@ -1,0 +1,168 @@
+<ion-header class="aqua-header-wrap">
+  <ion-toolbar class="aqua-header">
+    <ion-title class="ion-text-center">Order Receipt</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- ✅ Success Header -->
+  <div class="success-header ion-text-center">
+    <ion-icon name="checkmark-circle" color="success" class="success-icon"></ion-icon>
+    <h2 class="title-strong">Order Placed Successfully!</h2>
+    <p class="muted">
+      Your order <strong>#{{ order?.id || 'AUTO-ID' }}</strong> has been placed.
+    </p>
+  </div>
+
+  <!-- ✅ Order Info -->
+  <ion-card class="soft-card">
+    <ion-card-content>
+      <div class="row-between">
+        <span class="label">Order ID</span>
+        <strong>#{{ order?.id || 'AUTO-ID' }}</strong>
+      </div>
+      <div class="row-between">
+        <span class="label">Date</span>
+        <span>{{ order?.createdAt | date:'medium' }}</span>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- ✅ Stations -->
+  <ion-card *ngIf="order?.stations?.length" class="soft-card">
+    <ion-card-header>
+      <ion-card-title>Station Details</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div *ngFor="let st of order?.stations" class="station-block">
+        <div class="station-name">{{ st.stationName }}</div>
+        <div class="station-address muted">{{ st.stationAddress || '—' }}</div>
+
+        <div *ngIf="st.deliveryWindow" class="muted">
+          Delivery Window: {{ st.deliveryWindow | titlecase }}
+        </div>
+
+        <div [class]="'expected-time text-' + getExpectedColor(st)">
+          Expected Delivery: {{ getExpectedTime(st) }}
+        </div>
+
+        <ion-item-divider></ion-item-divider>
+      </div>
+      <p class="note muted small">
+        *Times may vary due to traffic, road conditions, or last-minute orders
+      </p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- ✅ Items -->
+  <ion-card class="soft-card">
+    <ion-card-header>
+      <ion-card-title>Order Summary</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-list>
+        <ion-item *ngFor="let it of order?.items">
+          <ion-thumbnail slot="start">
+            <img [src]="it.imageUrl || 'assets/placeholder.png'" alt="{{ it.name || 'Product' }}" />
+          </ion-thumbnail>
+
+          <ion-label>
+            <h3>{{ it.name }}</h3>
+            <p>x{{ it.quantity }} • ₱{{ it.price }}</p>
+            <small *ngIf="it.deliveryMode === 'scheduled'">
+              Scheduled – {{ it.deliveryWindow || 'Unassigned' }}
+            </small>
+            <small *ngIf="it.deliveryMode && it.deliveryMode !== 'scheduled'">
+              {{ it.deliveryMode | titlecase }}
+            </small>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <ion-item lines="full"></ion-item>
+
+      <!-- Totals -->
+      <div class="totals" *ngIf="order?.charges as charges; else noCharges">
+        <div class="row-between">
+          <span>Subtotal</span>
+          <strong>₱{{ charges.subtotal | number:'1.0-2' }}</strong>
+        </div>
+        <div class="row-between">
+          <span>Delivery Fee</span>
+          <strong>₱{{ charges.deliveryFee | number:'1.0-2' }}</strong>
+        </div>
+        <div class="row-between total-line">
+          <span>Total</span>
+          <strong class="grand-total">₱{{ charges.total | number:'1.0-2' }}</strong>
+        </div>
+      </div>
+      <ng-template #noCharges>
+        <div class="row-between total-line">
+          <span>Total</span>
+          <strong class="grand-total">₱0</strong>
+        </div>
+      </ng-template>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- ✅ Delivery & Payment -->
+  <ion-card class="soft-card">
+    <ion-card-header>
+      <ion-card-title>Delivery & Payment</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="row-between">
+        <span><strong>Name:</strong></span>
+        <span>{{ order?.delivery?.fullName || '—' }}</span>
+      </div>
+      <div class="row-between">
+        <span><strong>Address:&nbsp;</strong></span>
+        <span>{{ order?.delivery?.address || '—' }}</span>
+      </div>
+
+
+      <div class="row-between">
+        <span><strong>Payment</strong></span>
+        <span class="highlight">{{ order?.payment?.method || '—' }}</span>
+      </div>
+
+      <div class="row-between">
+        <span><strong>Status</strong></span>
+        <span class="highlight">{{ order?.payment?.status || '—' }}</span>
+      </div>
+
+      <!-- ✅ Notes -->
+      <div class="row-between">
+        <span><strong>Notes:</strong></span>
+        <span>{{ order?.delivery?.notes || '—' }}</span>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>
+
+<!-- ✅ Footer Actions -->
+<ion-footer>
+  <ion-toolbar>
+    <div class="footer-buttons ion-padding-horizontal ion-padding-vertical">
+      <ion-button
+        expand="block"
+        color="primary"
+        [routerLink]="['/track-order']"
+        [queryParams]="{ id: order?.id }"
+      >
+        Track Order
+      </ion-button>
+
+      <ion-button expand="block" fill="outline" routerLink="/orders">
+        My Orders
+      </ion-button>
+
+      <!-- 🔄 FIXED: Back to Home now points to root -->
+      <ion-button expand="block" fill="clear" routerLink="/">
+        Back to Home
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

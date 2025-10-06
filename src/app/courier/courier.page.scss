@@ -1,0 +1,260 @@
+.courier-header {
+  ion-toolbar.header-toolbar {
+    --background: linear-gradient(90deg, #2f80ed, #0099ff);
+    --color: #fff;
+    --min-height: 76px; /* taller header */
+    border-radius: 0 0 14px 14px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px; /* more breathing room */
+  }
+
+  .station-title {
+    font-size: 23px;
+    font-weight: 800;
+    padding-right: 8%;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .head-right {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* spacing between avatar and toggle */
+  }
+
+  .avatar-wrapper {
+    position: relative;
+    display: inline-block;
+  }
+
+  .courier-avatar {
+    width: 48px;
+    height: 48px;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #e5e7eb;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    ion-icon {
+      font-size: 44px;
+      color: #fff;
+    }
+  }
+
+  .status-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+  }
+
+  .status-dot.online {
+    background: #10b981;
+  }
+  .status-dot.offline {
+    background: #ef4444;
+  }
+}
+
+/* ────────────────────────────────
+   Metrics (square tiles)
+────────────────────────────────── */
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin: 18px 0 22px;
+
+  .metric-tile {
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    aspect-ratio: 1 / 1;
+    min-height: 120px;
+
+    &:active {
+      transform: scale(0.98);
+    }
+
+    ion-card-content {
+      height: 100%;
+      display: grid;
+      place-items: center;
+      gap: 6px;
+      padding: 14px;
+      text-align: center;
+    }
+  }
+
+  .metric-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: grid;
+    place-items: center;
+    background: rgba(47, 128, 237, 0.12);
+
+    ion-icon {
+      font-size: 22px;
+      color: #2f80ed;
+    }
+  }
+
+  .metric-sub {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+
+  .metric-val {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #2f80ed;
+  }
+}
+
+/* ────────────────────────────────
+   Orders loading hint
+────────────────────────────────── */
+.orders-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 4px;
+  color: #6b7280;
+
+  ion-spinner {
+    width: 18px;
+    height: 18px;
+  }
+
+  span {
+    font-size: 13px;
+  }
+}
+
+/* ────────────────────────────────
+   Orders List
+────────────────────────────────── */
+ion-list {
+  ion-item {
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    align-items: flex-start;
+
+    ion-icon[slot='start'] {
+      font-size: 20px;
+      color: #2f80ed;
+      margin-right: 8px;
+    }
+
+    ion-label {
+      h2 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 4px;
+        color: #111827;
+      }
+
+      p {
+        font-size: 13px;
+        color: #6b7280;
+        margin: 0;
+      }
+    }
+
+    ion-badge {
+      display: inline-block;
+      margin-top: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      border-radius: 8px;
+      padding: 4px 8px;
+    }
+
+    ion-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-left: 8px;
+
+      ion-button {
+        --border-radius: 10px;
+        font-size: 13px;
+        font-weight: 600;
+        min-width: 90px;
+        height: 34px;
+        text-transform: none;
+      }
+    }
+  }
+}
+
+/* ────────────────────────────────
+   Empty State
+────────────────────────────────── */
+.center-text {
+  text-align: center;
+  color: #9ca3af;
+  margin-top: 40px;
+  font-size: 14px;
+
+  ion-icon {
+    display: block;
+    font-size: 44px;
+    margin: 0 auto 8px;
+    color: #d1d5db;
+  }
+}
+
+/* ────────────────────────────────
+   Route Map
+────────────────────────────────── */
+.route-map-container {
+  margin-top: 22px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+
+  height: 340px; /* visible map height */
+  position: relative;
+
+  .map-title {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    z-index: 10;
+  }
+
+  app-route-map {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}

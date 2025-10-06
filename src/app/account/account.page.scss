@@ -1,0 +1,143 @@
+/* === Header (match Cart/Checkout style) === */
+.aqua-header-wrap {
+  --background: transparent;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
+}
+
+.aqua-header {
+  --background: linear-gradient(90deg, #3b82f6, #2563eb);
+  --color: #fff;
+  text-align: center;
+
+  ion-title {
+    font-weight: 700;
+    font-size: 20px;
+  }
+}
+
+/* === Profile Section === */
+.profile-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  margin: 16px 0;
+
+  ion-avatar {
+    width: 90px;
+    height: 90px;
+    margin-bottom: 12px;
+    border: 3px solid #3b82f6;
+  }
+
+  .username {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 6px 0;
+    color: #1a1a1a;
+  }
+
+  .email,
+  .phone,
+  .provider {
+    font-size: 15px;
+    font-weight: 500;
+    color: #555;
+    margin: 2px 0;
+  }
+}
+
+/* === Register Button === */
+.register-btn {
+  margin: 12px 0;
+  font-weight: 700;
+  --border-radius: 12px;
+  --background: #1e3a8a;
+  color: #fff;
+}
+
+/* === Quick Actions (card-style buttons) === */
+.quick-actions {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+
+  .action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+
+    padding: 16px;
+    width: 100px;
+    height: 100px;
+    transition: all 0.2s ease-in-out;
+
+    ion-icon {
+      font-size: 28px;
+      color: #007bff;
+      margin-bottom: 6px;
+    }
+
+    span {
+      font-size: 14px;
+      font-weight: 600;
+      color: #007bff;
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+  }
+}
+
+/* === Personal Info List === */
+.info-list {
+  margin-top: 12px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+  ion-item {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+
+    ion-label {
+      font-weight: 600;
+    }
+
+    ion-note {
+      font-size: 14px;
+      color: #666;
+    }
+  }
+}
+
+/* === Bottom Tabs === */
+ion-tab-bar {
+  --background: #fff;
+  border-top: 1px solid #ddd;
+
+  ion-tab-button {
+    color: #666;
+    font-weight: 600;
+
+    &.tab-selected {
+      color: #007bff;
+    }
+
+    ion-icon {
+      font-size: 22px;
+    }
+  }
+}

@@ -1,0 +1,16 @@
+<ion-content [fullscreen]="true" class="login-bg">
+  <div class="logo-wrapper">
+    <img src="assets/AquaRoute 3D.png" alt="AquaRoute Logo" />
+  </div>
+
+  <div class="bottom-sheet">
+    <div class="button-row">
+    <ion-button expand="block" class="signup-btn" [routerLink]="['/number-input']" [queryParams]="{ mode: 'signup' }">Sign Up</ion-button>
+    <ion-button expand="block" class="login-btn" [routerLink]="['/login']" [queryParams]="{ mode: 'login' }">Log In</ion-button>
+
+    </div>
+    <p class="help-text">
+      Need Help? <a href="#">Visit our Help Centre.</a>
+    </p>
+  </div>
+</ion-content>

@@ -1,0 +1,64 @@
+<ion-header class="aqua-header-wrap">
+  <ion-toolbar class="aqua-header">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/addresses"></ion-back-button>
+    </ion-buttons>
+    <ion-title>{{ editing ? 'Edit Address' : 'Add Address' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form (ngSubmit)="saveAddress()" #form="ngForm" class="address-form">
+
+    <!-- Full Name -->
+    <ion-item>
+      <ion-label position="floating">Full Name</ion-label>
+      <ion-input [(ngModel)]="fullName" name="fullName" required></ion-input>
+    </ion-item>
+
+    <!-- City -->
+    <ion-item>
+      <ion-label position="floating">City</ion-label>
+      <ion-input value="Tuguegarao City" readonly></ion-input>
+    </ion-item>
+
+    <!-- Barangay -->
+    <ion-item>
+      <ion-label position="floating">Barangay</ion-label>
+      <ion-select [(ngModel)]="barangay" name="barangay" required>
+        <ion-select-option *ngFor="let brgy of barangays" [value]="brgy">
+          {{ brgy }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Street -->
+    <ion-item>
+      <ion-label position="floating">Street</ion-label>
+      <ion-input [(ngModel)]="street" name="street" required></ion-input>
+    </ion-item>
+
+    <!-- Phone -->
+    <ion-item>
+      <ion-label position="floating">Phone Number</ion-label>
+      <ion-input type="tel" [(ngModel)]="phone" name="phone" required></ion-input>
+    </ion-item>
+
+    <!-- Notes to Rider -->
+    <ion-item>
+      <ion-label position="floating">Notes to Rider (optional)</ion-label>
+      <ion-textarea autoGrow="true" [(ngModel)]="notes" name="notes"></ion-textarea>
+    </ion-item>
+
+    <!-- Default toggle -->
+    <ion-item lines="none">
+      <ion-label>Set as Default</ion-label>
+      <ion-toggle [(ngModel)]="isDefault" name="isDefault"></ion-toggle>
+    </ion-item>
+
+    <!-- Save Button -->
+    <ion-button expand="block" class="save-btn" type="submit" [disabled]="form.invalid">
+      {{ editing ? 'Update Address' : 'Save Address' }}
+    </ion-button>
+  </form>
+</ion-content>

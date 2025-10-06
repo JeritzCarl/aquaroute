@@ -1,0 +1,64 @@
+ <ion-toolbar>
+    <ion-title>Notifications</ion-title>
+  </ion-toolbar>
+
+
+<ion-content class="ion-padding">
+
+  <ion-list>
+    <!-- Example notification -->
+    <ion-item lines="none">
+      <ion-icon name="alert-circle-outline" slot="start" color="primary"></ion-icon>
+      <ion-label>
+        <h2>Your order #1234 is on the way</h2>
+        <p>Expected delivery: 3:30 PM</p>
+      </ion-label>
+    </ion-item>
+
+    <ion-item lines="none">
+      <ion-icon name="checkmark-circle-outline" slot="start" color="success"></ion-icon>
+      <ion-label>
+        <h2>Order #1220 delivered</h2>
+        <p>Delivered at 9:45 AM today</p>
+      </ion-label>
+    </ion-item>
+
+    <ion-item lines="none">
+      <ion-icon name="gift-outline" slot="start" color="tertiary"></ion-icon>
+      <ion-label>
+        <h2>Promo available at AquaPure Station</h2>
+        <p>Get ₱20 off your next order</p>
+      </ion-label>
+    </ion-item>
+  </ion-list>
+
+</ion-content>
+
+<!-- ✅ Proper footer -->
+<ion-footer>
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button 
+      [routerLink]="['/landing-page']" 
+      routerDirection="root"
+      routerLinkActive="tab-selected">
+      <ion-icon name="location"></ion-icon>
+      <ion-label>Stations</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button 
+      [routerLink]="['/notifications']" 
+      routerDirection="root"
+      routerLinkActive="tab-selected">
+      <ion-icon name="notifications"></ion-icon>
+      <ion-label>Notifications</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button 
+      [routerLink]="['/account']" 
+      routerDirection="root"
+      routerLinkActive="tab-selected">
+      <ion-icon name="person"></ion-icon>
+      <ion-label>Account</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-footer>

@@ -1,0 +1,76 @@
+<ion-header class="aqua-header-wrap">
+  <ion-toolbar class="aqua-header">
+    <ion-title>Account</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Profile Section -->
+  <div class="profile-section" [routerLink]="['/profile']">
+    <ion-avatar>
+      <img [src]="profilePic" alt="User Avatar" />
+    </ion-avatar>
+    <h2 class="username">{{ displayName || 'Guest User' }}</h2>
+    <p class="email">{{ email || 'No email linked' }}</p>
+    <p class="phone" *ngIf="phoneNumber">📱 {{ phoneNumber }}</p>
+    <p class="provider" *ngIf="provider">🔗 Connected with {{ provider }}</p>
+  </div>
+
+  <!-- Register Station -->
+  <ion-button expand="block" class="register-btn" (click)="goToRegisterStation()">
+    Register Your Station
+  </ion-button>
+
+  <!-- ✅ Quick Actions -->
+  <div class="quick-actions">
+    <div class="action-card" (click)="goToOrders()">
+      <ion-icon name="list-outline"></ion-icon>
+      <span>Orders</span>
+    </div>
+
+    <div class="action-card" (click)="goToFavorites()">
+      <ion-icon name="heart-outline"></ion-icon>
+      <span>Favorites</span>
+    </div>
+
+    <div class="action-card" (click)="goToAddresses()">
+      <ion-icon name="location-outline"></ion-icon>
+      <span>Addresses</span>
+    </div>
+  </div>
+
+  <!-- Personal Information -->
+  <ion-list lines="full" class="info-list">
+    <ion-item button detail (click)="openPersonalInfoModal('gender')">
+      <ion-label>Gender</ion-label>
+      <ion-note slot="end">{{ gender || 'Not set' }}</ion-note>
+    </ion-item>
+    <ion-item button detail (click)="openPersonalInfoModal('dob')">
+      <ion-label>Date of Birth</ion-label>
+      <ion-note slot="end">
+        {{ dob ? (dob | date:'longDate') : 'Not set' }}
+      </ion-note>
+    </ion-item>
+  </ion-list>
+</ion-content>
+
+<!-- Bottom Tabs -->
+<ion-footer>
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button [routerLink]="['/landing-page']" routerDirection="root" routerLinkActive="tab-selected">
+      <ion-icon name="location"></ion-icon>
+      <ion-label>Stations</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button [routerLink]="['/notifications']" routerDirection="root" routerLinkActive="tab-selected">
+      <ion-icon name="notifications"></ion-icon>
+      <ion-label>Notifications</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button [routerLink]="['/account']" routerDirection="root" routerLinkActive="tab-selected">
+      <ion-icon name="person"></ion-icon>
+      <ion-label>Account</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-footer>

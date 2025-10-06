@@ -1,0 +1,48 @@
+<ion-header class="aqua-header-wrap">
+  <ion-toolbar class="aqua-header">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/account"></ion-back-button>
+    </ion-buttons>
+    <ion-title>My Addresses</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  <!-- Address list -->
+  <ion-list *ngIf="addresses.length > 0; else emptyState">
+    <ion-item *ngFor="let addr of addresses" (click)="selectAddress(addr)" detail="true">
+      <ion-label>
+        <h2>{{ addr.fullName }}</h2>
+        <p>{{ addr.street }}, {{ addr.barangay }}, Tuguegarao City</p>
+        <p><ion-icon name="call-outline"></ion-icon> {{ addr.phone }}</p>
+
+        <!-- Default Badge -->
+        <span *ngIf="addr.isDefault" class="default-badge">Default Address</span>
+      </ion-label>
+
+      <ion-buttons slot="end" (click)="$event.stopPropagation()">
+        <ion-button fill="clear" (click)="editAddress(addr)">EDIT</ion-button>
+        <ion-button fill="clear" color="danger" (click)="deleteAddress(addr.id)">DELETE</ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+
+  <!-- Empty state -->
+  <ng-template #emptyState>
+    <div class="empty-box">
+      <ion-icon name="location-outline"></ion-icon>
+      <p>No saved addresses yet</p>
+    </div>
+  </ng-template>
+
+</ion-content>
+
+<!-- Sticky footer button -->
+<ion-footer class="footer-btn">
+  <ion-toolbar>
+    <ion-button expand="block" class="add-btn" (click)="addAddress()">
+      ADD ADDRESS
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

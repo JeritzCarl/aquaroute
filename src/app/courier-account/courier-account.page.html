@@ -1,0 +1,57 @@
+<ion-header class="account-header">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button fill="clear" (click)="goBack()">
+        <ion-icon name="arrow-back-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+    <ion-title>Courier Account</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Profile Section -->
+  <div class="profile-section">
+    <ion-avatar class="profile-avatar">
+      <img
+        *ngIf="courierPhotoUrl; else defaultAvatar"
+        [src]="courierPhotoUrl"
+        alt="Courier Avatar"
+      />
+      <ng-template #defaultAvatar>
+        <ion-icon name="person-circle-outline"></ion-icon>
+      </ng-template>
+    </ion-avatar>
+
+    <h2 class="username">
+      {{ courierName || 'Courier' }}
+    </h2>
+
+    <p class="email">
+      {{ courierEmail || 'No email linked' }}
+    </p>
+
+    <p class="station">
+      🏪 {{ stationName || 'Station' }}
+    </p>
+  </div>
+
+  <!-- Settings List -->
+  <ion-list class="settings-list">
+    <ion-item button>
+      <ion-icon slot="start" name="settings-outline"></ion-icon>
+      <ion-label>Settings</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <!-- Logout Button -->
+  <ion-button
+    expand="block"
+    color="danger"
+    class="logout-btn"
+    (click)="logout()"
+  >
+    <ion-icon name="log-out-outline" slot="start"></ion-icon>
+    Logout
+  </ion-button>
+</ion-content>

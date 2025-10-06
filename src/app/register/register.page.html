@@ -1,0 +1,42 @@
+    <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/register"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Create Account</ion-title>
+  </ion-toolbar>
+
+<ion-content class="ion-padding register-bg">
+  <div class="form-container">
+    <h1 class="title">Welcome!</h1>
+    <p class="subtitle">Let’s create your AquaRoute account</p>
+
+    <ion-item lines="full">
+      <ion-label position="floating">Full Name</ion-label>
+      <ion-input type="text" [(ngModel)]="fullName"></ion-input>
+    </ion-item>
+
+    <ion-item lines="full">
+      <ion-label position="floating">Email</ion-label>
+      <ion-input type="email" [(ngModel)]="email"></ion-input>
+    </ion-item>
+
+    <ion-item lines="full">
+      <ion-label position="floating">Password</ion-label>
+      <ion-input type="password" [(ngModel)]="password"></ion-input>
+    </ion-item>
+
+    <ion-item lines="full">
+      <ion-label position="floating">Confirm Password</ion-label>
+      <ion-input type="password" [(ngModel)]="confirmPassword"></ion-input>
+    </ion-item>
+
+    <ion-button expand="block" class="signup-btn" (click)="createAccount()">
+      Create Account
+    </ion-button>
+
+    <p class="login-link">
+      Already have an account?
+      <a (click)="goToLogin()">Log In</a>
+    </p>
+  </div>
+</ion-content>

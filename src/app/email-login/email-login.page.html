@@ -1,0 +1,59 @@
+<ion-content [fullscreen]="true" class="email-login-bg">
+  <!-- Back Button -->
+  <ion-buttons>
+    <ion-back-button type="button" icon="chevron-back" defaultHref="/login"></ion-back-button>
+  </ion-buttons>
+
+  <!-- Form Container -->
+  <div class="form-container">
+
+    <h1 class="title">Log in with Email</h1>
+    <p class="subtitle">Enter your account details</p>
+
+    <!-- Form -->
+    <form (ngSubmit)="loginWithEmail()" #loginForm="ngForm" autocomplete="off" novalidate>
+      <ion-item class="input-item">
+        <ion-label position="stacked">Email</ion-label>
+        <ion-input
+          type="email"
+          [(ngModel)]="email"
+          name="email"
+          required
+          autocomplete="off"
+          placeholder="you@example.com"
+        ></ion-input>
+      </ion-item>
+
+      <ion-item class="input-item">
+        <ion-label position="stacked">Password</ion-label>
+        <ion-input
+          type="password"
+          [(ngModel)]="password"
+          name="password"
+          required
+          autocomplete="new-password"
+          placeholder="Enter your password"
+        ></ion-input>
+      </ion-item>
+
+      <ion-button
+        expand="block"
+        class="login-btn"
+        type="submit"
+        [disabled]="!email || !password"
+      >
+        Log In
+      </ion-button>
+    </form>
+
+    <!-- Forgot password (centered under button) -->
+    <p class="forgot-password">
+      <a [routerLink]="['/reset-password']">Forgot Password?</a>
+    </p>
+
+    <!-- Signup link -->
+    <p class="signup-link">
+      Don’t have an account? <a [routerLink]="['/register']">Sign Up</a>
+    </p>
+  </div>
+</ion-content>

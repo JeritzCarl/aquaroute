@@ -1,0 +1,120 @@
+/* =======================================
+   Auth Options Page (Login Choices)
+   ======================================= */
+
+ion-content {
+  margin-top: 50%;
+}
+
+.options-bg {
+  --background: var(--ion-background-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.auth-container {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  text-align: center;
+  padding: 24px;
+
+  .title {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: var(--ion-text-color);
+  }
+
+  .subtitle {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--aqua-subtext, #666);
+    margin-bottom: 24px;
+  }
+
+  ion-button {
+    font-weight: 600;
+    font-size: 16px;
+    height: 50px;
+    border-radius: 12px;
+    margin-bottom: 14px;
+    text-transform: none;
+  }
+
+  /* Provider buttons */
+  .google-btn {
+    --background: #ffffff;
+    --color: #444;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  }
+
+  .facebook-btn {
+    --background: #1877f2;
+    --color: #fff;
+  }
+
+  .manual-btn {
+    --background: transparent;
+    --color: var(--ion-color-primary);
+    border: 1px solid var(--ion-color-primary);
+  }
+
+  /* Divider */
+  .divider {
+    position: relative;
+    margin: 20px 0;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    font-weight: 500;
+
+    span {
+      background: var(--ion-background-color);
+      padding: 0 12px;
+      position: relative;
+      z-index: 2;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: #ddd;
+      z-index: 1;
+    }
+  }
+}
+
+/* 🌙 Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .auth-container {
+    .subtitle {
+      color: var(--aqua-subtext, #aaa);
+    }
+
+    .google-btn {
+      --background: #2a2a2a;
+      --color: #f1f1f1;
+      border: 1px solid #444;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .divider {
+      color: #aaa;
+
+      &::before {
+        background: #333;
+      }
+
+      span {
+        background: #121212;
+      }
+    }
+  }
+}

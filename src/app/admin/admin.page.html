@@ -1,0 +1,30 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Admin Dashboard</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <h2>All Registered Stations</h2>
+
+  <!-- ✅ Show list of stations -->
+  <ion-list *ngIf="stations$ | async as stations; else noStations">
+    <ion-item *ngFor="let station of stations">
+      <ion-label>
+        <h2>{{ station.stationName }}</h2>
+        <p>Owner: {{ station.ownerName }}</p>
+        <p>Email: {{ station.email }}</p>
+        <p>Phone: {{ station.phone }}</p>
+      </ion-label>
+
+      <ion-button fill="clear" color="danger" (click)="deleteStation(station.id)">
+        Delete
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <!-- ✅ Fallback if no stations -->
+  <ng-template #noStations>
+    <p>No stations registered yet.</p>
+  </ng-template>
+</ion-content>

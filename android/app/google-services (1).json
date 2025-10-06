@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "480500507580",
+    "project_id": "thesisaquaroute",
+    "storage_bucket": "thesisaquaroute.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480500507580:android:5bf14a212e6ca85c7001b9",
+        "android_client_info": {
+          "package_name": "com.aquaroute.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480500507580-pf50pmqe5cggsoilmnramoe2jeo1umod.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.aquaroute.app",
+            "certificate_hash": "1c2dc62cc1baefa77669e32e9b15b9a42d276ddc"
+          }
+        },
+        {
+          "client_id": "480500507580-ifmdm4uvt146pevj1fdo59s2dnl6db5e.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCgQmCsnLtHil37cXOMaZHZBrXFahA3l2w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480500507580-ifmdm4uvt146pevj1fdo59s2dnl6db5e.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,93 @@
+/* Skeleton Loader */
+.skeleton-line {
+  display: block;
+  height: 14px;
+  border-radius: 6px;
+  margin: 6px 0;
+}
+
+.w-60 { width: 60%; }
+.w-40 { width: 40%; }
+.w-80 { width: 80%; }
+.w-70 { width: 70%; }
+.w-50 { width: 50%; }
+
+/* Empty state */
+.empty-orders {
+  text-align: center;
+  margin-top: 40%;
+  color: #666;
+
+  ion-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+    color: var(--ion-color-primary);
+  }
+}
+
+/* Order cards */
+ion-card {
+  border-radius: 16px;
+  box-shadow: 0px 4px 12px rgba(0,0,0,0.05);
+  margin-bottom: 16px;
+
+  ion-card-title {
+    font-weight: 700;
+  }
+
+  ion-card-subtitle {
+    font-weight: 600;
+  }
+
+  ion-card-content {
+    font-weight: 600;
+
+    p {
+      margin: 4px 0;
+    }
+
+    ion-button {
+      margin-top: 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+  }
+}
+
+/* Badges */
+ion-badge {
+  vertical-align: middle;   // aligns with text baseline
+  margin-left: 4px;         // small spacing from "Status:"
+  font-size: 12px;          // keep badge compact
+  padding: 2px 6px;         // balanced look
+  border-radius: 6px;       // rounded like in your screenshot
+}
+
+/* Segment labels */
+ion-segment-button ion-label {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+/* Page title */
+.page-title {
+  text-align: center;
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  width: 100%;
+}
+
+/* Header */
+.orders-header {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  overflow: hidden;
+
+  ion-toolbar {
+    --background: linear-gradient(90deg, #0077ff, #0099ff);
+    color: #fff;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+  }
+}

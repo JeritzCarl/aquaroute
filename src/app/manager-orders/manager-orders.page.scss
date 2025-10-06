@@ -1,0 +1,91 @@
+/* Header wrapper */
+.orders-header {
+  --background: transparent;
+  box-shadow: none;
+}
+
+/* Toolbar styling */
+.aqua-toolbar {
+  --background: linear-gradient(180deg, #2b6ef6, #3c8ff9);
+  --border-color: transparent;
+  border-radius: 0 0 18px 18px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  overflow: hidden; /* fix overlapping edge */
+}
+
+/* Centered title */
+.aqua-title {
+  font-weight: 700;
+  font-size: 18px;
+  color: #fff;
+  margin: 0;
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  bottom: 30%;
+  transform: translateX(-50%);
+}
+
+/* Back button always visible, doesn’t push title */
+ion-back-button {
+  color: #fff;
+  z-index: 10;
+}
+
+/* Cards */
+.order-card {
+  border-radius: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+ion-chip {
+  font-weight: 600;
+  margin-left: 8px;
+}
+
+/* Items inside order */
+.order-items {
+  margin-top: 12px;
+
+  ion-item {
+    --background: transparent;
+    font-size: 14px;
+  }
+}
+
+/* Actions row */
+.actions {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Empty state polished */
+.empty-state {
+  text-align: center;
+  margin-top: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0.8;
+
+  ion-icon {
+    font-size: 64px;
+    color: #b0bec5;
+    margin-bottom: 12px;
+  }
+
+  p {
+    color: #555;
+    font-size: 16px;
+    font-weight: 500;
+    margin: 0;
+  }
+}

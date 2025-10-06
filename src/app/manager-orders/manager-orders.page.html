@@ -1,0 +1,102 @@
+<!-- src/app/manager-orders/manager-orders.page.html -->
+<ion-header class="orders-header ion-no-border">
+  <ion-toolbar class="aqua-toolbar">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/manager"></ion-back-button>
+    </ion-buttons>
+
+    <ion-title class="aqua-title">Station Orders</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="myOrders$ | async as orders">
+    <ng-container *ngIf="orders.length > 0; else noOrders">
+      <ion-card *ngFor="let order of orders" class="order-card">
+        <ion-card-header>
+          <ion-card-title>Order #{{ order.id }}</ion-card-title>
+          <ion-chip [color]="chipColor(order.status)">
+            {{ order.status }}
+          </ion-chip>
+        </ion-card-header>
+
+        <ion-card-content>
+          <!-- ✅ delivery guarded -->
+          <ng-container *ngIf="order.delivery">
+            <p><b>👤 Customer:</b> {{ order.delivery.fullName }}</p>
+            <p><b>📍 Address:</b> {{ order.delivery.address }}</p>
+          </ng-container>
+
+          <!-- ✅ createdAt guarded -->
+          <p *ngIf="order.createdAt">
+            <b>🕒 Placed:</b> {{ order.createdAt.toDate() | date: 'short' }}
+          </p>
+
+          <!-- Courier Info -->
+          <p *ngIf="order.courier">
+            <b>Courier:</b> {{ order.courier.name }}
+            ({{ order.courier.vehicle }})
+            <span *ngIf="order.courier.eta">– ETA: {{ order.courier.eta }}</span>
+          </p>
+
+          <!-- Items -->
+          <ion-list lines="none" class="order-items" *ngIf="order.items?.length">
+            <ion-item *ngFor="let item of order.items">
+              <ion-label>
+                {{ item.name }} (x{{ item.quantity || 0 }})
+              </ion-label>
+              <ion-note slot="end">₱{{ (item.price || 0) * (item.quantity || 0) }}</ion-note>
+            </ion-item>
+          </ion-list>
+
+          <!-- Actions -->
+          <div class="actions">
+            <ion-button
+              fill="outline"
+              color="secondary"
+              *ngIf="order.status === 'New' || order.status === 'Pending'"
+              (click)="updateOrderStatus(order, 'Preparing')"
+            >
+              Preparing
+            </ion-button>
+
+            <ion-button
+              fill="outline"
+              color="tertiary"
+              *ngIf="order.status === 'Preparing'"
+              (click)="updateOrderStatus(order, 'Out for Delivery')"
+            >
+              Out for Delivery
+            </ion-button>
+
+            <ion-button
+              fill="outline"
+              color="success"
+              *ngIf="order.status === 'Out for Delivery'"
+              (click)="updateOrderStatus(order, 'Delivered')"
+            >
+              Delivered
+            </ion-button>
+
+            <!-- ✅ Corrected: openAssignCourier -->
+            <ion-button
+              fill="outline"
+              color="primary"
+              (click)="openAssignCourier(order)"
+            >
+              Assign Courier
+            </ion-button>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </ng-container>
+  </ng-container>
+
+  <!-- Always visible fallback -->
+  <ng-template #noOrders>
+    <div class="empty-state">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <p>No orders yet</p>
+    </div>
+  </ng-template>
+</ion-content>

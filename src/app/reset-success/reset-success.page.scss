@@ -1,0 +1,70 @@
+/* =======================================
+   Reset Success Page
+   ======================================= */
+
+.reset-success-bg {
+  --background: var(--ion-background-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.success-container {
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.success-icon {
+  font-size: 96px;
+  color: #28a745; /* AquaRoute green */
+  margin-bottom: 20px;
+}
+
+.title {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: var(--ion-text-color);
+}
+
+.subtitle {
+  font-size: 15px;
+  color: var(--aqua-subtext, #555);
+  margin-bottom: 30px;
+  line-height: 1.5;
+}
+
+.login-btn {
+  font-weight: 700;
+  --border-radius: 12px;
+  --background: var(--ion-color-primary);
+  --color: #fff;
+  height: 48px;
+  width: 100%;
+  box-shadow: 0 4px 10px rgba(var(--ion-color-primary-rgb), 0.25);
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    filter: brightness(1.05);
+  }
+}
+
+/* 🌙 Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .success-icon { color: #34d058; }
+  .title { color: var(--aqua-text-light, #f1f1f1); }
+  .subtitle { color: var(--aqua-subtext, #aaa); }
+
+  .login-btn {
+    --background: #1e88e5;
+    box-shadow: 0 4px 10px rgba(30, 136, 229, 0.4);
+
+    &:hover { filter: brightness(1.15); }
+  }
+}

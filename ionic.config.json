@@ -1,0 +1,7 @@
+{
+  "name": "aquaroute-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

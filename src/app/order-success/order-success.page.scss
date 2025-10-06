@@ -1,0 +1,123 @@
+/* === Header: match Cart/Checkout exactly (no back button) === */
+.aqua-header-wrap {
+  --background: transparent;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
+}
+
+.aqua-header {
+  --background: linear-gradient(90deg, #3b82f6, #2563eb);
+  --color: #fff;
+  --padding-start: 0;
+  --padding-end: 0;
+  --border-width: 0;
+  --border-color: transparent;
+  padding-top: env(safe-area-inset-top);
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+
+.aqua-header ion-title {
+  color: #fff;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* === Cards: make corners softer, consistent app-wide === */
+.soft-card {
+  --border-radius: 16px;
+  --box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* ✅ Success header */
+.success-header {
+  margin: 24px 0;
+  .success-icon {
+    font-size: 72px;
+    margin-bottom: 12px;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  p {
+    font-size: 14px;
+    color: #666;
+  }
+}
+
+/* ✅ Rounded cards */
+.soft-card {
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+/* ✅ Station details */
+.station-name {
+  font-size: 18px;      /* bigger font */
+  font-weight: 700;     /* bold */
+  color: #222;          /* strong neutral color */
+  margin-bottom: 4px;
+}
+
+.station-address {
+  font-size: 14px;
+  color: #666;
+}
+
+/* ✅ Layout helpers */
+.row-between {
+  display: flex;
+  justify-content: space-between;
+  margin: 6px 0;
+}
+
+/* ✅ Totals styling */
+.totals {
+  margin-top: 12px;
+  .total-line {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid #ddd;
+  }
+  .grand-total {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ion-color-primary);
+  }
+}
+
+/* Make important values bold & bigger */
+.row-between {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.highlight {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+/* ✅ Footer buttons */
+.footer-buttons {
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+}
+
+/* ✅ Expected delivery time colors */
+.expected-time {
+  font-weight: 600;
+}
+.text-success {
+  color: var(--ion-color-success);
+}
+.text-warning {
+  color: var(--ion-color-warning);
+}
+.text-medium {
+  color: var(--ion-color-medium);
+}

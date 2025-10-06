@@ -1,0 +1,110 @@
+ion-header, ion-toolbar, ion-title {
+  --background: #ffffff;
+  --border-color: transparent;
+  font-weight: 700;
+  font-size: 20px;
+  color: #1a1a1a;
+}
+
+/* Profile Card */
+.profile-card {
+  display: flex;
+  align-items: center;
+  padding: 20px 16px;
+  background: #fff;
+  border-bottom: 1px solid #eee;
+
+  ion-avatar {
+    width: 80px;
+    height: 80px;
+    margin-right: 18px;
+  }
+
+  .profile-info {
+    flex: 1;
+
+    .name {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0;
+      color: #1a1a1a;
+    }
+
+    .email, .phone {
+      font-size: 16px;
+      font-weight: 600;
+      color: #444;
+      margin: 4px 0;
+    }
+  }
+
+  ion-button {
+    --color: #007bff;
+    font-size: 18px;
+  }
+}
+
+/* Section Lists */
+ion-list {
+  margin: 16px 0;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+
+  ion-list-header {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    padding-left: 16px;
+  }
+
+  ion-item {
+    --background: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1a1a1a;
+
+    ion-icon {
+      font-size: 22px;
+      color: #007bff; /* 🔵 Make all icons blue by default */
+    }
+
+    ion-label {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    ion-note {
+      font-size: 14px;
+      font-weight: 600;
+      color: #007bff;
+    }
+  }
+}
+
+/* Logout + Delete buttons */
+ion-item[color="danger"],
+ion-item ion-label[color="danger"] {
+  font-size: 16px;
+  font-weight: 700;
+  color: #d32f2f;
+
+  ion-icon {
+    color: #d32f2f !important;
+  }
+}
+
+/* Confirmation Alert Styling (Delete Account) */
+.alert-wrapper {
+  border-radius: 16px !important;
+}
+
+.alert-title {
+  font-weight: 700 !important;
+  color: #d32f2f !important; /* Red title for danger */
+}
+
+.alert-message {
+  font-size: 15px !important;
+  color: #444 !important;
+}

@@ -1,0 +1,106 @@
+<ion-toolbar>
+  <ion-buttons slot="start">
+    <ion-button (click)="goBackToStation()">
+      <ion-icon slot="icon-only" name="arrow-back"></ion-icon>
+    </ion-button>
+  </ion-buttons>
+</ion-toolbar>
+
+<ion-content fullscreen *ngIf="product">
+  <!-- Product Hero -->
+  <div class="product-hero">
+    <img [src]="product.imageUrl || 'assets/placeholder.png'" alt="Product image" />
+  </div>
+
+  <!-- Product & Station Details -->
+  <div class="product-details ion-padding">
+    <h1 class="product-name">{{ product.name }}</h1>
+    <p class="price">₱{{ product.basePrice }}</p>
+
+    <div class="station-info" *ngIf="station">
+      <p class="station-name">🏪 {{ station.stationName }}</p>
+      <p class="rating">
+        ⭐ {{ station.rating || '—' }} ({{ station.reviewCount || 0 }} reviews)
+      </p>
+      <p class="address">📍 {{ station.address }}</p>
+    </div>
+
+    <!-- Extra product details -->
+    <div class="product-meta">
+      <p *ngIf="product['waterType']">💧 {{ product['waterType'] }}</p>
+      <p *ngIf="product['containerSize']">📦 {{ product['containerSize'] }}</p>
+    </div>
+  </div>
+
+  <!-- Delivery Mode -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Delivery Mode</ion-card-title>
+    </ion-card-header>
+    <ion-segment [(ngModel)]="deliveryMode">
+      <ion-segment-button value="delivery"><ion-label>Delivery</ion-label></ion-segment-button>
+      <ion-segment-button value="pickup"><ion-label>Pickup</ion-label></ion-segment-button>
+      <ion-segment-button value="scheduled"><ion-label>Scheduled</ion-label></ion-segment-button>
+    </ion-segment>
+    <div *ngIf="deliveryMode === 'scheduled'" class="ion-padding">
+      <ion-segment [(ngModel)]="deliveryWindow">
+        <ion-segment-button value="morning"><ion-label>Morning</ion-label></ion-segment-button>
+        <ion-segment-button value="afternoon"><ion-label>Afternoon</ion-label></ion-segment-button>
+      </ion-segment>
+    </div>
+  </ion-card>
+
+  <!-- Payment -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Payment Method</ion-card-title>
+    </ion-card-header>
+    <ion-list>
+      <ion-radio-group [(ngModel)]="paymentMethod">
+        <ion-item>
+          <ion-label>Cash on Delivery</ion-label>
+          <ion-radio slot="end" value="cod"></ion-radio>
+        </ion-item>
+        <ion-item>
+          <ion-label>GCash</ion-label>
+          <ion-radio slot="end" value="gcash"></ion-radio>
+        </ion-item>
+      </ion-radio-group>
+    </ion-list>
+  </ion-card>
+
+  <!-- Add-ons -->
+  <ion-card *ngIf="product.addons?.length">
+    <ion-card-header>
+      <ion-card-title>Add-ons</ion-card-title>
+    </ion-card-header>
+    <ion-list>
+      <ion-item *ngFor="let addon of product.addons">
+        <ion-label>{{ addon.label }} (+₱{{ addon.price }})</ion-label>
+        <ion-checkbox
+          slot="end"
+          [checked]="selectedAddons.has(addon.id)"
+          (ionChange)="toggleAddon(addon.id)">
+        </ion-checkbox>
+      </ion-item>
+    </ion-list>
+  </ion-card>
+
+  <div class="spacer"></div>
+</ion-content>
+
+<!-- Sticky Footer -->
+<ion-footer *ngIf="product">
+  <div class="footer-bar">
+    <div class="qty">
+      <ion-button class="qty-btn" fill="outline" (click)="decreaseQty()">-</ion-button>
+      <span>{{ quantity }}</span>
+      <ion-button class="qty-btn" fill="outline" (click)="increaseQty()">+</ion-button>
+    </div>
+    <div class="total">
+      <p>Total</p>
+      <h2>₱{{ getLineTotal() }}</h2>
+    </div>
+    <ion-button expand="block" color="primary" (click)="addToCart()">Add to Cart</ion-button>
+  </div>
+</ion-footer>

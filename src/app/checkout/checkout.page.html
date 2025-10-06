@@ -1,0 +1,210 @@
+<ion-content class="checkout-bg">
+
+  <!-- Checkout Header -->
+  <div class="checkout-header">
+    <ion-buttons slot="start" class="back-btn">
+      <ion-back-button defaultHref="/cart" text=""></ion-back-button>
+    </ion-buttons>
+    <h2>Checkout</h2>
+  </div>
+
+  <!-- Order Summary -->
+  <ion-card class="block-card">
+    <ion-card-header>
+      <ion-card-title>Order Summary</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ng-container *ngFor="let s of stations">
+        <!-- Station Header -->
+        <ion-item lines="full" class="station-info">
+          <ion-icon name="water-outline" slot="start" color="primary"></ion-icon>
+          <ion-label>
+            <h3>{{ s.stationName }}</h3>
+            <p>{{ s.address || 'No address provided' }}</p>
+            <!-- ETA per station -->
+            <p *ngIf="s.eta" class="eta-line">
+              ⏱ {{ s.eta.duration }} • {{ s.eta.distance }}
+            </p>
+          </ion-label>
+        </ion-item>
+
+        <!-- Station Items -->
+        <ion-list>
+          <ion-item *ngFor="let it of s.items">
+            <ion-thumbnail slot="start">
+              <img [src]="it.imageUrl || 'assets/placeholder.png'" alt="{{ it.name }}" />
+            </ion-thumbnail>
+
+            <ion-label>
+              <div class="item-name">{{ it.name }}</div>
+              <div class="muted">x{{ it.quantity || 0 }}</div>
+              <div class="muted small">
+                {{ it.deliveryMode === 'scheduled'
+                    ? 'Scheduled – ' + (it.deliveryWindow ?? 'Unassigned')
+                    : (it.deliveryMode ? (it.deliveryMode | titlecase) : 'Delivery') }}
+              </div>
+            </ion-label>
+
+            <ion-note slot="end" color="dark">
+              ₱{{ (it.unitPriceComputed ?? it.basePrice ?? it.price ?? 0) * (it.quantity || 1) | number:'1.0-2' }}
+            </ion-note>
+          </ion-item>
+        </ion-list>
+
+        <!-- Station Options -->
+        <div class="station-options">
+          <ion-item lines="none">
+            <ion-label>Container Swap</ion-label>
+            <ion-checkbox
+              [(ngModel)]="s.containerSwap"
+              (ngModelChange)="onStationOptionChange()">
+            </ion-checkbox>
+          </ion-item>
+          <ion-item lines="none">
+            <ion-label>Pickup Later</ion-label>
+            <ion-checkbox
+              [(ngModel)]="s.pickupLater"
+              (ngModelChange)="onStationOptionChange()">
+            </ion-checkbox>
+          </ion-item>
+        </div>
+      </ng-container>
+
+      <!-- Global Totals -->
+      <ion-item lines="full" class="spacer-line"></ion-item>
+      <div class="totals">
+        <div class="row-between">
+          <span>Subtotal</span>
+          <strong> ₱{{ getGrandSubtotal() | number:'1.0-2' }}</strong>
+        </div>
+        <div class="row-between">
+          <span>Delivery Fee</span>
+          <strong> ₱{{ getGrandDeliveryFee() | number:'1.0-2' }}</strong>
+        </div>
+        <div class="row-between total-line">
+          <span>Total</span>
+          <strong> ₱{{ getGrandTotal() | number:'1.0-2' }}</strong>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Delivery Details + Map + Payment (wrapped in form) -->
+  <form #checkoutForm="ngForm" (ngSubmit)="placeOrder(checkoutForm)">
+
+    <!-- Delivery Details -->
+    <ion-card class="block-card">
+      <ion-card-header>
+        <ion-card-title>Delivery Details</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content class="form-grid">
+        <!-- Select Address Button -->
+        <ion-item lines="none">
+          <ion-label>Select Address</ion-label>
+          <ion-button size="small" fill="outline" (click)="goToAddresses()">
+            <ion-icon name="location-outline" slot="start"></ion-icon>
+            {{ selectedAddressId ? 'Change Address' : 'Select Address' }}
+          </ion-button>
+        </ion-item>
+
+        <!-- Show chosen address -->
+        <ion-card *ngIf="contact.fullName" class="address-preview">
+          <ion-card-content>
+            <h3>{{ contact.fullName }}</h3>
+            <p>{{ contact.address }}</p>
+            <p *ngIf="contact.notes">{{ contact.notes }}</p>
+            <p *ngIf="contact.phone">📞 {{ contact.phone }}</p>
+            <ion-badge color="primary" *ngIf="contact.isDefault">Default Address</ion-badge>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Notes -->
+        <ion-item>
+          <ion-label position="stacked">Notes / Special Instructions</ion-label>
+          <ion-textarea
+            [(ngModel)]="contact.notes"
+            name="notes"
+            autoGrow="true"
+            placeholder="e.g., Please call when outside, leave at the gate"
+          ></ion-textarea>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- 📍 Map + Location Helpers -->
+    <ion-card class="block-card">
+      <ion-card-header>
+        <ion-card-title>Pin Delivery Location</ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <!-- Helper buttons -->
+        <div class="location-actions">
+          <ion-button size="small" fill="outline" (click)="useMyLocation()">
+            <ion-icon name="navigate-outline" slot="start"></ion-icon>
+            Use my current location
+          </ion-button>
+
+          <ion-button size="small" fill="outline" (click)="geocodeFromAddress()">
+            <ion-icon name="search-outline" slot="start"></ion-icon>
+            Find via address
+          </ion-button>
+        </div>
+
+        <!-- Leaflet Map -->
+        <div class="map-container">
+          <div id="checkout-map"></div>
+        </div>
+
+        <p *ngIf="contact.lat && contact.lng" class="muted small">
+          📍 Lat: {{ contact.lat.toFixed(5) }}, Lng: {{ contact.lng.toFixed(5) }}
+        </p>
+
+        <ion-note *ngIf="approximateLocation" color="warning" class="muted small">
+          Approximate location — refine using “Use my location” or drag the pin.
+        </ion-note>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Payment Method -->
+    <ion-card class="block-card">
+      <ion-card-header>
+        <ion-card-title>Payment Method</ion-card-title>
+      </ion-card-header>
+      <ion-card-content class="pay-options">
+        <button type="button"
+                class="pay-chip"
+                [class.active]="payment === 'COD'"
+                (click)="changePayment('COD')">
+          <ion-icon name="cash-outline"></ion-icon>
+          <span>Cash on Delivery</span>
+          <ion-icon *ngIf="payment === 'COD'" name="checkmark-circle" class="check"></ion-icon>
+        </button>
+
+        <button type="button"
+                class="pay-chip"
+                [class.active]="payment === 'GCASH'"
+                (click)="changePayment('GCASH')">
+          <ion-icon name="card-outline"></ion-icon>
+          <span>GCash</span>
+          <ion-icon *ngIf="payment === 'GCASH'" name="checkmark-circle" class="check"></ion-icon>
+        </button>
+      </ion-card-content>
+    </ion-card>
+  </form>
+</ion-content>
+
+<!-- Sticky Footer -->
+<ion-footer>
+  <ion-toolbar class="checkout-footer">
+    <div class="total-wrap">
+      <div class="label">Total</div>
+      <div class="amount">₱{{ getGrandTotal() | number:'1.0-2' }}</div>
+    </div>
+    <ion-button class="cta" size="large" expand="block" (click)="checkoutForm.ngSubmit.emit()">
+      Place Order
+    </ion-button>
+  </ion-toolbar>
+</ion-footer>

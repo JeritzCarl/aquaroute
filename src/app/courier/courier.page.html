@@ -1,0 +1,111 @@
+<ion-header class="courier-header ion-no-border">
+  <ion-toolbar class="header-toolbar">
+    <!-- Station name -->
+    <ion-title class="station-title">{{ stationName }}</ion-title>
+
+    <!-- Avatar with status dot -->
+    <ion-buttons slot="end" class="head-right">
+      <div class="avatar-wrapper">
+        <ion-avatar
+          class="courier-avatar"
+          routerLink="/courier-account"
+          routerDirection="forward"
+          aria-label="Open account"
+        >
+          <img *ngIf="courierPhotoUrl; else defaultAvatar" [src]="courierPhotoUrl" alt="Courier Profile" />
+          <ng-template #defaultAvatar>
+            <ion-icon name="person-circle-outline"></ion-icon>
+          </ng-template>
+        </ion-avatar>
+        <span class="status-dot" [class.online]="online" [class.offline]="!online"></span>
+      </div>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- Pull to refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
+    <ion-refresher-content pullingIcon="arrow-down-outline"></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- First-load progress -->
+  <ion-progress-bar *ngIf="initializing" type="indeterminate"></ion-progress-bar>
+
+  <!-- METRICS GRID -->
+  <div class="metrics-grid">
+    <ion-card class="metric-tile">
+      <ion-card-content>
+        <div class="metric-icon"><ion-icon name="list-outline"></ion-icon></div>
+        <p class="metric-sub">Assigned Orders</p>
+        <h2 class="metric-val">{{ assignedOrders.length }}</h2>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="metric-tile">
+      <ion-card-content>
+        <div class="metric-icon"><ion-icon name="checkmark-done-circle-outline"></ion-icon></div>
+        <p class="metric-sub">Completed</p>
+        <h2 class="metric-val">{{ completedCount }}</h2>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="metric-tile">
+      <ion-card-content>
+        <div class="metric-icon"><ion-icon name="water-outline"></ion-icon></div>
+        <p class="metric-sub">Gallons Delivered</p>
+        <h2 class="metric-val">{{ gallonsDelivered }}</h2>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card class="metric-tile">
+      <ion-card-content>
+        <div class="metric-icon"><ion-icon name="cash-outline"></ion-icon></div>
+        <p class="metric-sub">Earnings</p>
+        <h2 class="metric-val">₱{{ estimatedEarnings }}</h2>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- Orders loading hint -->
+  <div *ngIf="ordersLoading" class="orders-loading">
+    <ion-spinner name="dots"></ion-spinner>
+    <span>Loading orders…</span>
+  </div>
+
+  <!-- Orders List -->
+  <ion-list *ngIf="assignedOrders.length; else empty">
+    <ion-item *ngFor="let o of assignedOrders" lines="full">
+      <ion-icon name="bicycle-outline" slot="start"></ion-icon>
+      <ion-label>
+        <h2>{{ o.customerName }}</h2>
+        <p>{{ o.flatAddress || 'No address available' }}</p>
+        <p>Items: {{ o.items?.length || 0 }}</p>
+        <ion-badge [color]="badgeColor(o.status)">{{ o.status }}</ion-badge>
+      </ion-label>
+      <ion-buttons slot="end">
+        <ion-button fill="outline" color="tertiary" (click)="openNavigation(o)">Navigate</ion-button>
+        <ion-button color="warning" *ngIf="canStartDelivery(o)" (click)="setOutForDelivery(o)">Pick Up</ion-button>
+        <ion-button color="success" *ngIf="canMarkDelivered(o)" (click)="setDelivered(o)">Delivered</ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+
+  <!-- Empty State -->
+  <ng-template #empty>
+    <div class="center-text">
+      <ion-icon name="cube-outline"></ion-icon>
+      <p>No active deliveries assigned.</p>
+    </div>
+  </ng-template>
+
+  <!-- Route Map -->
+  <div class="route-map-container" *ngIf="assignedOrders.length">
+    <h3 class="map-title">Optimized Delivery Route</h3>
+    <app-route-map
+      [start]="stationAddress"
+      [waypoints]="orderWaypoints"
+      [end]="assignedOrders.length ? assignedOrders[assignedOrders.length - 1].delivery.address : ''">
+    </app-route-map>
+  </div>
+</ion-content>

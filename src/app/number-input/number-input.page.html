@@ -1,0 +1,33 @@
+<ion-toolbar>
+  <ion-buttons slot="start">
+    <ion-back-button defaultHref="/login"></ion-back-button>
+  </ion-buttons>
+  <ion-title>Enter Mobile Number</ion-title>
+</ion-toolbar>
+
+<ion-content class="ion-padding">
+
+  <div class="form-section">
+    <label class="label">Mobile</label>
+    <div class="phone-input">
+      <span class="country-code">+63</span>
+      <ion-input
+        type="tel"
+        maxlength="13"
+        placeholder="963 123 4567"
+        [(ngModel)]="phoneNumber">
+      </ion-input>
+    </div>
+
+    <p class="info-text">Send me a verification code through SMS</p>
+
+    <ion-button expand="block" class="next-btn" (click)="sendOTP()" [disabled]="!phoneNumber || isSending">
+      <ng-container *ngIf="!isSending">Next</ng-container>
+      <ng-container *ngIf="isSending">Sending…</ng-container>
+    </ion-button>
+  </div>
+
+</ion-content>
+
+<!-- recaptcha container (kept outside content as in your original file) -->
+<div id="recaptcha-container"></div>

@@ -1,0 +1,274 @@
+<ion-toolbar>
+  <ion-title class="logo-title">
+    <img src="assets/AquaRoute Word Logo.png" alt="AquaRoute Logo" class="logo" />
+  </ion-title>
+
+  <ion-buttons slot="end">
+    <ion-button (click)="openNotifications()">
+      <ion-icon name="notifications-outline" class="header-icon notifications-icon"></ion-icon>
+    </ion-button>
+    <ion-button (click)="openProfileFull()">
+      <ion-icon name="person-circle-outline" class="header-icon profile-icon"></ion-icon>
+    </ion-button>
+    <ion-button (click)="openSettings()">
+      <ion-icon name="settings-outline" class="header-icon settings-icon"></ion-icon>
+    </ion-button>
+  </ion-buttons>
+</ion-toolbar>
+
+<ion-content class="ion-padding">
+
+  <!-- Dashboard -->
+  <ion-card *ngIf="selectedTab === 'dashboard' && myStation">
+    <ion-card-header>
+      <ion-card-title>{{ myStation.stationName }}</ion-card-title>
+      <ion-card-subtitle>{{ myStation.address }}</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>Owner:</strong> {{ myStation.ownerName }}</p>
+      <p *ngIf="myStation['email']"><strong>Email:</strong> {{ myStation['email'] }}</p>
+      <p *ngIf="myStation['phone']"><strong>Phone:</strong> {{ myStation['phone'] }}</p>
+      <p *ngIf="myStation['address']"><strong>Address:</strong> {{ myStation['address'] }}</p>
+      <ion-button expand="block" (click)="editStation()" class="editStation">
+        Edit Station Info
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Delivery Area Map -->
+<ion-card *ngIf="selectedTab === 'dashboard' && myStation">
+  <ion-card-header>
+    <ion-card-title>📍 Delivery Area</ion-card-title>
+  </ion-card-header>
+  <ion-card-content>
+    <div id="manager-map"></div>
+  </ion-card-content>
+</ion-card>
+
+  <div *ngIf="selectedTab === 'dashboard'">
+    <div class="stats-grid">
+      <ion-card>
+        <ion-card-content>
+          <ion-icon name="bag-handle-outline" class="stat-icon new"></ion-icon>
+          <h2>{{ newOrdersCount }}</h2>
+          <p>New Orders</p>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card>
+        <ion-card-content>
+          <ion-icon name="car-outline" class="stat-icon transit"></ion-icon>
+          <h2>{{ inTransitCount }}</h2>
+          <p>In-Transit</p>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card>
+        <ion-card-content>
+          <ion-icon name="checkmark-done-outline" class="stat-icon completed"></ion-icon>
+          <h2>{{ completedCount }}</h2>
+          <p>Completed</p>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card>
+        <ion-card-content>
+          <ion-icon name="flash-outline" class="stat-icon efficiency"></ion-icon>
+          <h2>{{ efficiencyScore }}%</h2>
+          <p>Efficiency</p>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <ion-card class="route-card">
+      <ion-card-header>
+        <ion-card-title>Route Optimization</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <ion-item>
+          <ion-label>Algorithm</ion-label>
+          <ion-select [(ngModel)]="selectedAlgorithm">
+            <ion-select-option value="greedy">Greedy Nearest Neighbor</ion-select-option>
+            <ion-select-option value="genetic">Genetic Algorithm (Demo)</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-button expand="block" color="primary" (click)="startOptimizedRoute()">
+          Generate Optimized Route
+        </ion-button>
+
+        <ion-list *ngIf="optimizedRoute.length > 0">
+          <ion-list-header>Optimized Route</ion-list-header>
+          <ion-item *ngFor="let stop of optimizedRoute; index as i">
+            <ion-label>{{ i+1 }}. {{ stop }}</ion-label>
+          </ion-item>
+        </ion-list>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Delivery Schedule</ion-card-title>
+      </ion-card-header>
+      <ion-list>
+        <ion-item *ngFor="let order of myOrdersList">
+          <ion-icon slot="start" name="car-outline" class="delivery-icon"></ion-icon>
+          <ion-label>
+            <h2>{{ order.customerName || order.name || 'No name' }}</h2>
+            <p>{{ order.address || order.deliveryAddress || '' }}</p>
+            <p *ngIf="order.courier">
+              🚚 Courier: {{ order.courier.name }} ({{ order.courier.vehicle }})
+              <span *ngIf="order.courier.eta"> – ETA: {{ order.courier.eta }}</span>
+            </p>
+          </ion-label>
+          <ion-chip [color]="chipColor(order.status)">{{ order.status }}</ion-chip>
+        </ion-item>
+      </ion-list>
+    </ion-card>
+  </div>
+
+  <!-- Products Tab -->
+  <div *ngIf="selectedTab === 'products'">
+    <ion-list>
+      <ion-item *ngFor="let product of myProducts$ | async">
+        <ion-label>
+          <h2>{{ product.name }}</h2>
+          <p>₱{{ product.basePrice }}</p>
+        </ion-label>
+        <ion-button fill="clear" color="warning" (click)="editProduct(product)">Edit</ion-button>
+        <ion-button fill="clear" color="danger" (click)="deleteProduct(product.id!)">Delete</ion-button>
+      </ion-item>
+    </ion-list>
+    <ion-button expand="block" color="primary" (click)="addProduct()">Add Product</ion-button>
+  </div>
+
+  <!-- Orders Tab -->
+  <div *ngIf="selectedTab === 'orders'">
+    <ion-list>
+      <ion-item *ngFor="let order of myOrders$ | async">
+        <ion-label>
+          <h2>Order #{{ order.id }}</h2>
+          <p>Status: {{ order.status }}</p>
+          <p *ngIf="order.courier">🚚 Courier: {{ order.courier.name || order.courier }}</p>
+          <p *ngIf="!order.courier" class="no-courier">⚠️ No courier assigned</p>
+        </ion-label>
+
+        <ion-select placeholder="Choose Courier" (ionChange)="assignCourier(order, $event.detail.value)">
+          <ion-select-option *ngFor="let courier of myCouriers" [value]="courier">
+            {{ courier.name }}
+          </ion-select-option>
+        </ion-select>
+
+        <ion-button
+          size="small"
+          color="success"
+          (click)="updateOrderStatus(order.id, 'Preparing')"
+          [disabled]="order.status !== 'Pending'">
+          Prepare
+        </ion-button>
+
+        <ion-button
+          size="small"
+          color="tertiary"
+          (click)="updateOrderStatus(order.id, 'Out for Delivery')"
+          [disabled]="!order.courier || order.status !== 'Preparing'">
+          Deliver
+        </ion-button>
+
+        <ion-button
+          size="small"
+          color="dark"
+          (click)="updateOrderStatus(order.id, 'Delivered')"
+          [disabled]="order.status !== 'Out for Delivery'">
+          Complete
+        </ion-button>
+      </ion-item>
+    </ion-list>
+  </div>
+
+  <!-- Couriers Tab -->
+  <div *ngIf="selectedTab === 'couriers'">
+    <ion-card class="courier-card">
+      <ion-card-header>
+        <ion-card-title>My Couriers</ion-card-title>
+      </ion-card-header>
+
+      <ion-list>
+        <ion-item *ngIf="myCouriers.length === 0" class="no-couriers">
+          <ion-label>No couriers yet. Add one below.</ion-label>
+        </ion-item>
+
+        <ion-item *ngFor="let courier of myCouriers" class="courier-item">
+          <ion-icon slot="start" name="bicycle-outline"></ion-icon>
+          <ion-label>
+            <h2>{{ courier.name }}</h2>
+            <p>{{ courier.vehicle || '—' }}</p>
+            <p *ngIf="courier.eta">ETA: {{ courier.eta }}</p>
+            <p>
+              <ion-badge color="success" *ngIf="courier.active">Active</ion-badge>
+              <ion-badge color="medium" *ngIf="!courier.active">Inactive</ion-badge>
+            </p>
+          </ion-label>
+
+          <ion-toggle slot="end" [checked]="courier.active" (ionChange)="toggleCourierActive(courier)">
+          </ion-toggle>
+
+          <ion-button fill="clear" color="danger" (click)="deleteCourier(courier)">
+            <ion-icon name="trash-outline"></ion-icon>
+          </ion-button>
+        </ion-item>
+      </ion-list>
+
+      <ion-button expand="block" class="add-courier-btn" (click)="promptNewCourierAndAssign(null)">
+        Add Courier
+      </ion-button>
+    </ion-card>
+  </div>
+
+  <!-- Market Tab -->
+  <div *ngIf="selectedTab === 'market'">
+    <ion-list>
+      <ion-item *ngFor="let station of otherStations">
+        <ion-label class="market-label">
+          <h2>{{ station.stationName }}</h2>
+          <p>{{ station.address }}</p>
+        </ion-label>
+        <ion-button fill="outline" size="small" color="primary" (click)="viewStation(station.id!)">
+          View
+        </ion-button>
+      </ion-item>
+    </ion-list>
+  </div>
+</ion-content>
+
+<ion-footer>
+  <ion-tab-bar slot="bottom">
+    <ion-tab-button (click)="selectedTab = 'dashboard'" [class.active]="selectedTab === 'dashboard'">
+      <ion-icon name="home-outline"></ion-icon>
+      <ion-label>Dashboard</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button (click)="selectedTab = 'products'" [class.active]="selectedTab === 'products'">
+      <ion-icon name="pricetag-outline"></ion-icon>
+      <ion-label>Products</ion-label>
+    </ion-tab-button>
+
+    <!-- ✅ Orders tab now handled by onOpenOrders() -->
+    <ion-tab-button (click)="onOpenOrders()" [class.active]="selectedTab === 'orders'">
+      <ion-icon name="cart-outline"></ion-icon>
+      <ion-label>Orders</ion-label>
+      <ion-badge *ngIf="newOrdersBadge > 0" color="danger">{{ newOrdersBadge }}</ion-badge>
+    </ion-tab-button>
+
+    <ion-tab-button (click)="selectedTab = 'couriers'" [class.active]="selectedTab === 'couriers'">
+      <ion-icon name="bicycle-outline"></ion-icon>
+      <ion-label>Couriers</ion-label>
+    </ion-tab-button>
+
+    <ion-tab-button (click)="selectedTab = 'market'" [class.active]="selectedTab === 'market'">
+      <ion-icon name="storefront-outline"></ion-icon>
+      <ion-label>Market</ion-label>
+    </ion-tab-button>
+  </ion-tab-bar>
+</ion-footer>
+

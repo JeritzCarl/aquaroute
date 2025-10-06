@@ -1,0 +1,109 @@
+/*
+ * App Global CSS
+ * ----------------------------------------------------------------------------
+ * Put style rules here that you want to apply globally. These styles are for
+ * the entire app and not just one component. Additionally, this file can be
+ * used as an entry point to import other CSS/Sass files to be included in the
+ * output CSS.
+ * For more information on global stylesheets, visit the documentation:
+ * https://ionicframework.com/docs/layout/global-stylesheets
+ */
+
+/* Core CSS required for Ionic components to work properly */
+@import "@ionic/angular/css/core.css";
+
+/* Basic CSS for apps built with Ionic */
+@import "@ionic/angular/css/normalize.css";
+@import "@ionic/angular/css/structure.css";
+@import "@ionic/angular/css/typography.css";
+@import "@ionic/angular/css/display.css";
+
+/* Optional CSS utils that can be commented out */
+@import "@ionic/angular/css/padding.css";
+@import "@ionic/angular/css/float-elements.css";
+@import "@ionic/angular/css/text-alignment.css";
+@import "@ionic/angular/css/text-transformation.css";
+@import "@ionic/angular/css/flex-utils.css";
+@import "~leaflet/dist/leaflet.css";
+
+
+/**
+ * Ionic Dark Mode
+ * -----------------------------------------------------
+ * For more info, please see:
+ * https://ionicframework.com/docs/theming/dark-mode
+ */
+
+/* @import "@ionic/angular/css/palettes/dark.always.css"; */
+/* @import "@ionic/angular/css/palettes/dark.class.css"; */
+@import "@ionic/angular/css/palettes/dark.system.css";
+
+
+
+/* Force Ionic iOS mode (rounded style) */
+:root {
+  --ion-border-radius: 14px;
+  --ion-background-color: #f9f9f9;
+  --ion-toolbar-background: #fff;
+  --ion-tab-bar-background: #fff;
+
+  /* Brand colors */
+  --ion-color-primary: #007bff;
+  --ion-color-success: #28a745;
+  --ion-color-warning: #ff9800;
+  --ion-color-tertiary: #9c27b0;
+  --ion-color-danger: #dc3545;
+}
+
+/* Toolbar logo */
+ion-title.logo-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+ion-title .logo {
+  height: 32px;
+  max-width: 160px;
+  object-fit: contain;
+}
+
+/* Header icons */
+.header-icon {
+  font-size: 24px;
+  margin: 0 6px;
+}
+.notifications-icon {
+  color: #ff9800;
+}
+.profile-icon {
+  color: #2196f3;
+}
+.settings-icon {
+  color: #4caf50;
+}
+
+/* Bottom Tabs */
+ion-tab-bar {
+  border-radius: 18px 18px 0 0;
+  box-shadow: 0 -2px 10px rgba(0,0,0,0.12);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+ion-tab-button {
+  --color: #888;
+  --color-selected: var(--ion-color-primary);
+  --ripple-color: var(--ion-color-primary);
+}
+
+
+
+/* Avoid iOS auto-zoom on inputs */
+input, textarea, select { font-size: 16px; }
+
+/* Optional: nudge sticky footers while the keyboard is open */
+body.keyboard-open ion-footer .checkout-footer {
+  padding-bottom: max(env(safe-area-inset-bottom), 8px);
+  /* Or use the measured height if you want:
+  padding-bottom: calc(var(--keyboard-height, 0px) * 0.15 + env(safe-area-inset-bottom));
+  */
+}
