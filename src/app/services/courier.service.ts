@@ -18,6 +18,7 @@ import {
 import { Auth } from '@angular/fire/auth';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { OrderSyncService } from './order-sync.service';
 
 type LocationQueueItem = {
   stationId: string;
@@ -34,7 +35,11 @@ export class CourierService {
   private locationQueue: LocationQueueItem[] = [];
   private flushTimer: any = null;
 
-  constructor(private db: Firestore, private auth: Auth) {}
+  constructor(
+  private db: Firestore,
+  private auth: Auth,
+  private orderSync: OrderSyncService
+) {}
 
   // 🔑 1) Find courier’s station + profile
   async getCourierStationAndProfile(uid: string) {
@@ -70,43 +75,89 @@ export class CourierService {
     return null;
   }
 
-  // 📦 2) Load assigned orders for courier (adds flatAddress)
-  getAssignedOrders(stationId: string, courierId: string): Observable<any[]> {
-    const ordersRef = collection(this.db, `stations/${stationId}/orders`);
-    const qOrders = query(ordersRef, where('courier.id', '==', courierId));
+// 📦 Load assigned orders for courier (multi-courier compatible)
+getAssignedOrders(stationId: string, courierId: string): Observable<any[]> {
+  const ordersRef = collection(this.db, `stations/${stationId}/orders`);
 
-    return collectionData(qOrders, { idField: 'id' }).pipe(
-      map((orders: any[]) =>
-        orders.map((o) => ({
-          ...o,
-          // ✅ Always provide a flat address string
-          flatAddress: o?.delivery?.address || o?.address || null,
-          customerName: o?.delivery?.fullName || o?.customerName || 'Customer',
-        }))
-      )
-    );
-  }
+  // 🔹 Match either assignedCourierId OR couriers array (multi-courier)
+  const q1 = query(ordersRef, where('assignedCourierId', '==', courierId));
+  const q2 = query(ordersRef, where('couriers', 'array-contains', courierId));
 
-  // 🚚 3) Update order status
-  async updateOrderStatus(
-    stationId: string,
-    orderId: string,
-    courierName: string,
-    nextStatus: 'Out for Delivery' | 'Delivered',
-    note?: string
-  ) {
-    const ref = doc(this.db, `stations/${stationId}/orders/${orderId}`);
-    await updateDoc(ref, {
-      status: nextStatus,
-      lastUpdatedAt: serverTimestamp(),
-      statusHistory: arrayUnion({
-        status: nextStatus,
-        changedAt: serverTimestamp(),
-        by: courierName,
-        note: note || null,
-      }),
+  // 🔹 Merge both observables manually
+  const obs1 = collectionData(q1, { idField: 'id' });
+  const obs2 = collectionData(q2, { idField: 'id' });
+
+  return new Observable<any[]>((subscriber) => {
+    let sub2: any;
+
+    const sub1 = obs1.subscribe({
+      next: (a) => {
+        const seen = new Set(a.map((o: any) => o.id));
+
+        sub2 = obs2.subscribe({
+          next: (b) => {
+            const merged = [...a, ...b.filter((o: any) => !seen.has(o.id))];
+
+            subscriber.next(
+              merged.map((o: any) => {
+                const delivery = o['delivery'] || {};
+                const flatAddress = delivery['address'] || o['address'] || null;
+                const customerName =
+                  delivery['fullName'] || o['customerName'] || 'Customer';
+
+                return {
+                  ...o,
+                  flatAddress,
+                  customerName,
+                };
+              })
+            );
+          },
+          error: (err) => subscriber.error(err),
+        });
+      },
+      error: (err) => subscriber.error(err),
     });
-  }
+
+    // 🔹 Cleanup both subscriptions when unsubscribed
+    return () => {
+      sub1.unsubscribe();
+      if (sub2) sub2.unsubscribe();
+    };
+  });
+}
+
+// ✅ Load archived (delivered) orders for courier metrics
+getArchivedOrders(stationId: string, courierId: string): Observable<any[]> {
+  const archivedRef = collection(
+    this.db,
+    `stations/${stationId}/couriers/${courierId}/archivedOrders`
+  );
+  return collectionData(archivedRef, { idField: 'id' });
+}
+
+// 🚚 3) Update order status
+async updateOrderStatus(
+  stationId: string,
+  orderId: string,
+  courierName: string,
+  nextStatus: 'Out for Delivery' | 'Delivered',
+  note?: string
+) {
+  const ref = doc(this.db, `stations/${stationId}/orders/${orderId}`);
+  await updateDoc(ref, {
+    status: nextStatus,
+    lastUpdatedAt: serverTimestamp(),
+    statusHistory: arrayUnion({
+      status: nextStatus,
+      changedAt: new Date(), // ✅ FIXED — use JS Date instead
+      by: courierName,
+      note: note || null,
+    }),
+  });
+  // 🔁 Mirror status to user's orders for consistency
+await this.orderSync.mirrorToUserOrders(orderId, nextStatus);
+}
 
   // 📍 4a) Direct live update (station-scoped)
   async updateCourierLocation(stationId: string, courierId: string, lat: number, lng: number) {

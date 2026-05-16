@@ -1,0 +1,50 @@
+<ion-header class="aqua-header">
+  <ion-toolbar class="aqua-toolbar">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin" text=""></ion-back-button>
+    </ion-buttons>
+
+    <ion-title class="aqua-title">Admin Notifications</ion-title>
+
+    <ion-buttons slot="end" class="toolbar-actions">
+      <ion-button fill="clear" (click)="markAllAsRead()">
+        <ion-icon name="checkmark-done-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="notifications-content">
+  <div *ngIf="loading" class="loading-state">
+    <ion-spinner name="crescent"></ion-spinner>
+  </div>
+
+  <ion-list *ngIf="!loading && notifications.length; else empty">
+    <ion-item
+      *ngFor="let n of notifications"
+      [class.unread]="!n.read"
+      (click)="openRelated(n)"
+      lines="none"
+    >
+      <ion-icon [name]="getIcon(n.type)" slot="start" class="notif-icon"></ion-icon>
+      <ion-label>
+        <div class="title">{{ n.message }}</div>
+        <div class="meta">{{ n.timestamp?.toDate() | date: 'MMM d, y, h:mm a' }}</div>
+      </ion-label>
+
+      <ion-buttons slot="end">
+        <ion-button fill="clear" color="danger" (click)="deleteNotification(n)">
+          <ion-icon name="trash-outline"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+    </ion-item>
+  </ion-list>
+
+  <ng-template #empty>
+    <div class="empty-state">
+      <ion-icon name="notifications-off-outline" class="empty-icon"></ion-icon>
+      <h2>No Notifications</h2>
+      <p>System or manager updates will appear here.</p>
+    </div>
+  </ng-template>
+</ion-content>

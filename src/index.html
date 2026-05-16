@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>Ionic App</title>
+  <title>AquaRoute</title>
 
   <base href="/" />
 
@@ -14,22 +14,26 @@
 
   <link rel="icon" type="image/png" href="assets/icon/favicon.png" />
 
-  <!-- add to homescreen for ios -->
-  <meta name="mobile-web-app-capable" content="yes" />
+  <!-- ✅ Added Apple Touch Icon (fixes the 'apple-touch-icon' warning) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/icon-192x192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-title" content="AquaRoute" />
+
+  <!-- ✅ Manifest (for Android / PWA install) -->
+  <link rel="manifest" href="manifest.webmanifest" />
 
   <!-- ✅ Google Maps JavaScript API -->
-  <!-- ✅ Google Maps JavaScript API -->
-<script 
-  src="https://maps.googleapis.com/maps/api/js?key=YOUR_REAL_API_KEY&libraries=places" 
-  async 
-  defer
-></script>
-
+  <script
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_REAL_API_KEY&libraries=places"
+    async
+    defer>
+  </script>
 </head>
 
 <body>
   <app-root></app-root>
+  <noscript>Please enable JavaScript to continue using this application.</noscript>
 </body>
 
 </html>

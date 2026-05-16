@@ -8,7 +8,7 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <form (ngSubmit)="saveAddress()" #form="ngForm" class="address-form">
+  <form (ngSubmit)="saveAddress()" class="address-form">
 
     <!-- Full Name -->
     <ion-item>
@@ -20,6 +20,12 @@
     <ion-item>
       <ion-label position="floating">City</ion-label>
       <ion-input value="Tuguegarao City" readonly></ion-input>
+    </ion-item>
+
+    <!-- Zip Code -->
+    <ion-item>
+      <ion-label position="floating">Zip Code</ion-label>
+      <ion-input value="3500" readonly></ion-input>
     </ion-item>
 
     <!-- Barangay -->
@@ -41,13 +47,15 @@
     <!-- Phone -->
     <ion-item>
       <ion-label position="floating">Phone Number</ion-label>
-      <ion-input type="tel" [(ngModel)]="phone" name="phone" required></ion-input>
-    </ion-item>
-
-    <!-- Notes to Rider -->
-    <ion-item>
-      <ion-label position="floating">Notes to Rider (optional)</ion-label>
-      <ion-textarea autoGrow="true" [(ngModel)]="notes" name="notes"></ion-textarea>
+      <ion-input
+        type="tel"
+        [(ngModel)]="phone"
+        name="phone"
+        maxlength="11"
+        required
+        placeholder="09XXXXXXXXX"
+        (ionInput)="formatPhone()">
+      </ion-input>
     </ion-item>
 
     <!-- Default toggle -->
@@ -57,8 +65,9 @@
     </ion-item>
 
     <!-- Save Button -->
-    <ion-button expand="block" class="save-btn" type="submit" [disabled]="form.invalid">
+    <ion-button expand="block" class="save-btn" type="submit">
       {{ editing ? 'Update Address' : 'Save Address' }}
     </ion-button>
+
   </form>
 </ion-content>

@@ -56,50 +56,62 @@
     </ion-text>
   </div>
 
-  <!-- Station Cards -->
-  <ion-card *ngFor="let station of filteredStations">
-    <ion-item lines="none">
-      <ion-avatar slot="start">
-        <img [src]="station.logoUrl || 'assets/station1.png'" alt="Station Logo" />
-      </ion-avatar>
-      <ion-label>
-        <h2>{{ station.stationName }}</h2>
+<!-- Station Cards -->
+<ion-card *ngFor="let station of filteredStations" class="station-card">
+  <ion-item lines="none">
+<!-- Avatar / Logo -->
+<ion-avatar slot="start" class="station-avatar">
+  <img
+    [src]="station.logoUrl || 'assets/AquaRoute Droplet Logo.png'"
+    (error)="onImageError($event)"
+    alt="Station Logo"
+  />
+</ion-avatar>
 
-        <!-- ✅ Open/Closed status -->
-        <p class="status" [ngClass]="station.status === 'closed' ? 'closed' : 'open'">
-          <ion-icon [name]="station.status === 'closed' ? 'close-circle' : 'checkmark-circle'"></ion-icon>
-          {{ station.status === 'closed' ? 'Closed' : 'Open' }}
-        </p>
 
-        <p>
-          <ion-icon name="star" color="warning"></ion-icon>
-          {{ station.rating }} ({{ station.reviewCount }} reviews)
-        </p>
-        <p>
-          <ion-icon name="location-outline"></ion-icon>
-          {{ station.address }}
-        </p>
-        <p *ngIf="station.distanceKm !== undefined">
-          <ion-icon name="navigate-outline"></ion-icon>
-          {{ station.distanceKm | number:'1.1-1' }} km away
-        </p>
-        <p>
-          <ion-icon name="time-outline"></ion-icon>
-          {{ station.deliveryEstimate || '30–45 mins' }}
-        </p>
-      </ion-label>
-    </ion-item>
+    <ion-label>
+      <!-- Station Name + Heart Icon (Aligned Right) -->
+      <div class="station-header">
+        <h2 class="station-name">{{ station.stationName }}</h2>
+        <ion-icon
+          class="fav-icon"
+          [name]="station.isFav ? 'heart' : 'heart-outline'"
+          [class.active]="station.isFav"
+          (click)="toggleFavorite(station.id)"
+        ></ion-icon>
+      </div>
 
-    <!-- ✅ Centered ORDER button -->
-    <div class="order-btn-wrapper">
-      <ion-button 
-        class="order-btn"
-        [routerLink]="['/station', station.id]"
-        [disabled]="station.status === 'closed'">
-        {{ station.status === 'closed' ? 'Closed' : 'Order' }}
-      </ion-button>
-    </div>
-  </ion-card>
+<!-- Ratings -->
+<p *ngIf="station.avgRating !== undefined">
+  <ion-icon name="star" color="warning"></ion-icon>
+  {{ station.avgRating | number:'1.1-1' }}
+  <span *ngIf="station.totalRatings">({{ station.totalRatings }} ratings)</span>
+</p>
+
+      <!-- Address -->
+      <p>
+        <ion-icon name="location-outline"></ion-icon>
+        {{ getFullAddress(station) }}
+      </p>
+
+      <!-- Distance -->
+      <p *ngIf="station.distanceKm !== undefined">
+        <ion-icon name="navigate-outline"></ion-icon>
+        {{ station.distanceKm | number: '1.1-1' }} km away
+      </p>
+    </ion-label>
+  </ion-item>
+
+  <!-- Centered ORDER Button -->
+  <div class="order-btn-wrapper">
+<ion-button
+  class="order-btn"
+  [routerLink]="['/station', station.id]"
+  [disabled]="station.status === 'closed'">
+  {{ station.status === 'closed' ? 'Closed' : 'Order' }}
+</ion-button>
+  </div>
+</ion-card>
 </ion-content>
 
 <!-- Bottom Tabs -->
@@ -110,10 +122,11 @@
       <ion-label>Stations</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button [routerLink]="['/notifications']" routerDirection="root" routerLinkActive="tab-selected">
-      <ion-icon name="notifications"></ion-icon>
-      <ion-label>Notifications</ion-label>
-    </ion-tab-button>
+<ion-tab-button [routerLink]="['/notifications']" routerDirection="root" routerLinkActive="tab-selected">
+  <ion-icon name="notifications"></ion-icon>
+  <ion-badge *ngIf="unreadCount > 0" color="danger" class="notif-badge">{{ unreadCount }}</ion-badge>
+  <ion-label>Notifications</ion-label>
+</ion-tab-button>
 
     <ion-tab-button [routerLink]="['/account']" routerDirection="root" routerLinkActive="tab-selected">
       <ion-icon name="person"></ion-icon>

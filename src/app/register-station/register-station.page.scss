@@ -1,50 +1,96 @@
-.aqua-bg {
-  --background: #f9fbfc;
+/* === Header (same style as other AquaRoute pages) === */
+.aqua-header-wrap {
+  --background: transparent;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
 }
 
 .aqua-header {
-  --background: #007bff;  /* AquaRoute blue */
-  --color: #fff;          /* White text/icons */
+  --background: #2f80ed;
+  --color: #fff;
+  border-radius: 0 0 18px 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
   position: relative;
-  text-align: center;
+  padding: 0 10px;
 }
 
-.page-title {
+.aqua-title {
+  font-weight: 700;
   font-size: 20px;
-  font-weight: 600;
   color: #fff;
+  text-align: center;
+  margin: 0;
+  line-height: 1;
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%); /* ✅ ensures proper centering */
-  margin: 0;
+  transform: translate(-50%, -50%);
+  width: max-content;
+  max-width: 60%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .aqua-header ion-back-button {
-  --color: #fff; /* back button white */
+  --color: #fff;
 }
 
-
-.station-form ion-item {
-  border-radius: 12px;
-  margin-bottom: 14px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+.status-card {
+  margin-bottom: 16px;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-ion-item.valid {
-  --highlight-color-focused: #2a9d8f;
-}
-ion-item.invalid {
-  --highlight-color-focused: #e63946;
+.status-message {
+  margin-top: 6px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
-ion-note {
-  margin-left: 16px;
+.status-pending {
+  border-left: 5px solid #f4b400;
+}
+
+.status-approved {
+  border-left: 5px solid #34a853;
+}
+
+.status-disabled,
+.status-rejected {
+  border-left: 5px solid #d93025;
+}
+
+.credential-note {
+  display: block;
+  margin: 12px 4px 0;
   font-size: 13px;
+  color: #5f6368;
+  line-height: 1.4;
 }
 
-.register-btn {
-  margin-top: 20px;
-  border-radius: 12px;
-  font-weight: 600;
+.status-helper {
+  display: block;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 13px;
+  color: #5f6368;
+}
+
+.status-helper.danger {
+  color: #d93025;
+}
+
+input[type="file"] {
+  margin-top: 8px;
+  font-size: 14px;
+  width: 100%;
+}
+
+.station-form input[type="file"] {
+  padding: 8px 0;
 }

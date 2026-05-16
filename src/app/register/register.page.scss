@@ -1,73 +1,208 @@
 .register-bg {
-  --background: #f9fbfc;
+  --background: linear-gradient(180deg, #4ec9f3 0%, #2f80ed 100%);
+  display: block; /* Prevent jump during keyboard open */
+  position: relative;
+  min-height: 100vh;
+  overflow-y: auto;
 }
 
-ion-toolbar {
-    margin-top: 2%;
+/* Floating Back Button */
+.back-btn {
+  position: absolute;
+  top: 24px;
+  left: 14px;
+  z-index: 10;
 
-    ion-title {
-        margin-left: 13%;
-        font-weight: bold;
-        font-size: 25px;
-    }
+  ion-back-button {
+    color: #ffffff;
+    font-size: 22px;
+    --icon-font-size: 24px;
+  }
 }
 
-.form-container {
-  max-width: 400px;
-  margin: 40px auto;
+/* Wrapper */
+.register-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 20px 120px; /* space for keyboard */
+}
+
+/* Header */
+.header-section {
+  text-align: center;
+  margin-bottom: 28px;
+
+  .logo {
+    width: 220px;
+    max-width: 90%;
+    margin-bottom: 40px;
+  }
+
+  .tagline {
+    font-size: 16px;
+    font-weight: 700;
+    color: #003366;
+    margin-top: -117px;
+  }
+}
+
+/* Form Card */
+.register-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  padding: 36px 26px;
+  width: 100%;
+  max-width: 380px;
   text-align: center;
 
   .title {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 6px;
-    color: #171717;
+    font-size: 24px;
+    font-weight: 900;
+    color: #003366;
+    margin-bottom: 8px;
   }
 
   .subtitle {
-    font-size: 18px;
-    font-weight: 700;
-    color: #666;
-    margin-bottom: 24px;
-  }
-
-  ion-item {
-    margin-bottom: 14px;
-    --highlight-color-focused: #00b2ff;
-    border-radius: 12px;
-    box-shadow: 0 5px 8px rgba(0, 0, 0, 0.3);
-    border-radius: 12px;
-    background: #fff;
-  }
-
-  ion-label {
-    font-weight: 600;
-  }
-
-  ion-input {
     font-size: 16px;
+    color: #555;
+    margin-bottom: 22px;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .input-item {
+    --background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.05);
+    padding: 2px 6px;
+
+    ion-input {
+      font-size: 16px;
+      font-weight: 500;
+      --padding-start: 12px;
+    }
+  }
+
+  .password-item {
+    position: relative;
+
+    .toggle-icon {
+      font-size: 22px;
+      color: #777;
+      cursor: pointer;
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: #2f80ed;
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+    }
   }
 
   .signup-btn {
-    --background: #00b2ff;
+    --background: #2f80ed;
     --color: #fff;
-    font-weight: 600;
-    font-size: 16px;
+    font-weight: 700;
+    font-size: 17px;
     height: 50px;
     border-radius: 12px;
-    margin-top: 20px;
+    margin-top: 16px;
+    box-shadow: 0 5px 12px rgba(47, 128, 237, 0.35);
+    text-transform: none;
   }
 
   .login-link {
-    font-size: 18px;
-    font-weight: 700;
-    margin-top: 18px;
+    margin-top: 16px;
+    font-size: 15px;
+    font-weight: 600;
     color: #444;
 
     a {
-      color: #0077c2;
-      font-weight: 600;
-      text-decoration: none;
+      color: #2f80ed;
+      font-weight: 700;
+      text-decoration: underline;
     }
+  }
+}
+
+/* Password Strength Bar */
+.strength-bar {
+  height: 6px;
+  border-radius: 6px;
+  margin-top: -6px;
+  margin-bottom: 6px;
+  transition: background 0.3s;
+}
+
+.strength-bar.weak {
+  background: #ff5252;
+}
+.strength-bar.medium {
+  background: #ffb300;
+}
+.strength-bar.strong {
+  background: #4caf50;
+}
+
+/* Error messages */
+.error-msg {
+  color: #e53935;
+  font-size: 13px;
+  margin-top: -4px;
+  text-align: left;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .register-bg {
+    --background: linear-gradient(180deg, #1e1e1e, #2a2a2a);
+  }
+
+  .register-card {
+    background: #1e1e1e;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+
+    .title {
+      color: #e0e0e0;
+    }
+
+    .subtitle {
+      color: #aaa;
+    }
+
+    .input-item {
+      background: #2a2a2a;
+      border: 1px solid #444;
+    }
+
+    .toggle-icon {
+      color: #bbb;
+
+      &:hover {
+        color: #4da3ff;
+      }
+    }
+
+    .login-link {
+      color: #aaa;
+
+      a {
+        color: #4da3ff;
+      }
+    }
+  }
+
+  .header-section .tagline {
+    color: #e0e0e0;
   }
 }

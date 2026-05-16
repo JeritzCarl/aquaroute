@@ -1,22 +1,73 @@
-<ion-header>
+<ion-header class="profile-header">
   <ion-toolbar>
-    <ion-title>My Profile</ion-title>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/manager"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="page-title">My Profile</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
+  <!-- 👤 Profile Card -->
   <div class="profile-card">
     <ion-avatar>
       <img [src]="profilePic" alt="Profile" />
     </ion-avatar>
-    <div class="profile-info">  
+    <div class="profile-info">
       <h2>{{ displayName }}</h2>
-      <p>{{ email }}</p>
-      <p *ngIf="phoneNumber">📱 {{ phoneNumber }}</p>
+      <p class="email">{{ email }}</p>
+      <p *ngIf="phoneNumber" class="phone">📱 {{ phoneNumber }}</p>
     </div>
   </div>
 
-  <ion-list inset="true" class="options-list">
+    <!-- 💳 Cashless Payment Settings -->
+  <ion-card class="payment-card">
+    <ion-card-header>
+      <ion-card-title>Cashless Payment Settings</ion-card-title>
+      <ion-card-subtitle>
+        Set the GCash details shown to customers during checkout.
+      </ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <ion-item class="payment-item" lines="inset">
+        <ion-label position="stacked">GCash Account Name</ion-label>
+        <ion-input
+          [(ngModel)]="gcashName"
+          name="gcashName"
+          placeholder="Enter GCash account name"
+          autocomplete="name">
+        </ion-input>
+      </ion-item>
+
+      <ion-item class="payment-item" lines="inset">
+        <ion-label position="stacked">GCash Number</ion-label>
+        <ion-input
+          [(ngModel)]="gcashNumber"
+          name="gcashNumber"
+          type="tel"
+          maxlength="11"
+          placeholder="09XXXXXXXXX"
+          (ionInput)="onGcashNumberInput($event)">
+        </ion-input>
+      </ion-item>
+
+      <p class="payment-hint">
+        Enter an 11-digit mobile number starting with 09. It will be saved as +63 format in Firestore.
+      </p>
+
+      <ion-button
+        expand="block"
+        class="save-payment-btn"
+        [disabled]="isSavingPayment"
+        (click)="savePaymentDetails()">
+        {{ isSavingPayment ? 'Saving...' : 'Save Payment Details' }}
+      </ion-button>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- ⚙️ Options -->
+  <ion-list class="options-list">
     <ion-item button (click)="logout()">
       <ion-icon name="log-out-outline" slot="start" color="danger"></ion-icon>
       <ion-label color="danger">Log Out</ion-label>

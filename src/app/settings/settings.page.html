@@ -1,65 +1,60 @@
-  <ion-toolbar>
+<ion-header class="aqua-header">
+  <ion-toolbar class="aqua-toolbar">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/landing-page"></ion-back-button>
+      <ion-back-button defaultHref="/account"></ion-back-button>
     </ion-buttons>
-    <ion-title>Settings</ion-title>
+    <ion-title class="aqua-title">Settings</ion-title>
   </ion-toolbar>
+</ion-header>
 
-<ion-content class="ion-padding settings-page">
+<ion-content class="settings-bg ion-padding">
 
-  <!-- General -->
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>General</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-item lines="none">
-        <ion-icon name="moon-outline" slot="start" color="medium"></ion-icon>
-        <ion-label>Dark Theme</ion-label>
-        <ion-toggle [(ngModel)]="darkTheme" (ionChange)="toggleTheme()"></ion-toggle>
-      </ion-item>
+  <!-- 🌙 GENERAL SETTINGS -->
+  <ion-list class="settings-list">
+    <ion-list-header>
+      <ion-label>General</ion-label>
+    </ion-list-header>
 
-      <ion-item lines="none">
-        <ion-icon name="speedometer-outline" slot="start" color="medium"></ion-icon>
-        <ion-label>Units</ion-label>
-        <ion-select [(ngModel)]="unit" interface="popover">
-          <ion-select-option value="kmh">km/h</ion-select-option>
-          <ion-select-option value="mph">mph</ion-select-option>
-        </ion-select>
-      </ion-item>
-    </ion-card-content>
-  </ion-card>
+    <ion-item lines="none">
+      <ion-icon name="moon-outline" slot="start" color="medium"></ion-icon>
+      <ion-label>Dark Theme</ion-label>
+      <ion-toggle [(ngModel)]="darkTheme" (ionChange)="toggleTheme()" color="primary"></ion-toggle>
+    </ion-item>
+  </ion-list>
 
-  <!-- Notifications -->
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Notifications</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-item lines="none">
-        <ion-icon name="notifications-outline" slot="start" color="medium"></ion-icon>
-        <ion-label>Push Notifications</ion-label>
-        <ion-toggle [(ngModel)]="pushNotifications" (ionChange)="toggleNotifications()"></ion-toggle>
-      </ion-item>
-    </ion-card-content>
-  </ion-card>
+  <!-- 🔔 NOTIFICATION SETTINGS -->
+  <ion-list class="settings-list">
+    <ion-list-header>
+      <ion-label>Notifications</ion-label>
+    </ion-list-header>
 
-  <!-- Support -->
-  <ion-card>
-    <ion-card-header>
-      <ion-card-title>Support</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-item button lines="full">
-        <ion-icon name="help-circle-outline" slot="start" color="medium"></ion-icon>
-        <ion-label>Help</ion-label>
-      </ion-item>
+    <ion-item lines="none">
+      <ion-icon name="notifications-outline" slot="start" color="medium"></ion-icon>
+      <ion-label>Push Notifications</ion-label>
+      <ion-toggle [(ngModel)]="pushNotifications" (ionChange)="toggleNotifications()" color="primary"></ion-toggle>
+    </ion-item>
 
-      <ion-item button lines="none">
-        <ion-icon name="mail-outline" slot="start" color="medium"></ion-icon>
-        <ion-label>Contact Us</ion-label>
-      </ion-item>
-    </ion-card-content>
-  </ion-card>
+    <ion-item lines="none" button detail="false" (click)="sendTestNotification()">
+      <ion-icon name="send-outline" slot="start" color="primary"></ion-icon>
+      <ion-label>Send Test Notification</ion-label>
+    </ion-item>
+  </ion-list>
+
+  <!-- 💬 SUPPORT -->
+  <ion-list class="settings-list">
+    <ion-list-header>
+      <ion-label>Support</ion-label>
+    </ion-list-header>
+
+    <ion-item button lines="full">
+      <ion-icon name="help-circle-outline" slot="start" color="medium"></ion-icon>
+      <ion-label>Help</ion-label>
+    </ion-item>
+
+    <ion-item button lines="none">
+      <ion-icon name="mail-outline" slot="start" color="medium"></ion-icon>
+      <ion-label>Contact Us</ion-label>
+    </ion-item>
+  </ion-list>
 
 </ion-content>

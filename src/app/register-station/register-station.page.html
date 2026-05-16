@@ -3,90 +3,227 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/account" color="light"></ion-back-button>
     </ion-buttons>
-    <ion-title class="page-title">Register Station</ion-title>
+    <ion-title class="aqua-title">Register Station</ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding aqua-bg">
 
-  <form [formGroup]="stationForm" (ngSubmit)="registerStation()" autocomplete="off" class="station-form">
+  <ion-card
+    *ngIf="statusMessage"
+    class="status-card"
+    [ngClass]="{
+      'status-pending': applicationStatus === 'pending',
+      'status-approved': applicationStatus === 'approved',
+      'status-disabled': applicationStatus === 'disabled',
+      'status-rejected': applicationStatus === 'rejected'
+    }"
+  >
+    <ion-card-content>
+      <strong>Application Status:</strong>
+      {{ applicationStatus ? (applicationStatus | titlecase) : 'Not Submitted' }}
+      <div class="status-message">{{ statusMessage }}</div>
+    </ion-card-content>
+  </ion-card>
 
-    <!-- Owner Name -->
-    <ion-item [class.valid]="isValid('ownerName')" [class.invalid]="isInvalid('ownerName')">
+  <form
+    [formGroup]="stationForm"
+    (ngSubmit)="registerStation()"
+    autocomplete="off"
+    class="station-form"
+  >
+
+    <ion-item>
       <ion-label position="stacked">Owner Name</ion-label>
-      <ion-input formControlName="ownerName"></ion-input>
+      <ion-input
+        formControlName="ownerName"
+        readonly
+        [value]="stationForm.get('ownerName')?.value">
+      </ion-input>
     </ion-item>
-    <ion-note *ngIf="isInvalid('ownerName')" color="danger">Owner name is required</ion-note>
 
-    <!-- Station Name -->
-    <ion-item [class.valid]="isValid('stationName')" [class.invalid]="isInvalid('stationName')">
+    <ion-item>
+      <ion-label position="stacked">Owner Email</ion-label>
+      <ion-input
+        type="email"
+        formControlName="email"
+        readonly
+        [value]="stationForm.get('email')?.value">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
       <ion-label position="stacked">Station Name</ion-label>
       <ion-input formControlName="stationName"></ion-input>
     </ion-item>
-    <ion-note *ngIf="isInvalid('stationName')" color="danger">Station name is required</ion-note>
 
-    <!-- Email -->
-    <ion-item [class.valid]="isValid('email')" [class.invalid]="isInvalid('email')">
-      <ion-label position="stacked">Email</ion-label>
-      <ion-input type="email" formControlName="email"></ion-input>
-    </ion-item>
-    <ion-note *ngIf="isInvalid('email')" color="danger">Enter a valid email address</ion-note>
-
-    <!-- Phone -->
-    <ion-item [class.valid]="isValid('phone')" [class.invalid]="isInvalid('phone')">
-      <ion-label position="stacked">Phone</ion-label>
-      <ion-input type="tel" formControlName="phone" placeholder="+639123456789"></ion-input>
-    </ion-item>
-    <ion-note *ngIf="isInvalid('phone')" color="danger">Enter a valid phone number</ion-note>
-
-    <!-- Address -->
-    <ion-item [class.valid]="isValid('address')" [class.invalid]="isInvalid('address')">
-      <ion-label position="stacked">Address</ion-label>
-      <ion-input formControlName="address"></ion-input>
-    </ion-item>
-    <ion-note *ngIf="isInvalid('address')" color="danger">Address is required</ion-note>
-
-    <!-- Station Type -->
     <ion-item>
-      <ion-label position="stacked">Station Type</ion-label>
-      <ion-select formControlName="stationType" placeholder="Select">
+      <ion-label position="stacked">Phone Number</ion-label>
+      <ion-input
+        type="tel"
+        formControlName="phone"
+        maxlength="13"
+        placeholder="09XXXXXXXXX"
+        (ionInput)="formatPhone()">
+      </ion-input>
+    </ion-item>
+    <ion-note
+      color="danger"
+      *ngIf="stationForm.get('phone')?.touched && stationForm.get('phone')?.invalid"
+    >
+      Enter a valid phone number (09xxxxxxxxx).
+    </ion-note>
+
+    <!-- <ion-item>
+      <ion-label position="stacked">Alternate Contact Number</ion-label>
+      <ion-input
+        type="tel"
+        formControlName="alternateContactNumber"
+        maxlength="13"
+        placeholder="09XXXXXXXXX"
+        (ionInput)="formatAlternatePhone()">
+      </ion-input>
+    </ion-item>
+    <ion-note
+      color="danger"
+      *ngIf="stationForm.get('alternateContactNumber')?.touched && stationForm.get('alternateContactNumber')?.invalid"
+    >
+      Alternate contact number must be blank or a valid phone number.
+    </ion-note> -->
+
+    <ion-item>
+      <ion-label position="stacked">Street / Purok / Subdivision</ion-label>
+      <ion-input
+        formControlName="address"
+        placeholder="Enter specific location"
+        (ionInput)="onAddressInput()">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Barangay</ion-label>
+      <ion-select formControlName="barangay" placeholder="Select Barangay">
+        <ion-select-option *ngFor="let b of barangays" [value]="b">
+          {{ b }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">City</ion-label>
+      <ion-input formControlName="city" readonly></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">ZIP Code</ion-label>
+      <ion-input formControlName="zipCode" readonly></ion-input>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Water Type</ion-label>
+      <ion-select formControlName="stationType" multiple="true" placeholder="Select type(s)">
         <ion-select-option value="Purified">Purified</ion-select-option>
         <ion-select-option value="Alkaline">Alkaline</ion-select-option>
         <ion-select-option value="Mineral">Mineral</ion-select-option>
       </ion-select>
     </ion-item>
 
-    <!-- Operating Hours -->
     <ion-item>
-      <ion-label position="stacked">Operating Hours</ion-label>
-      <ion-input formControlName="operatingHours" placeholder="e.g. 8:00 AM - 6:00 PM"></ion-input>
-    </ion-item>
-
-    <!-- Vehicles -->
-    <ion-item>
-      <ion-label position="stacked">Number of Vehicles</ion-label>
-      <ion-input type="number" formControlName="vehicles"></ion-input>
-    </ion-item>
-
-    <!-- Max Gallons -->
-    <ion-item>
-      <ion-label position="stacked">Max Gallons per Trip</ion-label>
-      <ion-input type="number" formControlName="maxGallonsPerTrip"></ion-input>
-    </ion-item>
-
-    <!-- Payment Options -->
-    <ion-item>
-      <ion-label position="stacked">Payment Options</ion-label>
-      <ion-select multiple="true" formControlName="paymentOptions" placeholder="Select">
-        <ion-select-option value="Cash">Cash</ion-select-option>
-        <ion-select-option value="GCash">GCash</ion-select-option>
-        <!-- ❌ Removed PayMaya -->
+      <ion-label position="stacked">Opening Time</ion-label>
+      <ion-select formControlName="openTime" placeholder="Select">
+        <ion-select-option *ngFor="let t of openTimes" [value]="t">
+          {{ t }}
+        </ion-select-option>
       </ion-select>
     </ion-item>
 
-    <!-- Submit -->
-    <ion-button expand="block" color="primary" type="submit" [disabled]="stationForm.invalid" class="register-btn">
-      Register Station
+    <ion-item>
+      <ion-label position="stacked">Closing Time</ion-label>
+      <ion-select formControlName="closeTime" placeholder="Select">
+        <ion-select-option *ngFor="let t of closeTimes" [value]="t">
+          {{ t }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Business Permit Number</ion-label>
+      <ion-input
+        formControlName="businessPermitNumber"
+        placeholder="Enter business permit number">
+      </ion-input>
+    </ion-item>
+
+    <ion-item>
+  <ion-label position="stacked" for="businessPermitInput">Upload Business Permit</ion-label>
+  <input
+    id="businessPermitInput"
+    type="file"
+    (change)="onBusinessPermitSelected($event)"
+    accept="image/*"
+    title="Upload Business Permit"
+  />
+</ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Owner Valid ID Type</ion-label>
+      <ion-select formControlName="ownerValidIdType" placeholder="Select valid ID type">
+        <ion-select-option *ngFor="let idType of validIdTypes" [value]="idType">
+          {{ idType }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-item>
+      <ion-label position="stacked">Owner Valid ID Number</ion-label>
+      <ion-input
+        formControlName="ownerValidIdNumber"
+        placeholder="Enter valid ID number">
+      </ion-input>
+    </ion-item>
+
+<ion-item>
+  <ion-label position="stacked" for="validIdInput">Upload Valid ID</ion-label>
+  <input
+    id="validIdInput"
+    type="file"
+    (change)="onValidIdSelected($event)"
+    accept="image/*"
+    title="Upload Valid ID"
+  />
+</ion-item>
+
+    <ion-note class="credential-note">
+      Please provide complete and accurate station credentials.
+      Documents will be verified manually by the admin before approval.
+    </ion-note>
+
+    <ion-button
+      expand="block"
+      color="primary"
+      type="submit"
+      [disabled]="submitDisabled"
+      class="register-btn"
+    >
+      <ng-container *ngIf="!submitting && !isApplicationLocked">Register Station</ng-container>
+      <ng-container *ngIf="submitting">Submitting...</ng-container>
+      <ng-container *ngIf="!submitting && applicationStatus === 'pending'">Waiting for Verification</ng-container>
+      <ng-container *ngIf="!submitting && applicationStatus === 'disabled'">Station Disabled</ng-container>
+      <ng-container *ngIf="!submitting && applicationStatus === 'rejected'">Application Rejected</ng-container>
+      <ng-container *ngIf="!submitting && applicationStatus === 'approved'">Already Approved</ng-container>
     </ion-button>
+
+    <ion-note *ngIf="applicationStatus === 'pending'" class="status-helper">
+      Your application is currently under review by the admin.
+    </ion-note>
+
+    <ion-note *ngIf="applicationStatus === 'disabled'" class="status-helper danger">
+      This station has been disabled by the admin and cannot be managed right now.
+    </ion-note>
+
+    <ion-note *ngIf="applicationStatus === 'rejected'" class="status-helper danger">
+      Your application was rejected. Please contact the admin for clarification.
+    </ion-note>
+
   </form>
 </ion-content>

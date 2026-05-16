@@ -1,0 +1,77 @@
+<ion-header class="orders-header ion-no-border">
+  <ion-toolbar class="aqua-toolbar small-header">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/manager-completed"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="aqua-title">Daily Log</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="!loading; else loadingTpl">
+
+    <!-- Date heading -->
+    <div class="date-title">
+      <h2>{{ dateParam | date: 'fullDate' }}</h2>
+    </div>
+
+    <!-- Summary -->
+    <ion-card class="summary-card" *ngIf="orders.length > 0">
+      <ion-card-content>
+        <div class="summary-grid">
+          <div>
+            <p>Total Deliveries</p>
+            <h2>{{ totalDeliveries }}</h2>
+          </div>
+          <div>
+            <p>Total Earnings</p>
+            <h2>₱{{ totalEarnings | number:'1.0-2' }}</h2>
+          </div>
+          <div>
+            <p>Avg. Duration</p>
+            <h2>{{ averageDuration }} mins</h2>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Orders -->
+    <ion-card *ngFor="let order of orders" class="order-card">
+      <ion-card-header>
+        <ion-card-title>Order #{{ order.id }}</ion-card-title>
+        <ion-chip color="success">Delivered</ion-chip>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p><b>Customer:</b> {{ order.delivery?.fullName || 'N/A' }}</p>
+        <p><b>Address:</b> {{ order.delivery?.address || 'N/A' }}</p>
+        <p>
+          <b>Courier:</b>
+          {{ order.courier?.name || 'N/A' }}
+          <span *ngIf="order.courier?.vehicle">({{ order.courier?.vehicle }})</span>
+        </p>
+
+        <!-- NOTE: parentheses ensure the date pipe applies to the OR expression -->
+        <p>
+          <b>Delivered:</b>
+          {{ (order._deliveredAt || order._completedAt) | date:'MMM d, y, h:mm a' }}
+        </p>
+
+        <p><b>Total:</b> ₱{{ order.charges?.total || order.totalAmount || 0 }}</p>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Empty state -->
+    <div *ngIf="orders.length === 0" class="empty-state">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <p>No deliveries recorded for this date.</p>
+    </div>
+  </ng-container>
+
+  <ng-template #loadingTpl>
+    <div class="empty-state">
+      <ion-spinner name="crescent"></ion-spinner>
+      <p>Loading orders...</p>
+    </div>
+  </ng-template>
+</ion-content>

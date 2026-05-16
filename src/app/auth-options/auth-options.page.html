@@ -1,32 +1,34 @@
-  <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/number-input"></ion-back-button>
-    </ion-buttons>
-  </ion-toolbar>
+<ion-content [fullscreen]="true" class="auth-bg">
+  <!-- Back button floating on top -->
+  <ion-buttons class="back-btn">
+    <ion-back-button defaultHref="/home" icon="chevron-back-outline"></ion-back-button>
+  </ion-buttons>
 
-
-<ion-content class="ion-padding options-bg">   
   <div class="auth-container">
-    <h1 class="title">Choose how to continue</h1>
-    <p class="subtitle">Select a method to sign up</p>
-
-    <ion-button expand="block" class="google-btn" (click)="continueWithGoogle()">
-      <ion-icon name="logo-google" slot="start"></ion-icon>
-      Continue with Google
-    </ion-button>
-
-    <ion-button expand="block" class="facebook-btn" (click)="continueWithFacebook()">
-      <ion-icon name="logo-facebook" slot="start"></ion-icon>
-      Continue with Facebook
-    </ion-button>
-
-    <div class="divider">
-      <span>or</span>
+    <!-- Logo and tagline -->
+    <div class="header-section">
+      <img src="assets/AquaRoute Word Logo.png" alt="AquaRoute Logo" class="logo" />
+      <p class="tagline">Deliver Smarter. Hydrate Faster.</p>
     </div>
 
-    <ion-button expand="block" fill="outline" class="manual-btn" (click)="createAccount()">
-      <ion-icon name="person-add" slot="start"></ion-icon>
-      Create Account
-    </ion-button>
+    <!-- Auth card -->
+    <div class="auth-card">
+      <h1 class="title">Sign in or Create an Account</h1>
+      <p class="subtitle">Choose your preferred method below</p>
+
+      <ion-button expand="block" fill="solid" class="google-btn" (click)="continueWithGoogle()">
+        <ion-icon name="logo-google" slot="start"></ion-icon>
+        Continue with Google
+      </ion-button>
+
+      <div class="divider">
+        <span>or</span>
+      </div>
+
+      <ion-button expand="block" fill="outline" class="create-btn" (click)="createAccount()">
+        <ion-icon name="person-add-outline" slot="start"></ion-icon>
+        Create Account
+      </ion-button>
+    </div>
   </div>
 </ion-content>

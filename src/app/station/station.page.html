@@ -1,7 +1,7 @@
 <ion-content>
-
   <!-- Station Header -->
   <div class="station-header" *ngIf="station">
+
     <!-- Back Button -->
     <ion-buttons slot="start" class="back-btn">
       <ion-button (click)="goBack()">
@@ -9,7 +9,19 @@
       </ion-button>
     </ion-buttons>
 
-    <!-- Cart Button -->
+    <!-- ❤️ Favorite Button (before Cart) -->
+    <ion-buttons slot="end" class="fav-btn">
+      <ion-button fill="clear" (click)="toggleFavorite()" aria-label="Favorite station">
+        <ion-icon
+          [name]="isFav ? 'heart' : 'heart-outline'"
+          class="fav-icon"
+          [class.fav-active]="isFav"
+          [class.fav-idle]="!isFav"
+        ></ion-icon>
+      </ion-button>
+    </ion-buttons>
+
+    <!-- 🛒 Cart Button -->
     <ion-buttons slot="end" class="cart-btn">
       <ion-button fill="clear" (click)="goToCart()" aria-label="Open cart">
         <ion-icon name="cart-outline" class="cart-icon"></ion-icon>
@@ -19,82 +31,91 @@
       </ion-button>
     </ion-buttons>
 
-    <!-- Station Logo -->
-    <div class="station-logo">
-      <img [src]="station.logoUrl || 'assets/station1.png'" alt="Station Logo" />
-    </div>
+<!-- Station Logo -->
+<div class="station-logo">
+  <img
+    [src]="station.logoUrl || 'assets/AquaRoute Droplet Logo.png'"
+    (error)="onImageError($event, 'station')"
+    alt="Station Logo"
+  />
+</div>
 
     <!-- Station Info -->
-    <h2>{{ station.stationName }}</h2>
-    <p class="rating">
-      <ion-icon name="star" color="warning"></ion-icon>
-      {{ station.rating || '—' }} ({{ station.reviewCount || 0 }} reviews)
-    </p>
+    <div class="station-title-container">
+      <h2 class="station-title">
+        {{ station.stationName }}
+      </h2>
+    </div> <!-- ✅ properly closed -->
+
+<!-- Rating (live from Manager reflection) -->
+<div class="rating">
+  <ion-icon name="star" color="warning"></ion-icon>
+  <span>{{ station.rating | number:'1.1-1' }}</span>
+  <small>({{ station.reviewCount || 0 }} ratings)</small>
+</div>
+
+    <!-- Address -->
     <p class="address">
       <ion-icon name="location-outline"></ion-icon>
       {{ station.address }}
     </p>
-    <p class="phone">
+
+    <!-- Phone -->
+    <p class="phone" *ngIf="station.phone">
       <ion-icon name="call-outline"></ion-icon>
       {{ station.phone }}
     </p>
-    <p class="estimate">
-      <ion-icon name="time-outline"></ion-icon>
-      {{ station.deliveryEstimate || '30–45 mins' }}
-    </p>
+
+    <!-- Distance -->
     <p *ngIf="station.distanceKm !== undefined" class="distance">
       <ion-icon name="navigate-outline"></ion-icon>
-      {{ station.distanceKm | number:'1.1-1' }} km away
+      {{ station.distanceKm | number: '1.1-1' }} km away
     </p>
 
-    <!-- Promo -->
-    <p *ngIf="station.promo" class="promo">🎉 {{ station.promo }}</p>
-
-    <!-- Services Offered -->
-    <div class="services">
-      <ion-chip color="primary" *ngIf="station.services?.includes('delivery')">Delivery</ion-chip>
-      <ion-chip color="secondary" *ngIf="station.services?.includes('pickup')">Pickup</ion-chip>
-      <ion-chip color="tertiary" *ngIf="station.services?.includes('scheduled')">Scheduled</ion-chip>
-    </div>
-
-    <!-- Payment Options -->
-    <div class="payments">
-      <ion-icon name="cash-outline"></ion-icon>
-      <ion-icon name="phone-portrait-outline" *ngIf="station.payments?.includes('gcash')"></ion-icon>
-    </div>
-
-    <!-- Message Us Button -->
+    <!-- Message Us
     <ion-button
       expand="block"
       color="light"
       [routerLink]="['/station-message', station.id]"
       [queryParams]="{ name: station.stationName, logo: station.logoUrl }"
+      [disabled]="!station['isOpen']"
     >
       <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
       Message Us
-    </ion-button>
+    </ion-button> -->
+
+    <ion-text *ngIf="!station['isOpen']" color="medium" class="closed-note">
+      <p>Station is currently closed. Ordering is disabled.</p>
+    </ion-text>
   </div>
 
-  <!-- Products -->
-  <ion-text class="section-title"><h2>Products</h2></ion-text>
+  <!-- Product Section -->
+  <ion-text class="section-title">
+    <h2>Products</h2>
+  </ion-text>
+
   <ion-list class="product-list">
     <ion-card
       class="product-card"
       *ngFor="let product of productsSnapshot"
-      (click)="goToProduct(product)"
+      (click)="station && station['isOpen'] && goToProduct(product)"
+      [class.disabled]="station && !station['isOpen']"
     >
       <div class="product-content">
         <div class="product-icon">
-          <img [src]="product.imageUrl || 'assets/placeholder.png'" alt="Product Image" />
+<!-- Product Image -->
+<img
+  [src]="product.imageUrl || 'assets/water-placeholder.png'"
+  (error)="onImageError($event, 'product')"
+  alt="Product Image"
+/>
         </div>
         <div class="product-info">
           <h2>{{ product.name }}</h2>
-          <p class="price">₱ {{ product.basePrice | number:'1.0-2' }}</p>
-          <p class="type" *ngIf="product.waterType">💧 {{ product.waterType }}</p>
-          <p class="size" *ngIf="product.containerSize">📦 {{ product.containerSize }}</p>
+          <p class="price">₱ {{ product.basePrice | number: '1.0-2' }}</p>
+          <p class="size" *ngIf="product.containerSize">{{ product.containerSize }}</p>
         </div>
       </div>
     </ion-card>
   </ion-list>
-
 </ion-content>

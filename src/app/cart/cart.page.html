@@ -1,6 +1,4 @@
 <ion-content>
-
-  <!-- Cart Header -->
   <div class="cart-header">
     <ion-buttons slot="start" class="back-btn">
       <ion-back-button defaultHref="/landing-page" text=""></ion-back-button>
@@ -8,17 +6,14 @@
     <h2>My Cart</h2>
   </div>
 
-  <!-- Cart Items -->
   <ng-container *ngIf="groupedCart.length > 0; else emptyCart">
     <div *ngFor="let group of groupedCart">
-
-      <!-- Station Header with Select All -->
       <ion-item lines="full" class="station-header">
         <ion-checkbox
           slot="start"
           [(ngModel)]="group.selectedAll"
-          (ionChange)="toggleStationSelection(group)">
-        </ion-checkbox>
+          (ionChange)="toggleStationSelection(group)"
+        ></ion-checkbox>
         <ion-label>
           <h2 (click)="goToStation(group.stationId)" class="station-link">
             {{ group.stationName }}
@@ -26,108 +21,157 @@
         </ion-label>
       </ion-item>
 
-      <!-- Items -->
       <ion-list>
         <ng-container *ngFor="let item of group.items">
-          <ion-item>
-            <!-- Item checkbox -->
-            <ion-checkbox slot="start" [(ngModel)]="item.selected" (ionChange)="updateGlobalSelection()"></ion-checkbox>
+          <!-- Product Info -->
+          <ion-item class="cart-item">
+            <ion-checkbox
+              slot="start"
+              [(ngModel)]="item.selected"
+              (ionChange)="updateGlobalSelection()"
+            ></ion-checkbox>
 
-            <!-- Product Image -->
-            <ion-thumbnail>
-              <img [src]="item.imageUrl || 'assets/placeholder.png'" alt="Product Image" />
-            </ion-thumbnail>
+<div class="product-thumb">
+  <img
+    [src]="item.imageUrl || 'assets/water-placeholder.png'"
+    (error)="onImageError($event, 'product')"
+    alt="Product Image"
+  />
+</div>
 
-            <!-- Product Info -->
             <ion-label>
               <h2>{{ item.name }}</h2>
-              <p class="price">
-                ₱ {{ item.unitPriceComputed ?? item.basePrice ?? item.price ?? 0 }}
-              </p>
+              <p>₱{{ item.unitPriceComputed ?? item.basePrice ?? item.price ?? 0 }}</p>
             </ion-label>
 
-            <!-- Quantity Stepper -->
             <div class="qty-ctrl">
               <ion-button size="small" fill="outline" (click)="decreaseQty(item)">−</ion-button>
               <span class="qty-number">{{ item.quantity }}</span>
               <ion-button size="small" fill="outline" (click)="increaseQty(item)">+</ion-button>
             </div>
 
-            <!-- Trash -->
             <ion-button fill="clear" color="danger" (click)="removeItem(item)">
               <ion-icon name="trash-outline"></ion-icon>
             </ion-button>
           </ion-item>
 
-          <!-- Delivery Mode Selector -->
-          <ion-item>
-            <ion-label>Mode</ion-label>
-            <ion-select [(ngModel)]="item.deliveryMode" (ionChange)="updateDeliveryMode(item)">
-              <ion-select-option value="delivery">Delivery</ion-select-option>
-              <ion-select-option value="pickup">Pickup</ion-select-option>
-              <ion-select-option value="scheduled">Scheduled</ion-select-option>
-            </ion-select>
-          </ion-item>
+          <!-- ⚙️ Editable Order Details -->
+          <div class="editable-section">
 
-          <!-- Delivery Window (only if scheduled) -->
-          <ion-item *ngIf="item.deliveryMode === 'scheduled'">
-            <ion-label>Window</ion-label>
-            <ion-select [(ngModel)]="item.deliveryWindow" (ionChange)="updateDeliveryWindow(item)">
-              <ion-select-option value="morning">Morning</ion-select-option>
-              <ion-select-option value="afternoon">Afternoon</ion-select-option>
-            </ion-select>
-          </ion-item>
+            <!-- Mode -->
+            <ion-item [class.incomplete]="!item.mode">
+              <ion-label>Mode</ion-label>
+              <ion-select [(ngModel)]="item.mode" (ionChange)="updateMode(item)">
+                <ion-select-option value="delivery">Delivery</ion-select-option>
+                <ion-select-option value="pickup">Pick Up</ion-select-option>
+              </ion-select>
+              <ion-icon *ngIf="!item.mode" name="alert-circle-outline" color="danger" slot="end"></ion-icon>
+            </ion-item>
 
-          <!-- Payment Method -->
-          <ion-item>
-            <ion-label>Payment</ion-label>
-            <ion-select [(ngModel)]="item.paymentMethod" (ionChange)="updatePaymentMethod(item)">
-              <ion-select-option value="cod">Cash on Delivery</ion-select-option>
-              <ion-select-option value="gcash">GCash</ion-select-option>
-            </ion-select>
-          </ion-item>
+            <!-- Slot -->
+            <ion-item [class.incomplete]="!item.slot">
+              <ion-label>Slot</ion-label>
+              <ion-select [(ngModel)]="item.slot" (ionChange)="updateSlot(item)">
+                <ion-select-option value="morning">Morning</ion-select-option>
+                <ion-select-option value="afternoon">Afternoon</ion-select-option>
+              </ion-select>
+              <ion-icon *ngIf="!item.slot" name="alert-circle-outline" color="danger" slot="end"></ion-icon>
+            </ion-item>
 
+            <!-- Time -->
+            <ion-item [class.incomplete]="!item.scheduledAt">
+              <ion-label>Time</ion-label>
+            <ion-select
+              [(ngModel)]="item.scheduledAt"
+              (ionChange)="updateTime(item)"
+              placeholder="Select Time"
+              interface="popover"
+            >
+              <ion-select-option value="ASAP">ASAP (Deliver Now)</ion-select-option>
+              <ion-select-option *ngFor="let t of availableTimes" [value]="t">
+                {{ t }}
+              </ion-select-option>
+            </ion-select>
+              <ion-icon *ngIf="!item.scheduledAt" name="alert-circle-outline" color="danger" slot="end"></ion-icon>
+            </ion-item>
+
+            <!-- <ion-item *ngIf="item.mode === 'delivery'">
+  <ion-label>Delivery Rate</ion-label>
+  <ion-note slot="end">₱{{ getItemFeeRate(item) }}/gallon</ion-note>
+</ion-item>
+
+<ion-item *ngIf="item.mode === 'delivery'">
+  <ion-label>Quantity Basis</ion-label>
+  <ion-note slot="end">{{ item.quantity }}</ion-note>
+</ion-item>
+
+<ion-item *ngIf="item.mode === 'delivery'">
+  <ion-label>Estimated Delivery Fee</ion-label>
+  <ion-note slot="end">₱{{ getItemDeliveryFee(item) | number:'1.0-2' }}</ion-note>
+</ion-item> -->
+
+            <!-- 💧 Water Type -->
+            <ion-item [class.incomplete]="!item.waterType">
+              <ion-label>Water Type</ion-label>
+              <ion-select
+                [(ngModel)]="item.waterType"
+                (ionChange)="updateWaterType(item)"
+                placeholder="Select Type"
+                interface="popover"
+              >
+                <ion-select-option
+                  *ngFor="let t of stationWaterTypes[group.stationId]"
+                  [value]="t"
+                >
+                  {{ t }}
+                </ion-select-option>
+              </ion-select>
+              <ion-icon *ngIf="!item.waterType" name="alert-circle-outline" color="danger" slot="end"></ion-icon>
+            </ion-item>
+
+          </div>
         </ng-container>
       </ion-list>
     </div>
   </ng-container>
 
-  <!-- Empty Cart -->
+  <!-- Empty Cart State -->
   <ng-template #emptyCart>
     <div class="empty">
-      <img src="assets/empty-cart.png" alt="Empty Cart" />
+      <img src="assets/empty-cart.png" alt="Empty cart" />
       <p>Your cart is empty.</p>
-      <ion-button expand="block" routerLink="/landing-page" color="primary">Start Shopping</ion-button>
+      <ion-button expand="block" routerLink="/landing-page" color="primary">
+        Start Shopping
+      </ion-button>
     </div>
   </ng-template>
 </ion-content>
 
-<!-- Footer -->
+<!-- Footer Summary -->
 <ion-footer *ngIf="cart.length > 0">
   <ion-toolbar class="summary-toolbar">
     <div class="footer-container">
-
-      <!-- Global Select All -->
       <div class="select-all">
         <ion-checkbox
           [(ngModel)]="globalSelectedAll"
-          (ionChange)="toggleGlobalSelection()">
-        </ion-checkbox>
+          (ionChange)="toggleGlobalSelection()"
+        ></ion-checkbox>
         <span>All</span>
       </div>
 
-      <!-- Subtotal -->
       <div class="subtotal">
         <span class="label">Subtotal</span>
-        <span class="amount">₱{{ getSelectedSubtotal() | number:'1.0-2' }}</span>
+        <span class="amount">
+          ₱{{ getSelectedSubtotal() | number: '1.0-2' }}
+        </span>
       </div>
 
-      <!-- Checkout -->
       <ion-button
         expand="block"
         color="primary"
         (click)="checkoutSelected()"
-        [disabled]="!hasSelectedItems()">
+        [disabled]="!isCartValid()"
+      >
         Check Out ({{ getSelectedCount() }})
       </ion-button>
     </div>

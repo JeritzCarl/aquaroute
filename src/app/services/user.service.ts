@@ -81,8 +81,30 @@ export class UserService {
     });
   }
 
+  // 🔹 Get current user instantly from BehaviorSubject
   get currentUser(): AppUser | null {
     return this.currentUserSubject.value;
+  }
+
+  // ✅ Get live user directly from Firebase Auth (used in Register Station)
+  async getCurrentUser(): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      const unsubscribe = onAuthStateChanged(
+        this.auth,
+        (user) => {
+          unsubscribe();
+          if (user) {
+            resolve(user);
+          } else {
+            resolve(null);
+          }
+        },
+        (error) => {
+          console.error('❌ Error getting current user:', error);
+          reject(error);
+        }
+      );
+    });
   }
 
   // ✅ Update role safely (user → manager, etc.)
@@ -145,4 +167,7 @@ export class UserService {
       }
     }
   }
+clearUser() {
+  this.currentUserSubject.next(null);
+}
 }

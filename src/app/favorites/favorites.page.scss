@@ -1,0 +1,141 @@
+/* === HEADER STYLE (consistent with AquaRoute UI) === */
+.aqua-header {
+  --background: transparent;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
+}
+
+.aqua-toolbar {
+  --background: #2f80ed;
+  --color: #fff;
+  border-radius: 0 0 18px 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  position: relative;
+  padding: 0 10px;
+}
+
+.aqua-title {
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
+/* Back button styling */
+.back-btn {
+  color: #fff;
+  margin-left: 5px;
+}
+
+/* === BODY === */
+.favorites-bg {
+  --background: #f4f6f8;
+  padding: 10px 0 80px;
+}
+
+/* Station card */
+.station-card {
+  border-radius: 16px;
+  margin: 12px 16px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  background: #fff;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.card-body {
+  display: flex;
+  align-items: center;
+  padding: 14px 12px;
+}
+
+/* Row layout */
+.station-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+/* Avatar */
+.station-avatar {
+  min-width: 60px;
+  min-height: 60px;
+
+  img {
+    border-radius: 50%;
+    object-fit: cover;
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* Station details */
+.station-details {
+  flex: 1;
+}
+
+/* Name + Heart */
+.station-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+
+  .station-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #222;
+    letter-spacing: 0.2px;
+  }
+
+  .fav-icon {
+    font-size: 25px;
+    color: #bbb;
+    cursor: pointer;
+    transition: color 0.25s ease;
+  }
+
+  .fav-icon.active {
+    color: #e63946;
+  }
+
+  .fav-icon:hover {
+    color: #ef4444;
+  }
+}
+
+/* === EMPTY STATE === */
+.empty-state {
+  text-align: center;
+  margin-top: 30vh;
+  color: #777;
+
+  ion-icon {
+    font-size: 60px;
+    color: #bbb;
+    margin-bottom: 12px;
+  }
+
+  p {
+    font-size: 16px;
+    font-weight: 500;
+  }
+
+  .hint {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+}

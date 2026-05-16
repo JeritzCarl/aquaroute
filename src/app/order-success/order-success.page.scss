@@ -1,4 +1,4 @@
-/* === Header: match Cart/Checkout exactly (no back button) === */
+/* === Header === */
 .aqua-header-wrap {
   --background: transparent;
   border-bottom-left-radius: 16px;
@@ -9,12 +9,8 @@
 .aqua-header {
   --background: linear-gradient(90deg, #3b82f6, #2563eb);
   --color: #fff;
-  --padding-start: 0;
-  --padding-end: 0;
-  --border-width: 0;
-  --border-color: transparent;
   padding-top: env(safe-area-inset-top);
-  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
 }
 
 .aqua-header ion-title {
@@ -23,13 +19,14 @@
   font-size: 18px;
 }
 
-/* === Cards: make corners softer, consistent app-wide === */
+/* === Cards === */
 .soft-card {
-  --border-radius: 16px;
-  --box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* ✅ Success header */
+/* ✅ Success Header */
 .success-header {
   margin: 24px 0;
   .success-icon {
@@ -47,18 +44,11 @@
   }
 }
 
-/* ✅ Rounded cards */
-.soft-card {
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-/* ✅ Station details */
+/* ✅ Station Details */
 .station-name {
-  font-size: 18px;      /* bigger font */
-  font-weight: 700;     /* bold */
-  color: #222;          /* strong neutral color */
+  font-size: 18px;
+  font-weight: 700;
+  color: #222;
   margin-bottom: 4px;
 }
 
@@ -67,57 +57,192 @@
   color: #666;
 }
 
-/* ✅ Layout helpers */
+/* === Universal two-column layout === */
 .row-between {
   display: flex;
   justify-content: space-between;
+  font-size: 15px;
+  font-weight: 700;
+  color: #000;
   margin: 6px 0;
 }
 
-/* ✅ Totals styling */
-.totals {
-  margin-top: 12px;
-  .total-line {
-    margin-top: 8px;
-    padding-top: 8px;
-    border-top: 1px solid #ddd;
-  }
-  .grand-total {
-    font-size: 20px;
+/* ✅ Order Meta */
+.order-meta {
+  margin: 8px 0;
+  p {
+    font-size: 15px;
     font-weight: 700;
-    color: var(--ion-color-primary);
+    color: #333;
+    margin: 2px 0;
   }
 }
 
-/* Make important values bold & bigger */
-.row-between {
-  font-size: 16px;
-  font-weight: 700;
+/* === Order & Delivery Summary === */
+.ods-item {
+  --inner-padding-start: 10px;
+  --inner-padding-end: 10px;
+  align-items: flex-start;
+  --min-height: 90px;
 }
 
-.highlight {
-  font-size: 16px;
-  font-weight: 700;
+.ods-thumb img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
 }
 
+.ods-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: #111;
+  margin-bottom: 4px;
+}
 
-/* ✅ Footer buttons */
+.ods-price-qty {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 2px 0 10px;
+
+  .ods-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: #222;
+  }
+
+  .ods-qty {
+    font-size: 14px;
+    font-weight: 700;
+    color: #000;
+  }
+}
+
+/* ✅ Mode–Address Section (matching Totals) */
+.ods-lines {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    line-height: 1.5;
+
+    strong {
+      flex: 0 0 130px;
+      text-align: left;
+      color: #333;
+      font-weight: 700;
+    }
+
+    span,
+    .value {
+      flex: 1;
+      text-align: right;
+      white-space: normal;
+      word-wrap: break-word;
+      color: #111;
+      font-weight: 600;
+    }
+  }
+}
+
+/* ✅ Divider alignment */
+.ods-divider {
+  --inner-border-width: 0;
+  margin: 8px 0 2px;
+}
+
+/* ✅ Totals (consistent across pages) */
+.ods-totals {
+  margin-top: 6px;
+
+  .row-between {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    margin: 6px 0;
+  }
+
+  .total-line {
+    border-top: 1px solid #ddd;
+    margin-top: 6px;
+    padding-top: 8px;
+  }
+
+  .grand-total {
+    font-size: 18px;
+    font-weight: 800;
+    color: #0a7bff;
+  }
+}
+
+/* ✅ Footer Buttons */
 .footer-buttons {
   display: grid;
   gap: 8px;
   padding: 8px;
 }
 
-/* ✅ Expected delivery time colors */
-.expected-time {
-  font-weight: 600;
+
+/* ───────────── Station Logo Styling ───────────── */
+.station-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
-.text-success {
-  color: var(--ion-color-success);
+
+.station-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
 }
-.text-warning {
-  color: var(--ion-color-warning);
+
+.station-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #f3f3f3 url('/assets/AquaRoute Droplet Logo.png') center center / contain no-repeat;
 }
-.text-medium {
-  color: var(--ion-color-medium);
+
+.station-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.station-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.station-address {
+  font-size: 13px;
+  color: #666;
+}
+
+/* ───────────── Product Thumbnail Consistency ───────────── */
+.ods-thumb {
+  width: 60px !important;
+  height: 60px !important;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ods-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f3f3f3 url('/assets/water-placeholder.png') center center / contain no-repeat;
 }

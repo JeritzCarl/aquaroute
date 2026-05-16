@@ -1,0 +1,61 @@
+.date-title {
+  text-align: center;
+  margin-top: 12px;
+  margin-bottom: 12px;
+
+  h2 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2f80ed;
+  }
+}
+
+.summary-card {
+  border-radius: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 16px;
+}
+
+.summary-grid {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+
+  div {
+    flex: 1;
+  }
+
+  p {
+    color: #666;
+    font-size: 13px;
+    margin-bottom: 4px;
+  }
+
+  h2 {
+    font-size: 18px;
+    margin: 0;
+    color: #2f80ed;
+  }
+}
+
+.order-card {
+  border-radius: 14px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.empty-state {
+  text-align: center;
+  margin-top: 80px;
+
+  ion-icon {
+    font-size: 64px;
+    color: #aaa;
+    margin-bottom: 12px;
+  }
+
+  p {
+    color: #777;
+    font-size: 15px;
+  }
+}

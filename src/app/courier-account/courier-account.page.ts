@@ -2,10 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Auth, signOut } from '@angular/fire/auth';
 import { Router } from '@angular/router';
 import { CourierService } from '../services/courier.service';
-
-// ✅ Angular & Ionic imports for standalone page
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, NavController, AlertController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -20,35 +18,33 @@ export class CourierAccountPage implements OnInit {
   courierEmail = '';
   stationName = 'Station';
   myCourierId = '';
-  courierPhotoUrl: string = 'assets/default-avatar.png'; // ✅ fallback
+  courierPhotoUrl: string = 'assets/default-avatar.png';
 
   constructor(
     private auth: Auth,
     private router: Router,
-    private courierService: CourierService
+    private navCtrl: NavController,
+    private courierService: CourierService,
+    private alertCtrl: AlertController   // ✅ Added
   ) {}
 
   async ngOnInit() {
     const user = this.auth.currentUser;
 
     if (user) {
-      // 🔹 Base profile from Firebase Auth
       this.courierEmail = user.email || '';
       this.courierName = user.displayName || this.courierName;
       this.courierPhotoUrl = user.photoURL || this.courierPhotoUrl;
 
-      // 🔹 Get courier + station profile from Firestore
       const info = await this.courierService.getCourierStationAndProfile(user.uid);
       if (info) {
         this.stationName = info.stationName || this.stationName;
         this.myCourierId = info.courierId || '';
 
-        // Prefer Firestore name/photo if available
         if (info.name) this.courierName = info.name;
         this.courierPhotoUrl =
           info.photoUrl || user.photoURL || this.courierPhotoUrl;
 
-        // ✅ Save/update cache so CourierPage shows correct info after refresh
         localStorage.setItem(
           'courierProfile',
           JSON.stringify({
@@ -61,21 +57,35 @@ export class CourierAccountPage implements OnInit {
     }
   }
 
-  // 🔹 Logout function
+  // ✅ Updated logout → now calls confirmation first
   async logout() {
-    try {
-      await signOut(this.auth);
+    const alert = await this.alertCtrl.create({
+      header: 'Log Out?',
+      message: 'Are you sure you want to log out of your courier account?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Log Out',
+          handler: async () => {
+            try {
+              await signOut(this.auth);
+              localStorage.removeItem('courierProfile');
+              this.navCtrl.navigateRoot('/home'); // 👈 full navigation reset
+              console.log('✅ Courier logged out and redirected to Home');
+            } catch (e) {
+              console.error('❌ Logout failed:', e);
+            }
+          },
+        },
+      ],
+    });
 
-      // 🧹 Clear cache on logout
-      localStorage.removeItem('courierProfile');
-
-      this.router.navigateByUrl('/login', { replaceUrl: true });
-    } catch (e) {
-      console.error('Logout failed:', e);
-    }
+    await alert.present();
   }
 
-  // 🔹 Back navigation
   goBack() {
     this.router.navigateByUrl('/courier', { replaceUrl: true });
   }

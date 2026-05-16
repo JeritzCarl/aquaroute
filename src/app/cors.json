@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["http://localhost:8100", "https://thesisaquaroute.web.app", "https://thesisaquaroute.firebaseapp.com"],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Authorization", "x-goog-meta-*"],
+    "maxAgeSeconds": 3600
+  }
+]

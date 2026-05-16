@@ -1,10 +1,20 @@
 <ion-header class="courier-header ion-no-border">
   <ion-toolbar class="header-toolbar">
-    <!-- Station name -->
     <ion-title class="station-title">{{ stationName }}</ion-title>
 
-    <!-- Avatar with status dot -->
     <ion-buttons slot="end" class="head-right">
+      <!-- 🔔 Notifications Button with Badge -->
+      <ion-button fill="clear" (click)="openNotifications()" aria-label="View notifications">
+        <ion-icon name="notifications-outline" size="large"></ion-icon>
+        <ion-badge *ngIf="unreadCount > 0" color="danger" class="notif-badge">{{ unreadCount }}</ion-badge>
+      </ion-button>
+
+      <!-- 🕒 History Button -->
+      <ion-button fill="clear" routerLink="/courier-history" aria-label="View delivery history">
+        <ion-icon name="time-outline" size="large"></ion-icon>
+      </ion-button>
+
+      <!-- 👤 Profile Avatar -->
       <div class="avatar-wrapper">
         <ion-avatar
           class="courier-avatar"
@@ -21,91 +31,258 @@
       </div>
     </ion-buttons>
   </ion-toolbar>
+  <!-- ⭐ Courier Rating Display -->
+<div class="courier-rating" *ngIf="avgRating !== undefined">
+  <ion-icon name="star" color="warning"></ion-icon>
+  {{ avgRating | number:'1.1-1' }} ({{ totalRatings || 0 }} ratings)
+</div>
+<!-- 🗣️ Recent Feedback -->
+<div class="recent-feedback" *ngIf="recentFeedbacks.length > 0">
+  <h3>Recent Feedback</h3>
+  <div *ngFor="let fb of recentFeedbacks" class="feedback-card">
+    <p class="stars">⭐ {{ fb.rating }}</p>
+    <p class="text">“{{ fb.feedback }}”</p>
+  </div>
+</div>
 </ion-header>
 
+
 <ion-content class="ion-padding">
-  <!-- Pull to refresh -->
   <ion-refresher slot="fixed" (ionRefresh)="doRefresh($event)">
     <ion-refresher-content pullingIcon="arrow-down-outline"></ion-refresher-content>
   </ion-refresher>
 
-  <!-- First-load progress -->
   <ion-progress-bar *ngIf="initializing" type="indeterminate"></ion-progress-bar>
 
-  <!-- METRICS GRID -->
-  <div class="metrics-grid">
-    <ion-card class="metric-tile">
-      <ion-card-content>
-        <div class="metric-icon"><ion-icon name="list-outline"></ion-icon></div>
-        <p class="metric-sub">Assigned Orders</p>
-        <h2 class="metric-val">{{ assignedOrders.length }}</h2>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="metric-tile">
-      <ion-card-content>
-        <div class="metric-icon"><ion-icon name="checkmark-done-circle-outline"></ion-icon></div>
-        <p class="metric-sub">Completed</p>
-        <h2 class="metric-val">{{ completedCount }}</h2>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="metric-tile">
-      <ion-card-content>
-        <div class="metric-icon"><ion-icon name="water-outline"></ion-icon></div>
-        <p class="metric-sub">Gallons Delivered</p>
-        <h2 class="metric-val">{{ gallonsDelivered }}</h2>
-      </ion-card-content>
-    </ion-card>
-
-    <ion-card class="metric-tile">
-      <ion-card-content>
-        <div class="metric-icon"><ion-icon name="cash-outline"></ion-icon></div>
-        <p class="metric-sub">Earnings</p>
-        <h2 class="metric-val">₱{{ estimatedEarnings }}</h2>
-      </ion-card-content>
-    </ion-card>
-  </div>
-
-  <!-- Orders loading hint -->
-  <div *ngIf="ordersLoading" class="orders-loading">
-    <ion-spinner name="dots"></ion-spinner>
-    <span>Loading orders…</span>
-  </div>
-
-  <!-- Orders List -->
-  <ion-list *ngIf="assignedOrders.length; else empty">
-    <ion-item *ngFor="let o of assignedOrders" lines="full">
-      <ion-icon name="bicycle-outline" slot="start"></ion-icon>
-      <ion-label>
-        <h2>{{ o.customerName }}</h2>
-        <p>{{ o.flatAddress || 'No address available' }}</p>
-        <p>Items: {{ o.items?.length || 0 }}</p>
-        <ion-badge [color]="badgeColor(o.status)">{{ o.status }}</ion-badge>
-      </ion-label>
-      <ion-buttons slot="end">
-        <ion-button fill="outline" color="tertiary" (click)="openNavigation(o)">Navigate</ion-button>
-        <ion-button color="warning" *ngIf="canStartDelivery(o)" (click)="setOutForDelivery(o)">Pick Up</ion-button>
-        <ion-button color="success" *ngIf="canMarkDelivered(o)" (click)="setDelivered(o)">Delivered</ion-button>
-      </ion-buttons>
-    </ion-item>
-  </ion-list>
-
-  <!-- Empty State -->
-  <ng-template #empty>
-    <div class="center-text">
-      <ion-icon name="cube-outline"></ion-icon>
-      <p>No active deliveries assigned.</p>
-    </div>
-  </ng-template>
-
-  <!-- Route Map -->
-  <div class="route-map-container" *ngIf="assignedOrders.length">
+  <!-- 🗺️ Route Map (always visible for delivery orders) -->
+  <div
+    class="route-map-container"
+    *ngIf="hasDeliveryOrders() && courierCoords && deliveriesCoords.length"
+  >
     <h3 class="map-title">Optimized Delivery Route</h3>
-    <app-route-map
-      [start]="stationAddress"
-      [waypoints]="orderWaypoints"
-      [end]="assignedOrders.length ? assignedOrders[assignedOrders.length - 1].delivery.address : ''">
-    </app-route-map>
+    <div class="route-summary">
+  <p><b>Distance:</b> {{ totalDistanceKm | number:'1.1-2' }} km</p>
+  <p><b>Estimated Time:</b> {{ totalTimeMin | number:'1.0-0' }} minutes</p>
+  <p><b>Optimization:</b> ML + OSRM Routing</p>
+</div>
+<app-route-map
+  [courier]="courierCoords"
+  [orders]="assignedOrders"
+  [legs]="optimizedLegs"
+  (mapReady)="onMapReady($event)"
+></app-route-map>
+
+<ion-button
+  expand="block"
+  color="primary"
+  fill="outline"
+  (click)="recalculateRoute()"
+  class="recalc-btn"
+>
+  🔁 Recalculate Route
+</ion-button>
+
+  </div>
+
+  <!-- 📊 Metrics Grid -->
+  <div class="metrics-grid">
+    <ion-card
+      class="metric-tile"
+      *ngFor="let metric of [
+        {icon: 'list-outline', sub: 'Assigned Orders', val: assignedOrders.length},
+        {icon: 'checkmark-done-circle-outline', sub: 'Completed', val: completedCount},
+        {icon: 'water-outline', sub: 'Gallons Delivered', val: gallonsDelivered},
+        {icon: 'cash-outline', sub: 'Earnings', val: '₱' + (estimatedEarnings | number:'1.0-2')}
+      ]"
+    >
+      <ion-card-content>
+        <div class="metric-icon"><ion-icon [name]="metric.icon"></ion-icon></div>
+        <p class="metric-sub">{{ metric.sub }}</p>
+        <h2 class="metric-val">{{ metric.val }}</h2>
+      </ion-card-content>
+    </ion-card>
+  </div>
+
+  <!-- 📦 Orders List -->
+  <div *ngIf="!expandedOrderId">
+    <div *ngIf="ordersLoading" class="orders-loading">
+      <ion-spinner name="dots"></ion-spinner>
+      <span>Loading orders…</span>
+    </div>
+
+    <ion-list *ngIf="assignedOrders.length; else empty">
+    <ion-item
+      *ngFor="let o of assignedOrders; let i = index"
+      lines="full"
+      (click)="toggleOrder(o.id)"
+      button
+      detail="true"
+      [class.nearest-order]="i === 0"
+    >
+        <ion-icon name="bicycle-outline" slot="start"></ion-icon>
+        <ion-label>
+          <div class="order-top-row">
+  <h2>{{ o.customerName }}</h2>
+
+  <ion-badge color="success" *ngIf="i === 0">
+    Recommended Next Stop
+  </ion-badge>
+
+  <ion-badge color="medium" *ngIf="i > 0">
+    Stop #{{ i + 1 }}
+  </ion-badge>
+</div>
+          <!-- 🔴 ASAP Badge -->
+          <ion-badge color="danger" *ngIf="o.delivery?.schedule === 'ASAP'">
+            ASAP
+          </ion-badge>
+          <ion-badge color="primary" *ngIf="o.mode">{{ o.mode | titlecase }}</ion-badge>
+          <p>{{ o.flatAddress || o.delivery?.address || 'No address available' }}</p>
+<p class="distance-note" *ngIf="o.distanceKm !== undefined">
+  <b>Distance:</b> {{ o.distanceKm | number:'1.1-2' }} km
+  <span *ngIf="i === 0">• Nearest</span>
+  <span *ngIf="i > 0 && i < assignedOrders.length - 1">• Farther stop</span>
+  <span *ngIf="i === assignedOrders.length - 1 && assignedOrders.length > 1">• Farthest</span>
+</p>
+          <p *ngIf="o.distanceKm !== undefined">
+          Distance: {{ o.distanceKm | number:'1.1-2' }} km
+        </p>
+        <p *ngIf="o.predictedMinutes !== undefined">
+  ETA: {{ o.predictedMinutes | number:'1.0-0' }} min
+</p>
+          <p>Items: {{ o.items?.length || 0 }}</p>
+          <ion-badge [color]="getStatusColor(o.status)">{{ o.status }}</ion-badge>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <ng-template #empty>
+      <div class="center-text">
+        <ion-icon name="cube-outline"></ion-icon>
+        <p>No active deliveries assigned.</p>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- 🪶 Expanded Order View -->
+  <div class="expanded-order-panel" *ngIf="expandedOrderId as eid">
+    <div class="expanded-header">
+      <ion-button fill="clear" color="medium" (click)="toggleOrder(eid)">
+        <ion-icon name="close-outline"></ion-icon>
+      </ion-button>
+      <h2>Order Details</h2>
+    </div>
+
+    <div *ngFor="let order of assignedOrders" [hidden]="order.id !== eid">
+      <ion-card class="order-detail-card">
+        <ion-card-content>
+          <h3>{{ order.customerName }}</h3>
+          <p><b>Phone:</b> {{ order.delivery?.phone || 'N/A' }}</p>
+          <p><b>Address:</b> {{ order.flatAddress || order.delivery?.address || 'N/A' }}</p>
+          <p><b>Container Swap:</b> {{ order.containerSwap ? 'Yes' : 'No' }}</p>
+          <p><b>Window:</b> {{ formatWindow(order.delivery?.window) }}</p>
+          <p>
+            <b>Schedule:</b>
+            {{
+              order.delivery?.schedule === 'ASAP'
+                ? 'ASAP (Deliver Now)'
+                : formatSchedule(order.delivery?.schedule)
+            }}
+          </p>
+          <p *ngIf="(order.mode || 'delivery') === 'delivery'">
+  <b>Delivery Rate:</b>
+  {{ order.delivery?.schedule === 'ASAP' ? '₱10 per gallon' : '₱5 per gallon' }}
+</p>
+          <p><b>Water Type:</b> {{ getWaterType(order) }}</p>
+          <p><b>Notes:</b> {{ order.delivery?.notes || order.notes || '—' }}</p>
+
+          <ion-list class="item-list">
+            <ion-item *ngFor="let item of order.items">
+              <ion-label>
+                <h4>{{ item.name }}</h4>
+                <p>{{ item.quantity }} × ₱{{ item.price | number:'1.0-2' }}</p>
+              </ion-label>
+              <ion-note slot="end">₱{{ (item.quantity * item.price) | number:'1.0-2' }}</ion-note>
+            </ion-item>
+          </ion-list>
+
+          <div class="charges">
+            <div><span>Subtotal:</span><span>₱{{ order.charges?.subtotal | number:'1.0-2' }}</span></div>
+            <div><span>Delivery Fee:</span><span>₱{{ order.charges?.deliveryFee | number:'1.0-2' }}</span></div>
+            <div class="total"><span>Total:</span><span>₱{{ order.charges?.total | number:'1.0-2' }}</span></div>
+          </div>
+
+<div class="expanded-actions">
+  <!-- Start Delivery -->
+  <ion-button
+    expand="block"
+    color="primary"
+    *ngIf="
+      ((order.mode || order.items?.[0]?.mode || 'delivery') | lowercase) === 'delivery' &&
+      canStartDelivery(order)
+    "
+    (click)="startDelivery(order)"
+  >
+    <ion-icon name="bicycle-outline" slot="start"></ion-icon>
+    Start Delivery
+  </ion-button>
+
+  <!-- Navigate -->
+  <ion-button
+    expand="block"
+    fill="outline"
+    color="tertiary"
+    *ngIf="
+      ((order.mode || order.items?.[0]?.mode || 'delivery') | lowercase) === 'delivery' &&
+      order.status === 'In Transit'
+    "
+    (click)="openNavigation(order)"
+  >
+    <ion-icon name="navigate-outline" slot="start"></ion-icon>
+    Navigate
+  </ion-button>
+
+  <!-- Mark Delivered -->
+  <ion-button
+    expand="block"
+    color="success"
+    *ngIf="
+      ((order.mode || order.items?.[0]?.mode || 'delivery') | lowercase) === 'delivery' &&
+      canMarkDelivered(order)
+    "
+    (click)="confirmDelivery(order)"
+  >
+    <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+    Mark Delivered
+  </ion-button>
+</div>
+
+<div
+  class="delivery-proof-box"
+  *ngIf="order.status === 'In Transit'"
+>
+  <label for="deliveryProofInput" class="proof-label">
+    Upload Delivery Proof
+  </label>
+
+  <input
+    id="deliveryProofInput"
+    type="file"
+    accept="image/*"
+    (change)="onDeliveryProofSelected($event)"
+  />
+
+  <img
+    *ngIf="deliveryProofPreviewUrl"
+    [src]="deliveryProofPreviewUrl"
+    alt="Delivery Proof Preview"
+    class="delivery-proof-preview"
+  />
+</div>
+
+
+        </ion-card-content>
+      </ion-card>
+    </div>
   </div>
 </ion-content>

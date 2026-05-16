@@ -56,17 +56,17 @@ ion-card {
 
 /* Badges */
 ion-badge {
-  vertical-align: middle;   // aligns with text baseline
-  margin-left: 4px;         // small spacing from "Status:"
-  font-size: 12px;          // keep badge compact
-  padding: 2px 6px;         // balanced look
-  border-radius: 6px;       // rounded like in your screenshot
+  vertical-align: middle;   /* aligns with text baseline */
+  margin-left: 4px;         /* small spacing from "Status:" */
+  font-size: 12px;          /* keep badge compact */
+  padding: 2px 6px;         /* balanced look */
+  border-radius: 6px;       /* rounded like in your screenshot */
 }
 
 /* Segment labels */
 ion-segment-button ion-label {
-  font-weight: 700;
-  font-size: 16px;
+  font-weight: 600;
+  font-size: 15px;
 }
 
 /* Page title */
@@ -90,4 +90,48 @@ ion-segment-button ion-label {
     border-bottom-left-radius: 20px;
     border-bottom-right-radius: 20px;
   }
+}
+
+/* ─────────────── Order Header Layout Fix ─────────────── */
+.order-header {
+  display: flex;
+  flex-direction: column; /* stack title + subtitle + badge vertically */
+  gap: 4px;
+
+  ion-card-title {
+    font-weight: 700;
+  }
+
+  ion-card-subtitle {
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  ion-badge {
+    align-self: flex-start;
+    margin-left: 0;
+    margin-top: 4px; /* spacing below subtitle */
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
+}
+
+/* === Declined Orders Visual Style === */
+ion-card.declined {
+  border-left: 4px solid #e63946;
+  transition: 0.3s ease;
+}
+
+/* Optional: subtle background tint */
+ion-card.declined ion-card-content {
+  background-color: #fff5f5;
+}
+
+.rated-badge {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  font-weight: 600;
 }

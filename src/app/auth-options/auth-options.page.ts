@@ -21,23 +21,11 @@ export class AuthOptionsPage {
 
   async continueWithGoogle() {
     try {
-      const user = await this.authSvc.loginWithGoogle();
-      console.log('✅ Google login success:', user);
-      this.router.navigate(['/landing-page']);
-    } catch (error) {
-      console.error('❌ Google login error:', error);
-      this.showToast('Google login failed. Please try again.', 'danger');
-    }
-  }
-
-  async continueWithFacebook() {
-    try {
-      const user = await this.authSvc.loginWithFacebook();
-      console.log('✅ Facebook login success:', user);
-      this.router.navigate(['/landing-page']);
-    } catch (error) {
-      console.error('❌ Facebook login error:', error);
-      this.showToast('Facebook login failed. Please try again.', 'danger');
+      await this.authSvc.loginWithGoogle();
+      this.showToast('✅ Login successful', 'success');
+    } catch (error: any) {
+      console.error('❌ Google Sign-In failed:', error);
+      this.showToast(`Google login failed: ${error?.message || error}`, 'danger');
     }
   }
 
@@ -45,7 +33,10 @@ export class AuthOptionsPage {
     this.router.navigate(['/register']);
   }
 
-  private async showToast(message: string, color: 'success' | 'warning' | 'danger' = 'warning') {
+  private async showToast(
+    message: string,
+    color: 'success' | 'warning' | 'danger' = 'warning'
+  ) {
     const toast = await this.toastCtrl.create({
       message,
       duration: 2500,

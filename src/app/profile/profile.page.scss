@@ -1,110 +1,164 @@
-ion-header, ion-toolbar, ion-title {
-  --background: #ffffff;
-  --border-color: transparent;
+/* === HEADER === */
+.aqua-header {
+  --background: transparent;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
+}
+
+.aqua-toolbar {
+  --background: #2f80ed;
+  --color: #fff;
+  border-radius: 0 0 18px 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  position: relative;
+  padding: 0 10px;
+}
+
+.aqua-title {
   font-weight: 700;
   font-size: 20px;
-  color: #1a1a1a;
+  color: #fff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
 }
 
-/* Profile Card */
-.profile-card {
+/* === BACKGROUND === */
+.profile-bg {
+  --background: #f6f9fc;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  padding: 20px 16px;
+  padding-bottom: 80px;
+}
+
+/* === PROFILE CARD === */
+.profile-container {
+  text-align: center;
   background: #fff;
-  border-bottom: 1px solid #eee;
+  width: 90%;
+  margin: 20px auto;
+  border-radius: 18px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 24px 16px;
+}
 
-  ion-avatar {
-    width: 80px;
-    height: 80px;
-    margin-right: 18px;
-  }
+.profile-avatar {
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 14px;
 
-  .profile-info {
-    flex: 1;
-
-    .name {
-      font-size: 20px;
-      font-weight: 700;
-      margin: 0;
-      color: #1a1a1a;
-    }
-
-    .email, .phone {
-      font-size: 16px;
-      font-weight: 600;
-      color: #444;
-      margin: 4px 0;
-    }
-  }
-
-  ion-button {
-    --color: #007bff;
-    font-size: 18px;
+  img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #2f80ed;
   }
 }
 
-/* Section Lists */
-ion-list {
-  margin: 16px 0;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+.profile-name {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 6px 0;
+}
 
-  ion-list-header {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1a1a1a;
-    padding-left: 16px;
+.profile-email,
+.profile-phone {
+font-size: 16px;
+ font-weight: 600;
+ color: #444;
+ margin: 4px 0;
+}
+
+.edit-btn {
+  margin-top: 14px;
+  font-weight: 600;
+  --border-radius: 8px;
+}
+
+/* === CONNECTED ACCOUNTS === */
+.connected-card {
+  margin: 20px auto;
+  width: 90%;
+  border-radius: 16px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+
+  ion-card-header {
+    background: #2f80ed;
+    border-radius: 16px 16px 0 0;
+    ion-card-title {
+      color: #fff;
+      font-weight: 700;
+      font-size: 16px;
+    }
   }
 
   ion-item {
     --background: #fff;
-    font-size: 16px;
-    font-weight: 600;
+    font-size: 15px;
+    font-weight: 700; /* ⬅️ Added bold text */
     color: #1a1a1a;
 
     ion-icon {
       font-size: 22px;
-      color: #007bff; /* 🔵 Make all icons blue by default */
     }
 
     ion-label {
-      font-size: 16px;
-      font-weight: 600;
+      font-weight: 700; /* ⬅️ Bold label text */
     }
 
     ion-note {
-      font-size: 14px;
       font-weight: 600;
-      color: #007bff;
+      font-size: 15px;
+      color: #2f80ed;
+      margin-bottom: 4%;
     }
   }
 }
 
-/* Logout + Delete buttons */
-ion-item[color="danger"],
-ion-item ion-label[color="danger"] {
-  font-size: 16px;
-  font-weight: 700;
-  color: #d32f2f;
+/* === ACTIONS === */
+.action-card {
+  width: 90%;
+  margin: 20px auto;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 
-  ion-icon {
-    color: #d32f2f !important;
+  ion-item {
+    --background: #fff;
+    font-size: 16px;
+    font-weight: 700;
+
+    ion-label[color="danger"] {
+      color: #d32f2f;
+    }
+
+    ion-icon[color="danger"] {
+      color: #d32f2f;
+    }
   }
 }
 
-/* Confirmation Alert Styling (Delete Account) */
-.alert-wrapper {
-  border-radius: 16px !important;
+.aqua-alert {
+  --background: #ffffff;
+  --border-radius: 16px;
+  font-family: 'Inter', sans-serif;
 }
 
-.alert-title {
-  font-weight: 700 !important;
-  color: #d32f2f !important; /* Red title for danger */
+.aqua-cancel {
+  color: #2f80ed;
+  font-weight: 600;
 }
 
-.alert-message {
-  font-size: 15px !important;
-  color: #444 !important;
+.aqua-logout {
+  color: #e63946;
+  font-weight: 700;
 }

@@ -1,0 +1,72 @@
+<!-- src/app/rating/rating.page.html -->
+  <ion-header class="aqua-header-wrap">
+    <ion-toolbar class="aqua-header">
+      <ion-buttons slot="start">
+        <ion-back-button defaultHref="/orders"></ion-back-button>
+      </ion-buttons>
+      <ion-title>Rate Order</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="order; else loadingTpl">
+    <h2 class="order-id">Order #{{ orderId }}</h2>
+    <p class="mode-label">
+      Mode: {{ mode === 'delivery' ? 'Delivery' : 'Pick Up' }}
+    </p>
+
+    <!-- ⭐ Station Rating -->
+    <ion-card>
+      <ion-card-header>
+        <ion-card-title>Station Rating</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="stars">
+          <ion-icon
+            *ngFor="let s of [1,2,3,4,5]"
+            [name]="stationRating >= s ? 'star' : 'star-outline'"
+            (click)="stationRating = s"
+            class="star-icon"
+          ></ion-icon>
+        </div>
+        <ion-textarea
+          rows="3"
+          placeholder="Leave feedback for the station (optional)"
+          [(ngModel)]="stationFeedback"
+        ></ion-textarea>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- 🚚 Courier Rating (Only for Delivery Mode) -->
+    <ion-card *ngIf="mode === 'delivery'">
+      <ion-card-header>
+        <ion-card-title>Courier Rating</ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="stars">
+          <ion-icon
+            *ngFor="let s of [1,2,3,4,5]"
+            [name]="courierRating >= s ? 'star' : 'star-outline'"
+            (click)="courierRating = s"
+            class="star-icon"
+          ></ion-icon>
+        </div>
+        <ion-textarea
+          rows="3"
+          placeholder="Leave feedback for the courier (optional)"
+          [(ngModel)]="courierFeedback"
+        ></ion-textarea>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Submit -->
+    <ion-button expand="block" color="success" (click)="submitRating()">
+      Submit Rating
+    </ion-button>
+  </ng-container>
+
+  <ng-template #loadingTpl>
+    <ion-spinner name="crescent"></ion-spinner>
+    <p>Loading order details...</p>
+  </ng-template>
+</ion-content>

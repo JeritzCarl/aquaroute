@@ -1,3 +1,4 @@
+<!-- ─────────────── HEADER ─────────────── -->
 <ion-header class="orders-header">
   <ion-toolbar>
     <ion-buttons slot="start">
@@ -12,9 +13,10 @@
   </ion-toolbar>
 </ion-header>
 
+<!-- ─────────────── CONTENT ─────────────── -->
 <ion-content class="ion-padding">
 
-  <!-- Skeleton Loader -->
+  <!-- ========== SKELETON LOADER (L20–L45) ========== -->
   <ng-container *ngIf="loading; else ordersContent">
     <ion-list>
       <ion-card *ngFor="let i of [1,2,3]">
@@ -31,8 +33,10 @@
     </ion-list>
   </ng-container>
 
+  <!-- ========== MAIN ORDERS CONTENT ========== -->
   <ng-template #ordersContent>
-    <!-- Tabs -->
+
+    <!-- ─────────────── TABS ─────────────── -->
     <ion-segment [(ngModel)]="selectedTab" value="current" color="primary">
       <ion-segment-button value="current">
         <ion-label>Current Orders</ion-label>
@@ -42,42 +46,101 @@
       </ion-segment-button>
     </ion-segment>
 
-    <!-- Current Orders -->
+    <!-- ========================= CURRENT ORDERS ========================= -->
     <ng-container *ngIf="selectedTab === 'current'">
       <ion-list *ngIf="currentOrders.length > 0; else noCurrent">
+
         <ion-card *ngFor="let order of currentOrders">
           <ion-card-header>
-            <ion-card-title>{{ getStationTitle(order) }}</ion-card-title>
+            <div class="order-header">
+              <ion-card-title>{{ getStationTitle(order) }}</ion-card-title>
+
+              <ion-badge color="danger" *ngIf="getScheduleValue(order) === 'ASAP'">
+              ASAP
+            </ion-badge>
+              <ion-badge [color]="getModeColor(order.mode || order.items[0]?.mode)">
+                {{ (order.mode || order.items[0]?.mode || 'Delivery') | titlecase }}
+              </ion-badge>
+            </div>
             <ion-card-subtitle>
               ORD-{{ order.id }} • {{ order.createdAt | date:'short' }}
             </ion-card-subtitle>
           </ion-card-header>
+
           <ion-card-content>
-            <p>📦 {{ order.items.length }} items</p>
+            <p>📦 {{ getItemSummary(order) }}</p>
+            <p>
+            🕒
+            {{
+              getScheduleValue(order) === 'ASAP'
+                ? 'ASAP (Deliver Now)'
+                : formatSchedule(getScheduleValue(order))
+            }}
+          </p>
             <p>📍 {{ order.delivery.address }}</p>
+
+            <!-- ✅ Updated Status Label -->
             <p>
               Status:
               <ion-badge [color]="getStatusColor(order.status)">
-                {{ order.status }}
+                {{ order.status === 'Declined' ? 'Declined by Station' : order.status }}
               </ion-badge>
             </p>
+
             <p><strong>Total: ₱{{ order.charges.total }}</strong></p>
 
-            <!-- ✅ Track Order button -->
+            <!-- 🔹 Track Order -->
             <ion-button expand="block" fill="outline" color="primary"
                         (click)="goToOrder(order)">
               Track Order
             </ion-button>
 
-            <!-- ✅ Cancel Order button -->
+            <!-- 🔹 Cancel Order -->
             <ion-button expand="block" fill="solid" color="danger"
                         *ngIf="order.status === 'Pending'"
                         (click)="confirmCancel(order)">
-              ❌ Cancel Order
+              Cancel Order
             </ion-button>
+
+<!-- ✅ Delivery Mode: Order Received -->
+<ion-button
+  expand="block"
+  color="success"
+  *ngIf="(order.mode || '').toLowerCase() === 'delivery' && order.status.toLowerCase() === 'delivered'"
+  (click)="confirmReceived(order)"
+>
+  Order Received
+</ion-button>
+
+<!-- ✅ Pickup Mode: Picked Up -->
+<ion-button
+  expand="block"
+  color="success"
+  *ngIf="(order.mode || '').toLowerCase() === 'pickup' && order.status.toLowerCase() === 'picked up'"
+  (click)="confirmPickedUp(order)"
+>
+  Picked Up
+</ion-button>
+            <!-- ⭐ Rate Button -->
+            <ion-button
+              expand="block"
+              color="tertiary"
+              *ngIf="['received', 'picked up'].includes((order.status || '').toLowerCase()) && !order.rated"
+              (click)="goToRatingPage(order)"
+            >
+              Rate
+            </ion-button>
+
+            <!-- ✅ Rated Badge -->
+            <ion-badge color="medium" *ngIf="order.rated" class="rated-badge">
+              Rated
+            </ion-badge>
+
           </ion-card-content>
         </ion-card>
+
       </ion-list>
+
       <ng-template #noCurrent>
         <div class="empty-orders">
           <ion-icon name="water-outline"></ion-icon>
@@ -86,34 +149,95 @@
       </ng-template>
     </ng-container>
 
-    <!-- Order History -->
+    <!-- ========================= ORDER HISTORY ========================= -->
     <ng-container *ngIf="selectedTab === 'history'">
       <ion-list *ngIf="orderHistory.length > 0; else noHistory">
+
         <ion-card *ngFor="let order of orderHistory">
           <ion-card-header>
-            <ion-card-title>{{ getStationTitle(order) }}</ion-card-title>
+            <div class="order-header">
+              <ion-card-title>{{ getStationTitle(order) }}</ion-card-title>
+              <ion-badge color="danger" *ngIf="getScheduleValue(order) === 'ASAP'">
+                ASAP
+              </ion-badge>
+              <ion-badge [color]="getModeColor(order.mode || order.items[0]?.mode)">
+                {{ (order.mode || order.items[0]?.mode || 'Delivery') | titlecase }}
+              </ion-badge>
+            </div>
             <ion-card-subtitle>
               ORD-{{ order.id }} • {{ order.createdAt | date:'short' }}
             </ion-card-subtitle>
           </ion-card-header>
+
           <ion-card-content>
-            <p>📦 {{ order.items.length }} items</p>
+            <p>📦 {{ getItemSummary(order) }}</p>
+            <p>
+  🕒
+  {{
+    getScheduleValue(order) === 'ASAP'
+      ? 'ASAP (Deliver Now)'
+      : formatSchedule(getScheduleValue(order))
+  }}
+</p>
             <p>📍 {{ order.delivery.address }}</p>
+
+            <!-- ✅ Declined / Cancelled Reason Display -->
+            <p *ngIf="order.status === 'Declined' && (order.declineReason || order.cancelReason)">
+              <b>Reason:</b> {{ order.declineReason || order.cancelReason }}
+            </p>
+
+            <!-- ✅ Unified Status Badge -->
             <p>
               Status:
               <ion-badge [color]="getStatusColor(order.status)">
-                {{ order.status }}
+                {{ order.status === 'Declined' ? 'Declined by Station' : order.status }}
               </ion-badge>
             </p>
+
             <p><strong>Total: ₱{{ order.charges.total }}</strong></p>
 
+            <!-- 🔹 View Order -->
             <ion-button expand="block" fill="outline" color="medium"
                         (click)="goToOrder(order)">
               View Order
             </ion-button>
+
+<!-- Delivery: Order Received -->
+<ion-button
+  expand="block"
+  color="success"
+  *ngIf="canShowOrderReceived(order) && !order.rated"
+  (click)="confirmReceived(order)">
+  Order Received
+</ion-button>
+
+<!-- Pickup: Picked Up -->
+<ion-button
+  expand="block"
+  color="success"
+  *ngIf="canShowPickedUp(order)"
+  (click)="confirmPickedUp(order)">
+  Picked Up
+</ion-button>
+
+<!-- Rate (common) -->
+<ion-button
+  expand="block"
+  color="tertiary"
+  *ngIf="canShowRate(order)"
+  (click)="goToRatingPage(order)">
+  Rate
+</ion-button>
+
+<ion-badge color="medium" *ngIf="order.rated" class="rated-badge">
+  Rated
+</ion-badge>
+
           </ion-card-content>
         </ion-card>
+
       </ion-list>
+
       <ng-template #noHistory>
         <div class="empty-orders">
           <ion-icon name="time-outline"></ion-icon>
@@ -121,5 +245,6 @@
         </div>
       </ng-template>
     </ng-container>
+
   </ng-template>
 </ion-content>

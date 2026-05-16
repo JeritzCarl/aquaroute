@@ -1,9 +1,10 @@
+/* === Checkout Background === */
 .checkout-bg {
   --background: #f7f9fb;
   --padding-bottom: calc(96px + env(safe-area-inset-bottom));
 }
 
-/* Header - same as Cart */
+/* === Header === */
 .checkout-header {
   background: linear-gradient(180deg, #2b6ef6, #3c8ff9);
   border-radius: 0 0 20px 20px;
@@ -27,74 +28,182 @@
   }
 }
 
-/* Cards */
+/* === Card Containers === */
 .block-card {
   border-radius: 16px;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
   margin-bottom: 16px;
   background: #fff;
+  padding-bottom: 8px;
 }
 
-/* Station section */
-.station-info h3 {
-  font-weight: 700;
-  font-size: 16px;
-}
-.station-info p {
-  font-size: 13px;
-  color: #777;
+/* === Card Titles === */
+ion-card-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #000;
 }
 
-/* Item list */
+/* === Station Header Section === */
+.station-info {
+  ion-icon {
+    font-size: 24px;
+    color: #0a7bff;
+  }
+
+  ion-label {
+    h3 {
+      margin-left: 2%;
+      font-size: 17px;
+      font-weight: 800;
+      color: #111;
+      margin-bottom: 4px;
+    }
+
+    p {
+      margin-left: 2%;
+      font-size: 14px;
+      color: #555;
+      margin: 0;
+    }
+  }
+}
+
+/* === Product Item List === */
+ion-list {
+  margin-top: 6px;
+  border-top: 1px solid #eee;
+  padding-top: 6px;
+}
+
+ion-item {
+  --inner-padding-start: 10px;
+  --inner-padding-end: 10px;
+  align-items: flex-start;
+  --min-height: 90px;
+}
+
+ion-thumbnail img {
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-right: 6px;
+}
+
+/* === Product Info === */
 .item-name {
-  font-weight: 600;
-}
-.muted {
-  color: #667085;
-  font-size: 13px;
-}
-.small {
-  font-size: 12px;
+  font-size: 17px;
+  font-weight: 800;
+  color: #111;
+  margin: 0 0 2px;
+  text-align: left;
 }
 
-/* Totals */
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 4px;
+
+  .item-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: #222;
+  }
+
+  .item-qty {
+    font-size: 14px;
+    font-weight: 700;
+    color: #000;
+  }
+}
+
+/* === Mode to Container Swap (Aligned like Totals) === */
+.item-details {
+  margin-top: 6px;
+  display: grid;
+  gap: 6px;
+
+  .row-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+
+    span {
+      font-weight: 700;
+      color: #333;
+    }
+
+    strong {
+      font-weight: 700;
+      color: #111;
+    }
+
+    ion-checkbox {
+      --size: 20px;
+      margin-left: 8px;
+    }
+  }
+}
+
+.notes-field {
+  .notes-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 700;
+    color: #111;
+    margin-bottom: 4px;
+  }
+
+  ion-textarea {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 6px;
+    --padding-bottom: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fafafa;
+    min-height: 40px;
+  }
+}
+
+/* === Totals === */
 .spacer-line {
   --inner-border-width: 0;
   margin: 8px 0 4px;
 }
+
 .totals {
   display: grid;
   gap: 8px;
-  font-size: 14px;
-  margin-top: 10px;
-}
-.total-line {
-  font-size: 16px;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  font-size: 18px;
   font-weight: 700;
-  margin-top: 4px;
+
+  .row-between {
+    display: flex;
+    justify-content: space-between;
+    color: #000;
+    font-weight: 700;
+  }
+
+  .total-line {
+    font-size: 17px;
+    font-weight: 800;
+    color: #0a7bff;
+  }
 }
 
-/* Form fields */
-.form-grid ion-item,
-.form-grid ion-input,
-.form-grid ion-textarea,
-.form-grid ion-select {
-  margin-bottom: 12px;
-  --highlight-color-focused: #0a7bff;
-  --padding-start: 8px;
-  --padding-end: 8px;
-  --border-radius: 12px;
-  font-size: 14px;
-}
-
-.form-grid ion-label {
-  font-size: 20px;
-  font-weight: 600;
-  color: #333;
-}
-
-
-/* Address preview card */
+/* === Address Preview === */
 .address-preview {
   border: 1px solid #e5e7eb;
   border-radius: 12px;
@@ -106,70 +215,18 @@
     font-weight: 600;
     margin-bottom: 4px;
   }
+
   p {
     font-size: 13px;
     margin: 2px 0;
   }
+
   ion-badge {
     margin-top: 6px;
   }
 }
 
-/* Payment options */
-.pay-options {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.pay-chip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border: 1.5px solid #e2e8f0;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #fff;
-  font-weight: 600;
-  transition: all 0.2s ease-in-out;
-}
-.pay-chip.active {
-  border-color: #0a7bff;
-  box-shadow: 0 0 0 3px rgba(10, 123, 255, 0.09);
-}
-.pay-chip .check {
-  margin-left: auto;
-  color: #0a7bff;
-}
-
-/* Sticky footer */
-.checkout-footer {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding-inline: 16px;
-  padding-block: 16px calc(16px + env(safe-area-inset-bottom));
-  background: #fff;
-}
-.checkout-footer .total-wrap .label {
-  font-size: 12px;
-  color: #667085;
-  padding-bottom: 2%;
-}
-.checkout-footer .total-wrap .amount {
-  font-size: 18px;
-  font-weight: 700;
-  padding-bottom: 2%;
-}
-.checkout-footer .cta {
-  min-width: 160px;
-  font-weight: 600;
-  --border-radius: 14px;
-  --background: #0a7bff;
-  margin-bottom: 3%;
-}
-
-/* Location actions */
+/* === Map Section === */
 .location-actions {
   display: flex;
   flex-wrap: wrap;
@@ -180,10 +237,10 @@
     flex: 1 1 auto;
     font-size: 13px;
     --border-radius: 10px;
+    font-weight: 600;
   }
 }
 
-/* Leaflet map container */
 .map-container {
   width: 100%;
   height: 250px;
@@ -199,10 +256,76 @@
     height: 450px;
   }
 }
+
 #checkout-map {
   width: 100%;
   height: 100%;
+  border: 1px solid #ddd;
+  border-radius: 12px;
 }
-.leaflet-container img {
-   max-width: none !important;
-} 
+
+/* === Footer === */
+.checkout-footer {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding-inline: 16px;
+  padding-block: 16px calc(16px + env(safe-area-inset-bottom));
+  background: #fff;
+
+  .total-wrap .label {
+    font-size: 12px;
+    color: #667085;
+    padding-bottom: 2%;
+  }
+
+  .total-wrap .amount {
+    font-size: 18px;
+    font-weight: 700;
+    padding-bottom: 2%;
+  }
+
+  .cta {
+    min-width: 160px;
+    font-weight: 600;
+    --border-radius: 14px;
+    --background: #0a7bff;
+    margin-bottom: 3%;
+  }
+}
+
+
+/* ───────────── Product Image (Consistent with Station & Cart) ───────────── */
+.product-thumb {
+  width: 70px;
+  height: 70px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.product-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f3f3f3 url('/assets/water-placeholder.png') center center / contain no-repeat;
+}
+
+/* ───────────── Station Logo (avatar-style) ───────────── */
+.station-logo {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.station-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #f3f3f3 url('/assets/AquaRoute Droplet Logo.png') center center / contain no-repeat;
+}
+

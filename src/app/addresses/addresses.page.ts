@@ -38,18 +38,22 @@ export class AddressesPage implements OnInit, OnDestroy {
     this.sub?.unsubscribe();
   }
 
-  // ➕ Add Address
-  addAddress() {
-    this.router.navigate(['/add-address']);
-  }
+// ➕ Add Address
+addAddress() {
+  // ✅ Pass context so AddAddress knows we came from Addresses page
+  this.router.navigate(['/add-address'], {
+    queryParams: { from: 'addresses' }
+  });
+}
 
-  // ✏️ Edit Address
-  editAddress(addr: any, event?: Event) {
-    event?.stopPropagation(); // prevent triggering select
-    this.router.navigate(['/add-address'], {
-      queryParams: { id: addr.id }
-    });
-  }
+// ✏️ Edit Address
+editAddress(addr: any, event?: Event) {
+  event?.stopPropagation(); // prevent triggering select
+  this.router.navigate(['/add-address'], {
+    queryParams: { id: addr.id, from: 'addresses' } // ✅ add context
+  });
+}
+
 
   // 🗑 Delete Address
   async deleteAddress(id: string, event?: Event) {

@@ -9,7 +9,11 @@
 <ion-content fullscreen *ngIf="product">
   <!-- Product Hero -->
   <div class="product-hero">
-    <img [src]="product.imageUrl || 'assets/placeholder.png'" alt="Product image" />
+    <img
+  [src]="product.imageUrl || 'assets/water-placeholder.png'"
+  (error)="onImageError($event)"
+  alt="Product Image"
+/>
   </div>
 
   <!-- Product & Station Details -->
@@ -19,74 +23,66 @@
 
     <div class="station-info" *ngIf="station">
       <p class="station-name">🏪 {{ station.stationName }}</p>
-      <p class="rating">
-        ⭐ {{ station.rating || '—' }} ({{ station.reviewCount || 0 }} reviews)
-      </p>
+      <p class="rating">⭐ {{ station.rating || '—' }} ({{ station.reviewCount || 0 }} reviews)</p>
       <p class="address">📍 {{ station.address }}</p>
-    </div>
-
-    <!-- Extra product details -->
-    <div class="product-meta">
-      <p *ngIf="product['waterType']">💧 {{ product['waterType'] }}</p>
-      <p *ngIf="product['containerSize']">📦 {{ product['containerSize'] }}</p>
     </div>
   </div>
 
-  <!-- Delivery Mode -->
-  <ion-card>
+  <!-- 💧 Water Type Selection -->
+  <ion-card *ngIf="availableWaterTypes.length > 0">
     <ion-card-header>
-      <ion-card-title>Delivery Mode</ion-card-title>
+      <ion-card-title>Water Type</ion-card-title>
     </ion-card-header>
-    <ion-segment [(ngModel)]="deliveryMode">
-      <ion-segment-button value="delivery"><ion-label>Delivery</ion-label></ion-segment-button>
-      <ion-segment-button value="pickup"><ion-label>Pickup</ion-label></ion-segment-button>
-      <ion-segment-button value="scheduled"><ion-label>Scheduled</ion-label></ion-segment-button>
-    </ion-segment>
-    <div *ngIf="deliveryMode === 'scheduled'" class="ion-padding">
-      <ion-segment [(ngModel)]="deliveryWindow">
-        <ion-segment-button value="morning"><ion-label>Morning</ion-label></ion-segment-button>
-        <ion-segment-button value="afternoon"><ion-label>Afternoon</ion-label></ion-segment-button>
-      </ion-segment>
+    <div class="ion-padding">
+      <ion-select [(ngModel)]="selectedWaterType" placeholder="Select Water Type" interface="popover">
+        <ion-select-option *ngFor="let type of availableWaterTypes" [value]="type">
+          {{ type }}
+        </ion-select-option>
+      </ion-select>
     </div>
   </ion-card>
 
-  <!-- Payment -->
+  <!-- ⚠️ No Available Types -->
+  <ion-card *ngIf="availableWaterTypes.length === 0">
+    <ion-card-content>
+      <p class="unavailable-note">No available water types for this station at the moment.</p>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Delivery / Pickup Mode -->
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Payment Method</ion-card-title>
+      <ion-card-title>Order Mode</ion-card-title>
     </ion-card-header>
-    <ion-list>
-      <ion-radio-group [(ngModel)]="paymentMethod">
-        <ion-item>
-          <ion-label>Cash on Delivery</ion-label>
-          <ion-radio slot="end" value="cod"></ion-radio>
-        </ion-item>
-        <ion-item>
-          <ion-label>GCash</ion-label>
-          <ion-radio slot="end" value="gcash"></ion-radio>
-        </ion-item>
-      </ion-radio-group>
-    </ion-list>
+    <ion-segment [(ngModel)]="mode" (ionChange)="onModeChange()">
+      <ion-segment-button value="delivery"><ion-label>Delivery</ion-label></ion-segment-button>
+      <ion-segment-button value="pickup"><ion-label>Pick Up</ion-label></ion-segment-button>
+    </ion-segment>
+  </ion-card>
+
+  <!-- Time Selection -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Schedule Time</ion-card-title>
+    </ion-card-header>
+    <ion-segment [(ngModel)]="slot" (ionChange)="filterAvailableTimes()">
+      <ion-segment-button value="morning"><ion-label>Morning</ion-label></ion-segment-button>
+      <ion-segment-button value="afternoon"><ion-label>Afternoon</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <div class="ion-padding">
+    <ion-select [(ngModel)]="selectedTime" placeholder="Select Time" interface="popover">
+      <ion-select-option value="ASAP">Deliver Now</ion-select-option>
+      <ion-select-option *ngFor="let t of availableTimes" [value]="t">
+        {{ t }}
+      </ion-select-option>
+    </ion-select>
+    </div>
   </ion-card>
 
   <!-- Add-ons -->
   <ion-card *ngIf="product.addons?.length">
-    <ion-card-header>
-      <ion-card-title>Add-ons</ion-card-title>
-    </ion-card-header>
-    <ion-list>
-      <ion-item *ngFor="let addon of product.addons">
-        <ion-label>{{ addon.label }} (+₱{{ addon.price }})</ion-label>
-        <ion-checkbox
-          slot="end"
-          [checked]="selectedAddons.has(addon.id)"
-          (ionChange)="toggleAddon(addon.id)">
-        </ion-checkbox>
-      </ion-item>
-    </ion-list>
   </ion-card>
-
-  <div class="spacer"></div>
 </ion-content>
 
 <!-- Sticky Footer -->

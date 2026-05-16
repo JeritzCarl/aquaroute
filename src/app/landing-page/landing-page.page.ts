@@ -1,211 +1,216 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { StationService } from '../services/station.service';
 import { CartService } from '../services/cart.service';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Firestore } from '@angular/fire/firestore';
+import { GeoService } from '../services/geo.service';
+import { RatingService } from '../services/rating.service';
+import { FavoritesService } from '../services/favorites.service';
+import { Subscription } from 'rxjs';
+import { NotificationService } from '../services/notification.service';
+import { collection, onSnapshot } from '@angular/fire/firestore';
+import { doc, getDoc } from '@angular/fire/firestore';
+import { query, where } from '@angular/fire/firestore';
 
 @Component({
   selector: 'app-landing-page',
   templateUrl: './landing-page.page.html',
   styleUrls: ['./landing-page.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, RouterModule, HttpClientModule],
+  imports: [CommonModule, IonicModule, RouterModule],
 })
-export class LandingPage implements OnInit {
+export class LandingPage implements OnInit, OnDestroy {
   stations: any[] = [];
   filteredStations: any[] = [];
   searchQuery = '';
   cartCount = 0;
+  unreadCount = 0;
+  private notifSub?: Subscription;
   userLocation: { lat: number; lng: number } | null = null;
-
-  private googleApiKey = 'YOUR_GOOGLE_MAPS_API_KEY'; // 🔑 Replace with your real key
-  private cacheExpiry = 10 * 60 * 1000; // 10 minutes
+  favSubs: Subscription[] = [];
+  favMainSub?: Subscription;
 
   constructor(
     private stationService: StationService,
     private cartService: CartService,
-    private http: HttpClient
+    private firestore: Firestore,
+    private geoService: GeoService,
+    private ratingService: RatingService,
+    private fav: FavoritesService,
+    private toast: ToastController,
+    private notifSvc: NotificationService
   ) {}
 
   async ngOnInit() {
-    this.getUserLocation();
+    await this.getUserLocation();
 
-    this.stationService.getStations().subscribe((data) => {
-      // ✅ Only keep Tuguegarao-based stations
-      this.stations = data
-        .filter(
-          (s: any) =>
-            s.stationName !== 'AquaClear Refilling Station' &&
-            s.stationName !== 'CrystalDrop Water Station' &&
-            s.address?.toLowerCase().includes('tuguegarao')
-        )
-        .map((station: any) => ({
-          ...station,
-          distanceKm: null,
-          deliveryEstimate: 'Calculating...',
-          containers: station.containers ?? [],
-          waterTypes: station.waterTypes ?? [],
-          minPrice: station.minPrice ?? null,
-        }));
+// ✅ Real-time Firestore listener (only active stations)
+const stationsRef = collection(this.firestore, 'stations');
+const q = query(stationsRef, where('active', '==', true));
 
-      this.filteredStations = [...this.stations];
+onSnapshot(q, async (snapshot) => {
+  this.stations = []; // clear current list
 
-      if (this.userLocation) {
-        this.loadCachedDistances();
-      }
+  snapshot.forEach((docSnap) => {
+    const data: any = { id: docSnap.id, ...docSnap.data() };
+    this.stations.push({
+      ...data,
+      distanceKm: null,
+      containers: data.containers ?? [],
+      waterTypes: Object.keys(data.availableTypes || {}).filter((t) => data.availableTypes[t]),
+      minPrice: data.minPrice ?? null,
+      rating: 0,
+      reviewCount: 0,
+      isFav: false,
     });
+  });
+
+  // Sort + update
+  this.filteredStations = [...this.stations].sort(
+    (a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity)
+  );
+
+  if (this.userLocation) {
+    await this.computeAllDistances();
+    await this.loadRatings();
+  }
+
+  this.observeFavorites();
+});
 
     this.cartService.cartCount$.subscribe((count) => (this.cartCount = count));
+    // 🔴 Subscribe to unread notifications count
+this.notifSub = this.notifSvc.getUnreadCount$().subscribe((count) => {
+  this.unreadCount = count;
+});
+
   }
 
-  // ===== Check cache before calling API =====
-  private loadCachedDistances() {
-    const cached = localStorage.getItem('stationDistances');
-    if (cached) {
-      const { data, timestamp } = JSON.parse(cached);
-      if (Date.now() - timestamp < this.cacheExpiry) {
-        // ✅ Use cached values
-        this.stations.forEach((station) => {
-          const cachedStation = data.find((s: any) => s.id === station.id);
-          if (cachedStation) {
-            station.distanceKm = cachedStation.distanceKm;
-            station.deliveryEstimate = cachedStation.deliveryEstimate;
-          }
-        });
-        this.filteredStations = [...this.stations];
-        return;
-      }
-    }
-    // Cache missing/expired → fetch fresh data
-    this.updateDistancesFromGoogle();
-  }
+  private observeFavorites() {
+    this.favSubs.forEach((s) => s.unsubscribe());
+    this.favSubs = [];
 
-  // ===== Google Distance Matrix API =====
-  private updateDistancesFromGoogle() {
-    if (!this.userLocation || !this.stations.length) return;
-
-    const origins = `${this.userLocation.lat},${this.userLocation.lng}`;
-    const destinations = this.stations.map((s) => `${s.lat},${s.lng}`).join('|');
-
-    const url =
-      `https://maps.googleapis.com/maps/api/distancematrix/json?units=metric` +
-      `&origins=${origins}&destinations=${destinations}&key=${this.googleApiKey}`;
-
-    this.http.get<any>(url).subscribe({
-      next: (res) => {
-        if (res?.status !== 'OK') {
-          console.warn('⚠️ Distance Matrix error:', res);
-          this.useFallbackDistances();
-          return;
-        }
-
-        const elements = res.rows?.[0]?.elements || [];
-        this.stations.forEach((station, i) => {
-          const el = elements[i];
-          if (el?.status === 'OK') {
-            station.distanceKm = el.distance.value / 1000;
-            station.deliveryEstimate = el.duration.text;
-          } else {
-            station.distanceKm = this.getDistance(
-              this.userLocation!.lat,
-              this.userLocation!.lng,
-              station.lat,
-              station.lng
-            );
-            station.deliveryEstimate = '30–45 mins';
-          }
-        });
-
-        // ✅ Save to cache
-        localStorage.setItem(
-          'stationDistances',
-          JSON.stringify({
-            data: this.stations.map((s) => ({
-              id: s.id,
-              distanceKm: s.distanceKm,
-              deliveryEstimate: s.deliveryEstimate,
-            })),
-            timestamp: Date.now(),
-          })
-        );
-
-        this.filteredStations = [...this.stations];
-      },
-      error: (err) => {
-        console.error('❌ Distance Matrix API blocked:', err);
-        this.useFallbackDistances();
-      },
+    this.favMainSub?.unsubscribe();
+    this.favMainSub = this.fav.favoritesList$().subscribe((ids) => {
+      this.stations.forEach((station) => {
+        station.isFav = ids.includes(station.id);
+      });
+      this.filteredStations = [...this.stations];
     });
-  }
-
-  // ===== fallback to haversine if Google API fails =====
-  private useFallbackDistances() {
-    if (!this.userLocation) return;
 
     this.stations.forEach((station) => {
-      station.distanceKm = this.getDistance(
-        this.userLocation!.lat,
-        this.userLocation!.lng,
-        station.lat,
-        station.lng
-      );
-      station.deliveryEstimate = '30–45 mins';
-    });
-
-    this.filteredStations = [...this.stations];
-  }
-
-  // ===== Haversine formula =====
-  getDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-    const R = 6371;
-    const dLat = this.toRad(lat2 - lat1);
-    const dLon = this.toRad(lon2 - lon1);
-    const a =
-      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRad(lat1)) *
-        Math.cos(this.toRad(lat2)) *
-        Math.sin(dLon / 2) *
-        Math.sin(dLon / 2);
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c;
-  }
-
-  toRad(value: number): number {
-    return (value * Math.PI) / 180;
-  }
-
-  async getUserLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((pos) => {
-        this.userLocation = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
-        };
-        this.loadCachedDistances();
+      const sub = this.fav.isFavorite$(station.id).subscribe((isFav) => {
+        station.isFav = isFav;
       });
-    } else {
-      console.warn('Geolocation not supported.');
+      this.favSubs.push(sub);
+    });
+  }
+
+    async toggleFavorite(stationId: string) {
+    try {
+      const res = await this.fav.toggle(stationId);
+      const msg = res.favored ? 'Added to favorites ❤️' : 'Removed from favorites 💔';
+      const toast = await this.toast.create({
+        message: msg,
+        duration: 1300,
+        color: 'medium',
+      });
+      await toast.present();
+    } catch (err) {
+      console.error('Favorite toggle failed:', err);
     }
   }
 
-  // ===== Filters =====
+  // 📍 Get user location
+  async getUserLocation() {
+    if (navigator.geolocation) {
+      return new Promise<void>((resolve) => {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            this.userLocation = {
+              lat: pos.coords.latitude,
+              lng: pos.coords.longitude,
+            };
+            this.computeAllDistances();
+            this.loadRatings();
+            resolve();
+          },
+          () => {
+            this.userLocation = { lat: 17.6131, lng: 121.7270 };
+            this.computeAllDistances();
+            this.loadRatings();
+            resolve();
+          }
+        );
+      });
+    } else {
+      this.userLocation = { lat: 17.6131, lng: 121.7270 };
+      this.computeAllDistances();
+      this.loadRatings();
+    }
+  }
+
+  // 📏 Compute distances
+  private async computeAllDistances() {
+    if (!this.userLocation) return;
+    for (const s of this.stations) {
+      try {
+        s.distanceKm = this.geoService.computeDistance(
+          { lat: this.userLocation.lat, lng: this.userLocation.lng },
+          { lat: s.lat, lng: s.lng }
+        );
+      } catch {
+        s.distanceKm = 0;
+      }
+    }
+    this.filteredStations = [...this.stations].sort(
+      (a, b) => (a.distanceKm ?? 0) - (b.distanceKm ?? 0)
+    );
+  }
+
+// ⭐ Load ratings directly from Firestore station doc
+private async loadRatings() {
+  for (const s of this.stations) {
+    try {
+      const ref = doc(this.firestore, `stations/${s.id}`);
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data() as any;
+        s.avgRating = data['avgRating'] ?? 0;
+        s.totalRatings = data['totalRatings'] ?? 0;
+      } else {
+        s.avgRating = 0;
+        s.totalRatings = 0;
+      }
+    } catch (err) {
+      console.error(`⚠️ Failed to load rating for ${s.id}:`, err);
+      s.avgRating = 0;
+      s.totalRatings = 0;
+    }
+  }
+
+  // Re-render list
+  this.filteredStations = [...this.stations];
+}
+
+  // 🔍 Search
   filterStations(event: any) {
     this.searchQuery = event.target.value?.toLowerCase().trim() || '';
     if (!this.searchQuery) {
       this.filteredStations = [...this.stations];
       return;
     }
-    this.filteredStations = this.stations.filter((station) => {
-      const matchesStation =
-        station.stationName.toLowerCase().includes(this.searchQuery) ||
-        station.address.toLowerCase().includes(this.searchQuery) ||
-        station.ownerName?.toLowerCase().includes(this.searchQuery);
-      const matchesProducts = station.products?.some((p: any) =>
+    this.filteredStations = this.stations.filter((s) => {
+      const match =
+        s.stationName.toLowerCase().includes(this.searchQuery) ||
+        s.address.toLowerCase().includes(this.searchQuery) ||
+        s.ownerName?.toLowerCase().includes(this.searchQuery);
+      const matchProd = s.products?.some((p: any) =>
         p.name?.toLowerCase().includes(this.searchQuery)
       );
-      return matchesStation || matchesProducts;
+      return match || matchProd;
     });
   }
 
@@ -214,18 +219,52 @@ export class LandingPage implements OnInit {
     this.filteredStations = [...this.stations];
   }
 
+  // 🔹 Filter buttons
   applyFilter(type: string) {
     switch (type) {
       case 'nearest':
         this.filteredStations = [...this.stations].sort(
-          (a, b) => (a.distanceKm || Infinity) - (b.distanceKm || Infinity)
+          (a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity)
         );
         break;
       case 'rating':
-        this.filteredStations = [...this.stations].sort((a, b) => b.rating - a.rating);
+        this.filteredStations = [...this.stations].sort(
+          (a, b) => (b.rating ?? 0) - (a.rating ?? 0)
+        );
         break;
       default:
         this.filteredStations = [...this.stations];
     }
+  }
+
+  // ─────────────── Fallback image handler ───────────────
+onImageError(event: any) {
+  event.target.src = 'assets/AquaRoute Droplet Logo.png';
+}
+
+getFullAddress(station: any): string {
+  const base = station.address?.trim() || '';
+
+  // If address already includes Tuguegarao or zip, return it directly
+  const lower = base.toLowerCase();
+  if (lower.includes('tuguegarao') || lower.includes('3500')) {
+    return base;
+  }
+
+  const parts = [
+    base,
+    station.barangay || '',
+    station.city || '',
+    station.zipCode || ''
+  ].filter((p) => p && p.trim() !== '');
+
+  return parts.join(', ');
+}
+
+
+  ngOnDestroy() {
+    this.favSubs.forEach((s) => s.unsubscribe());
+    this.favMainSub?.unsubscribe();
+    this.notifSub?.unsubscribe();
   }
 }

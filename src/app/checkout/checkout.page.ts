@@ -5,25 +5,20 @@ import { IonicModule, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AlertController } from '@ionic/angular';
 
-// Services
 import { CartService, CartItem } from '../services/cart.service';
 import { StationService } from '../services/station.service';
 import { NotificationService } from '../services/notification.service';
 
-// Firebase
 import { Firestore, collection, doc, setDoc, serverTimestamp, getDoc, collectionData } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 
-// HTTP
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
-
-// Models
 import { Station } from '../models/station.model';
 import { Order } from '../models/order.model';
-
-// Leaflet
 import * as L from 'leaflet';
+import { Geolocation } from '@capacitor/geolocation';
+import { LatLng, GeoService } from '../services/geo.service';
 
 interface UserContact {
   fullName: string;
@@ -39,13 +34,19 @@ type PaymentMethod = 'COD' | 'GCASH';
 
 type StationGroup = Pick<Station, 'id' | 'stationName' | 'address'> & {
   items: CartItem[];
+  mode?: 'delivery' | 'pickup';
   lat?: number;
   lng?: number;
+  logoUrl?: string;
   containerSwap?: boolean;
-  pickupLater?: boolean;
   deliveryFee?: number;
   eta?: { distance: string; duration: string };
+  isOpen?: boolean;
+  operatingHours?: string;
+  gcashName?: string;
+  gcashNumber?: string;
 };
+
 
 @Component({
   selector: 'app-checkout',
@@ -55,25 +56,35 @@ type StationGroup = Pick<Station, 'id' | 'stationName' | 'address'> & {
   styleUrls: ['./checkout.page.scss'],
 })
 export class CheckoutPage implements OnInit, AfterViewInit {
+  // ─────────────── Core State ───────────────
   stations: StationGroup[] = [];
   addresses: any[] = [];
   selectedAddressId: string | null = null;
   contact: UserContact = { fullName: '', address: '', notes: '', lat: undefined, lng: undefined };
   payment: PaymentMethod = 'COD';
+  deliveryNotes: string = '';
 
-  // Default map center (Tuguegarao)
+gcashReferenceNumber: string = '';
+proofFile: File | null = null;
+proofPreviewUrl: string = '';
+isUploadingProof: boolean = false;
+
+// Cloudinary config
+private readonly cloudinaryCloudName = 'ddmbxblmz';
+private readonly cloudinaryUploadPreset = 'aquaroute_unsigned';
+
+  // ─────────────── Map + Location ───────────────
   mapCenter = { lat: 17.6131, lng: 121.7270 };
-
   approximateLocation = false;
 
   private map!: L.Map;
   private customerMarker?: L.Marker;
   private stationMarkers: L.Marker[] = [];
   private routeLines: L.Polyline[] = [];
-  private isInTuguegarao(lat: number, lng: number): boolean {
-  return lat >= 17.58 && lat <= 17.68 && lng >= 121.69 && lng <= 121.75;
-}
 
+  private isInTuguegarao(lat: number, lng: number): boolean {
+    return lat >= 17.58 && lat <= 17.68 && lng >= 121.69 && lng <= 121.75;
+  }
 
   eta: { distance: string; duration: string } | null = null;
 
@@ -88,18 +99,17 @@ export class CheckoutPage implements OnInit, AfterViewInit {
     private notifications: NotificationService,
     private alertCtrl: AlertController
   ) {
-// Apply address passed from Addresses/Add Address page (handles refresh & back nav)
-const navState = (this.router.getCurrentNavigation()?.extras?.state as any) ?? (history.state || {});
-const selectedFromState = navState['selectedAddress'];
-if (selectedFromState) {
-  // Wipe any stale persisted contact (e.g., that Route 242 address)
-  localStorage.removeItem('checkoutContact');
-
-  this.applyAddress(selectedFromState);
-  this.selectedAddressId = selectedFromState.id ?? null;
-}
-
+    // Apply address passed from Addresses/Add Address page (handles refresh & back nav)
+    const navState = (this.router.getCurrentNavigation()?.extras?.state as any) ?? (history.state || {});
+    const selectedFromState = navState['selectedAddress'];
+    if (selectedFromState) {
+      // Wipe any stale persisted contact (e.g., that Route 242 address)
+      localStorage.removeItem('checkoutContact');
+      this.applyAddress(selectedFromState);
+      this.selectedAddressId = selectedFromState.id ?? null;
+    }
   }
+
 
   // ─────────────── Lifecycle ───────────────
 async ngOnInit() {
@@ -192,8 +202,14 @@ async ngAfterViewInit(): Promise<void> {
     }
   }
 
-  // ✅ Otherwise try GPS
-  await this.tryAutoLocate();
+await this.tryAutoLocate();
+
+setTimeout(() => {
+  if (!this.contact.lat || !this.contact.lng) {
+    console.warn('⚠️ Retrying GPS after live reload...');
+    this.tryAutoLocate();
+  }
+}, 4000);
 
   // ✅ If still no coords, notify user
   if (!this.contact.lat || !this.contact.lng) {
@@ -208,7 +224,6 @@ async ngAfterViewInit(): Promise<void> {
       this.applyAddress(selected);
       this.selectedAddressId = selected.id;
     }
-    
   }
 
   // ─────────────── Map (Leaflet + OSM) ───────────────
@@ -266,7 +281,7 @@ private setCustomerMarker(latlng: L.LatLngExpression) {
 
   if (!this.customerMarker) {
     const customerIcon = L.icon({
-      iconUrl: 'assets/pin-customer.png',
+      iconUrl: 'assets/pins/customer-icon.png',
       iconSize: [36, 36],
       iconAnchor: [18, 36],
       popupAnchor: [0, -36],
@@ -304,36 +319,56 @@ private setCustomerMarker(latlng: L.LatLngExpression) {
   this.updateETA();
 }
 
+// ───────────── Image Fallback Handler ─────────────
+onImageError(event: any, type: 'station' | 'product') {
+  event.target.src =
+    type === 'station'
+      ? 'assets/AquaRoute Droplet Logo.png'
+      : 'assets/water-placeholder.png';
+}
 
-
-  private async tryAutoLocate(): Promise<void> {
-    if (!('geolocation' in navigator)) return;
-    await new Promise<void>((resolve) => {
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          this.contact.lat = pos.coords.latitude;
-          this.contact.lng = pos.coords.longitude;
-          this.approximateLocation = false;
-
-          this.setCustomerMarker([this.contact.lat, this.contact.lng]);
-          await this.reverseGeocodeAndValidate(this.contact.lat, this.contact.lng);
-          localStorage.setItem('checkoutContact', JSON.stringify(this.contact));
-          this.updateETA();
-          resolve();
-          setTimeout(() => this.map?.invalidateSize(), 200);
-        },
-        () => resolve(),
-        { enableHighAccuracy: true, timeout: 8000 }
-      );
+private async tryAutoLocate(): Promise<void> {
+  try {
+    this.presentToast('📡 Getting precise GPS location...');
+    const pos = await Geolocation.getCurrentPosition({
+      enableHighAccuracy: true,
+      timeout: 20000,   // wait up to 20 s for GPS lock
+      maximumAge: 0,    // ignore cached results
     });
-  }
 
-  async useMyLocation() {
-    await this.tryAutoLocate();
-    if (!this.contact.lat || !this.contact.lng) {
-      await this.presentToast('Turn on Location Services and try again.');
+    const { latitude, longitude, accuracy } = pos.coords;
+    console.log('📍 Device GPS fix:', latitude, longitude, '±', accuracy, 'm');
+
+    if (accuracy > 50) {
+      this.approximateLocation = true;
+      await this.presentToast('⚠️ GPS accuracy is low (>' + Math.round(accuracy) + ' m). Move outdoors and retry.');
+    } else {
+      this.approximateLocation = false;
     }
+
+    this.contact.lat = latitude;
+    this.contact.lng = longitude;
+
+    this.setCustomerMarker([latitude, longitude]);
+    await this.reverseGeocodeAndValidate(latitude, longitude);
+
+    localStorage.setItem('checkoutContact', JSON.stringify(this.contact));
+    this.updateETA();
+    setTimeout(() => this.map?.invalidateSize(), 200);
+
+    await this.presentToast('✅ Location pinned accurately!');
+  } catch (err) {
+    console.error('❌ GPS locate failed', err);
+    await this.presentToast('Failed to get precise location. Please enable GPS or try again.');
   }
+}
+
+// async useMyLocation() {
+//   await this.tryAutoLocate();
+//   if (!this.contact.lat || !this.contact.lng) {
+//     await this.presentToast('📍 Unable to detect location. Please enable GPS and retry.');
+//   }
+// }
 
   private async reverseGeocodeAndValidate(lat: number, lng: number) {
     try {
@@ -513,6 +548,7 @@ private groupOrders() {
   if (!cart || cart.length === 0) cart = this.cartService.getCart();
 
   const grouped: { [stationId: string]: StationGroup } = {};
+
   cart.forEach((item: CartItem) => {
     if (!grouped[item.stationId]) {
       grouped[item.stationId] = {
@@ -521,40 +557,107 @@ private groupOrders() {
         address: 'Loading...',
         items: [],
         containerSwap: false,
-        pickupLater: false,
         deliveryFee: 0,
+        isOpen: true,
+        operatingHours: '—',
       };
 
-      // ✅ Fetch latest station info from Firestore
-      this.stationService.getStationById(item.stationId).subscribe((station) => {
-        grouped[item.stationId].address = station?.address || 'No address available';
+      // ✅ Firestore real-time station info
+      this.stationService.getStationById(item.stationId).subscribe((station: any) => {
+        if (!station) return;
 
-// ✅ Validate station coords, fallback to centroid of deliveryArea if available
-      if (typeof (station as any)?.lat === 'number' && typeof (station as any)?.lng === 'number') {
-        grouped[item.stationId].lat = (station as any).lat;
-        grouped[item.stationId].lng = (station as any).lng;
-      } else if (Array.isArray((station as any)?.deliveryArea) && (station as any).deliveryArea.length) {
-        const pts = (station as any).deliveryArea;
-        const c = pts.reduce((a: any, p: any) => ({ lat: a.lat + p.lat, lng: a.lng + p.lng }),
-          { lat: 0, lng: 0 });
-        grouped[item.stationId].lat = c.lat / pts.length;
-        grouped[item.stationId].lng = c.lng / pts.length;
-        console.warn(`⚠️ Station ${item.stationName} missing direct coords, using deliveryArea centroid`);
-      } else {
-        grouped[item.stationId].lat = 17.6131;
-        grouped[item.stationId].lng = 121.7270;
-        console.warn(`⚠️ Station ${item.stationName} missing coords, forced Tuguegarao center fallback`);
-      } 
+        // ✅ Type-safe bracket access (fix TS4111)
+        const openTime = station['openingTime'] || station['open'] || '—';
+        const closeTime = station['closingTime'] || station['close'] || '—';
 
-        localStorage.setItem('checkoutStations', JSON.stringify(Object.values(grouped)));
+        grouped[item.stationId].address = station['address'] || 'No address available';
+        grouped[item.stationId].operatingHours = `${openTime} - ${closeTime}`;
+        grouped[item.stationId].isOpen = this.checkIfStationOpen(openTime, closeTime);
+
+        grouped[item.stationId].gcashName = station['gcashName'] || '';
+        grouped[item.stationId].gcashNumber = this.displayCheckoutPhone(station['gcashNumber'] || '');
+
+        // ✅ Coordinates fallback
+        if (typeof station['lat'] === 'number' && typeof station['lng'] === 'number') {
+          grouped[item.stationId].lat = station['lat'];
+          grouped[item.stationId].lng = station['lng'];
+        } else {
+          grouped[item.stationId].lat = 17.6131;
+          grouped[item.stationId].lng = 121.7270;
+        }
+
+        // ✅ Save updated stations locally
+        this.stations = Object.values(grouped);
+        localStorage.setItem('checkoutStations', JSON.stringify(this.stations));
       });
     }
+
+    // ✅ Ensure waterType is loaded and cached
+    if (!item.waterType && item.productId && item.stationId) {
+      this.stationService
+        .getProductById(item.stationId, item.productId)
+        .subscribe((product: any) => {
+          const firestoreWaterType = product?.['waterType'] || product?.['type'] || '—';
+          item.waterType = firestoreWaterType;
+
+          // Cache in localStorage for offline persistence
+          const cached = JSON.parse(localStorage.getItem('cartItems') || '[]');
+          const idx = cached.findIndex((c: any) => c.lineId === item.lineId);
+          if (idx !== -1) {
+            cached[idx].waterType = firestoreWaterType;
+            localStorage.setItem('cartItems', JSON.stringify(cached));
+          }
+
+          this.refreshStations(grouped);
+        });
+    }
+
     grouped[item.stationId].items.push(item);
   });
 
   this.stations = Object.values(grouped);
   localStorage.setItem('checkoutStations', JSON.stringify(this.stations));
 }
+
+// ──────────────────────────────────────────────
+// Helper to refresh stations UI
+// ──────────────────────────────────────────────
+private refreshStations(grouped: { [id: string]: StationGroup }) {
+  this.stations = Object.values(grouped);
+  localStorage.setItem('checkoutStations', JSON.stringify(this.stations));
+}
+
+// ──────────────────────────────────────────────
+// Check if station open (based on time range)
+// ──────────────────────────────────────────────
+private checkIfStationOpen(openingTime?: string, closingTime?: string): boolean {
+  if (!openingTime || !closingTime) return true;
+
+  const now = new Date();
+  const [openH, openM, openMeridian] = this.parseTime(openingTime);
+  const [closeH, closeM, closeMeridian] = this.parseTime(closingTime);
+
+  const open24 = this.to24Hour(openH, openM, openMeridian);
+  const close24 = this.to24Hour(closeH, closeM, closeMeridian);
+  const current = now.getHours() * 60 + now.getMinutes();
+
+  return current >= open24 && current <= close24;
+}
+
+// Parse 12-hour format like "08:00 AM"
+private parseTime(timeStr: string): [number, number, string] {
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i);
+  if (!match) return [0, 0, 'AM'];
+  return [parseInt(match[1], 10), parseInt(match[2], 10), match[3].toUpperCase()];
+}
+
+// Convert to total minutes (24-hour)
+private to24Hour(hour: number, minute: number, meridian: string): number {
+  if (meridian === 'PM' && hour !== 12) hour += 12;
+  if (meridian === 'AM' && hour === 12) hour = 0;
+  return hour * 60 + minute;
+}
+
 
   // ─────────────── Delivery Fee + Totals ───────────────
   private getDistanceKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -569,17 +672,88 @@ private groupOrders() {
     return R * (2 * Math.atan2(Math.sqrt(1 - a), Math.sqrt(a)));
   }
 
-  private calculateDeliveryFee(station: StationGroup): number {
-    const totalContainers = (station.items || []).reduce((sum, item) => sum + (item.quantity || 1), 0);
-    if (
-      this.contact.lat == null || this.contact.lng == null ||
-      station.lat == null || station.lng == null
-    ) {
-      return 0;
-    }
-    const distance = this.getDistanceKm(station.lat, station.lng, this.contact.lat, this.contact.lng);
-    return distance <= 2 ? 0 : totalContainers * 5;
+calculateDeliveryFee(station: StationGroup): number {
+  const mode = (station.items?.[0]?.mode || station.mode || 'delivery')
+    .toString()
+    .trim()
+    .toLowerCase();
+
+  // ✅ Pickup = no delivery fee
+  if (mode === 'pickup') return 0;
+
+  const totalContainers = (station.items || []).reduce(
+    (sum, item) => sum + Number(item.quantity || 0),
+    0
+  );
+
+  const schedule = (station.items?.[0]?.scheduledAt || '')
+    .toString()
+    .trim()
+    .toUpperCase();
+
+  // ✅ Base per-gallon fee
+  const feePerGallon = schedule === 'ASAP' ? 10 : 5;
+  const baseFee = totalContainers * feePerGallon;
+
+  // ✅ If coordinates are missing, still charge only the base fee
+  if (
+    this.contact.lat == null || this.contact.lng == null ||
+    station.lat == null || station.lng == null
+  ) {
+    return baseFee;
   }
+
+  const distance = this.getDistanceKm(
+    station.lat,
+    station.lng,
+    this.contact.lat,
+    this.contact.lng
+  );
+
+  // ✅ Safety guard: if distance is invalid or absurd, ignore surcharge
+  if (!isFinite(distance) || distance < 0 || distance > 30) {
+    console.warn('⚠️ Invalid checkout distance detected. Using base fee only.', {
+      stationName: station.stationName,
+      stationLat: station.lat,
+      stationLng: station.lng,
+      customerLat: this.contact.lat,
+      customerLng: this.contact.lng,
+      distance,
+    });
+    return baseFee;
+  }
+
+  // ✅ Additional fee only if order distance exceeds 2 km
+  if (distance > 2) {
+    const extraKm = distance - 2;
+    const extraFee = Math.ceil(extraKm) * 5;
+    return baseFee + extraFee;
+  }
+
+  return baseFee;
+}
+
+getStationFeeRate(station: StationGroup): number {
+  const mode = (station.items?.[0]?.mode || station.mode || 'delivery')
+    .toString()
+    .trim()
+    .toLowerCase();
+
+  if (mode === 'pickup') return 0;
+
+  const schedule = (station.items?.[0]?.scheduledAt || '')
+    .toString()
+    .trim()
+    .toUpperCase();
+
+  return schedule === 'ASAP' ? 10 : 5;
+}
+
+getStationTotalGallons(station: StationGroup): number {
+  return (station.items || []).reduce((sum, item) => {
+    return sum + Number(item.quantity || 0);
+  }, 0);
+}
 
   getStationSubtotal(group: StationGroup): number {
     return (group.items || []).reduce(
@@ -597,9 +771,21 @@ private groupOrders() {
     return this.stations.reduce((sum, s) => sum + this.calculateDeliveryFee(s), 0);
   }
 
-  getGrandTotal(): number {
-    return this.getGrandSubtotal() + this.getGrandDeliveryFee();
-  }
+getGrandTotal(): number {
+  const subtotal = this.getGrandSubtotal();
+  // ✅ Only add delivery fees for delivery-mode stations
+  const deliveryFee = this.stations.reduce((sum, s) => {
+    const mode = (s.mode || (s.items?.[0]?.mode ?? 'delivery')).toLowerCase();
+    return sum + (mode === 'pickup' ? 0 : this.calculateDeliveryFee(s));
+  }, 0);
+  return subtotal + deliveryFee;
+}
+
+  // ─────────────── Check if any station is closed ───────────────
+isAnyStationClosed(): boolean {
+  return Array.isArray(this.stations) && this.stations.some(s => s && s.isOpen === false);
+}
+
 
   // ─────────────── State Saving ───────────────
   changePayment(method: PaymentMethod) {
@@ -611,44 +797,155 @@ private groupOrders() {
     localStorage.setItem('checkoutContact', JSON.stringify(this.contact));
   }
 
-  onStationOptionChange() {
-    localStorage.setItem('checkoutStations', JSON.stringify(this.stations));
+onStationOptionChange() {
+  localStorage.setItem('checkoutStations', JSON.stringify(this.stations));
+
+  this.stations = [...this.stations];
+}
+
+onProofSelected(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+
+  if (!file) return;
+
+  if (!file.type.startsWith('image/')) {
+    this.presentToast('Please upload an image file only.');
+    return;
   }
 
+  this.proofFile = file;
+  this.proofPreviewUrl = URL.createObjectURL(file);
+}
 
- // ─────────────── Place Order ───────────────
+private async uploadProofToCloudinary(): Promise<string> {
+  if (!this.proofFile) {
+    throw new Error('No proof file selected.');
+  }
+
+  this.isUploadingProof = true;
+
+  try {
+    const formData = new FormData();
+    formData.append('file', this.proofFile);
+    formData.append('upload_preset', this.cloudinaryUploadPreset);
+    formData.append('folder', 'aquaroute/payment-proofs');
+
+    const uploadUrl = `https://api.cloudinary.com/v1_1/${this.cloudinaryCloudName}/image/upload`;
+
+    const response: any = await firstValueFrom(
+      this.http.post(uploadUrl, formData)
+    );
+
+    if (!response?.secure_url) {
+      throw new Error('Cloudinary upload failed: no secure URL returned.');
+    }
+
+    return response.secure_url;
+  } finally {
+    this.isUploadingProof = false;
+  }
+}
+
+
+  // ─────────────── Station Open Validation ───────────────
+private async validateStationsOpen(): Promise<boolean> {
+  try {
+    for (const s of this.stations) {
+      const ref = doc(this.firestore, `stations/${s.id}`);
+      const snap = await getDoc(ref);
+      const data = snap.data() as any;
+      if (!data?.isOpen) {
+        await this.presentToast(`🚫 ${data?.stationName || 'Station'} is currently closed.`);
+        return false;
+      }
+    }
+    return true;
+  } catch (err) {
+    console.error('❌ Failed to validate station open status:', err);
+    await this.presentToast('⚠️ Could not verify station status. Try again later.');
+    return false;
+  }
+}
+
+
+// ─────────────── Place Order ───────────────
 async placeOrder(form: NgForm) {
+  // ✅ 1. Basic form validation
   if (form.invalid) {
     await this.presentToast('Please complete delivery details.');
     return;
   }
 
-  if (!this.contact.lat || !this.contact.lng) {
-    await this.presentToast('📍 Please pin your delivery location on the map or use "Find via address".');
+let uploadedProofUrl = '';
+
+if (this.payment === 'GCASH') {
+  const gcashStation = this.stations[0];
+
+  if (!gcashStation?.gcashNumber || !gcashStation?.gcashName) {
+    await this.presentToast('GCash details are not available for this station yet.');
     return;
   }
 
-  if (!this.contact.address || !this.contact.address.toLowerCase().includes('tuguegarao')) {
-    await this.presentToast('⚠️ We currently deliver only within Tuguegarao City.');
+  if (!this.gcashReferenceNumber.trim()) {
+    await this.presentToast('Please enter your GCash reference number.');
     return;
   }
 
+  if (!this.proofFile) {
+    await this.presentToast('Please upload your proof of payment.');
+    return;
+  }
+
+  try {
+    await this.presentToast('Uploading proof of payment...');
+    uploadedProofUrl = await this.uploadProofToCloudinary();
+  } catch (error) {
+    console.error('❌ Cloudinary upload failed:', error);
+    await this.presentToast('Failed to upload proof of payment. Please try again.');
+    return;
+  }
+}
+
+  // ✅ 2. Flatten all cart items
+const allItems = this.stations.reduce(
+  (acc: CartItem[], s: StationGroup) =>
+    acc.concat(
+      (s.items || []).map((item) => ({
+        ...item,
+        deliveryPriority: item.scheduledAt === 'ASAP' ? 'asap' : 'scheduled',
+      }))
+    ),
+  []
+);
+  if (allItems.length === 0) {
+    await this.presentToast('Your cart is empty.');
+    return;
+  }
+
+  // ✅ 3. Delivery vs Pickup validation
+  const hasDelivery = allItems.some(i => i.mode === 'delivery');
+
+  if (hasDelivery) {
+    if (!this.contact.address || !this.contact.address.toLowerCase().includes('tuguegarao')) {
+      await this.presentToast('⚠️ Delivery orders must have a valid Tuguegarao City address.');
+      return;
+    }
+    if (!this.contact.lat || !this.contact.lng) {
+      await this.presentToast('📍 Please pin your delivery location on the map.');
+      return;
+    }
+  }
+
+  // ✅ 4. Ensure station coordinates are valid
   const ok = await this.ensureStationCoords();
   if (!ok) {
     await this.presentToast('A station is missing location info. Please try again.');
     return;
   }
 
+  // ✅ 5. Save contact for reuse
   localStorage.setItem('checkoutContact', JSON.stringify(this.contact));
-
-  const allItems = this.stations.reduce(
-    (acc: CartItem[], s: StationGroup) => acc.concat(s.items || []),
-    []
-  );
-  if (allItems.length === 0) {
-    await this.presentToast('Your cart is empty.');
-    return;
-  }
 
   try {
     const user = this.auth.currentUser;
@@ -662,67 +959,82 @@ async placeOrder(form: NgForm) {
     const globalOrdersRef = collection(this.firestore, 'orders');
     const newGlobalOrderRef = doc(globalOrdersRef, newUserOrderRef.id);
 
-    const stationsPayload = this.stations.map((s) => {
-      const fee = this.calculateDeliveryFee(s);
+// ✅ 6. Build station payloads (auto-₱0 for Pickup)
+const stationsPayload = this.stations.map((s) => {
+  const mode = (s.items?.[0]?.mode || s.mode || 'delivery').toLowerCase();
+  const fee = mode === 'pickup' ? 0 : this.calculateDeliveryFee(s);
 
-      // Validate station coords are within Tuguegarao
-      let safeStationLatLng: { lat: number; lng: number } | undefined = undefined;
-      if (s.lat != null && s.lng != null) {
-        if (s.lat >= 17.58 && s.lat <= 17.68 && s.lng >= 121.69 && s.lng <= 121.75) {
-          safeStationLatLng = { lat: s.lat, lng: s.lng };
-        } else {
-          console.warn(`⚠️ Station ${s.stationName} has coords outside Tuguegarao (${s.lat},${s.lng}), ignoring`);
-        }
-      }
+  let safeStationLatLng: { lat: number; lng: number } | undefined;
+  if (s.lat != null && s.lng != null) {
+    if (s.lat >= 17.58 && s.lat <= 17.68 && s.lng >= 121.69 && s.lng <= 121.75) {
+      safeStationLatLng = { lat: s.lat, lng: s.lng };
+    }
+  }
 
-      return {
-        stationId: s.id,
-        stationName: s.stationName,
-        stationAddress: s.address,
-        stationLatLng: safeStationLatLng,
-        containerSwap: s.containerSwap,
-        pickupLater: s.pickupLater,
-        deliveryFee: fee,
-        subtotal: this.getStationSubtotal(s),
-        total: this.getStationSubtotal(s) + fee,
-      };
-    });
+  return {
+    stationId: s.id,
+    stationName: s.stationName,
+    stationAddress: s.address,
+    stationLatLng: safeStationLatLng,
+    containerSwap: s.containerSwap || false,
+    deliveryFee: fee,
+    subtotal: this.getStationSubtotal(s),
+    total: mode === 'pickup' ? this.getStationSubtotal(s) : this.getStationSubtotal(s) + fee,
+    mode,
+  };
+});
 
+
+    // ✅ 7. Assemble order object
     const order: Order & any = {
       id: newUserOrderRef.id,
       userId: user.uid,
       stations: stationsPayload,
       items: allItems,
-      charges: {
-        subtotal: this.getGrandSubtotal(),
-        deliveryFee: stationsPayload.reduce((sum, st) => sum + (st.deliveryFee ?? 0), 0),
-        total: stationsPayload.reduce((sum, st) => sum + (st.total ?? 0), 0),
-        currency: 'PHP',
-      },
-delivery: {
-  fullName: this.contact.fullName,
-  address: this.contact.address,
-  notes: this.contact.notes || '',
-  ...(this.contact.lat != null && this.contact.lng != null && this.isInTuguegarao(this.contact.lat, this.contact.lng)
-    ? {
-        latLng: {
-          lat: parseFloat(this.contact.lat.toFixed(6)),
-          lng: parseFloat(this.contact.lng.toFixed(6)),
-        },
-        needsPin: false,
-      }
-    : { needsPin: true }),
-},
+charges: (() => {
+  const subtotal = this.getGrandSubtotal();
 
+  // ✅ Sum only delivery-mode fees; pickup = ₱0
+  const deliveryFee = stationsPayload.reduce((sum, st) => {
+    const isPickup = (st.mode || '').toLowerCase() === 'pickup';
+    return sum + (isPickup ? 0 : (st.deliveryFee ?? 0));
+  }, 0);
+
+  // ✅ Total should never exceed subtotal if all pickups
+  const total = subtotal + deliveryFee;
+
+  return { subtotal, deliveryFee, total, currency: 'PHP' };
+})(),
+      delivery: {
+        fullName: this.contact.fullName,
+        address: this.contact.address,
+        phone: this.contact.phone || '',
+        notes: this.contact.notes || '',
+        ...(this.contact.lat != null &&
+        this.contact.lng != null &&
+        this.isInTuguegarao(this.contact.lat, this.contact.lng)
+          ? {
+              latLng: {
+                lat: parseFloat(this.contact.lat.toFixed(6)),
+                lng: parseFloat(this.contact.lng.toFixed(6)),
+              },
+              needsPin: false,
+            }
+          : { needsPin: true }),
+      },
       payment: {
         method: this.payment,
-        status: this.payment === 'COD' ? 'Pending' : 'Awaiting Proof',
+        status: this.payment === 'COD' ? 'Pending' : 'Pending Verification',
+        referenceNumber: this.payment === 'GCASH' ? this.gcashReferenceNumber.trim() : '',
+        proofUrl: this.payment === 'GCASH' ? uploadedProofUrl : '',
+        verifiedAt: null,
+        verifiedBy: '',
       },
       status: 'Pending',
       statusHistory: [
         {
           status: 'Pending',
-          changedAt: Date.now(), // client timestamp
+          changedAt: Date.now(),
           by: this.contact.fullName || user.displayName || 'Customer',
         },
       ],
@@ -731,50 +1043,84 @@ delivery: {
       ...(this.approximateLocation ? { approximateLocation: true } : {}),
     };
 
+    // ✅ 8. Sanitize before save
+    Object.keys(order).forEach((key) => {
+      if (order[key] === undefined) delete order[key];
+    });
+    if (order.delivery) {
+      Object.keys(order.delivery).forEach((key) => {
+        if (order.delivery[key] === undefined) delete order.delivery[key];
+      });
+    }
+    if (order.payment) {
+      Object.keys(order.payment).forEach((key) => {
+        if (order.payment[key] === undefined) delete order.payment[key];
+      });
+    }
+    if (order.charges) {
+      Object.keys(order.charges).forEach((key) => {
+        if (order.charges[key] === undefined) delete order.charges[key];
+      });
+    }
+
+    // ✅ 9. Save to Firestore
     await setDoc(newUserOrderRef, order);
     await setDoc(newGlobalOrderRef, order);
 
+// ✅ 10. Mirror to station collections + manager notifications
 for (const st of stationsPayload) {
   const sid = st.stationId;
-  if (!sid) {
-    console.warn(`⚠️ Skipping station mirror: stationId missing for`, st);
-    continue;
-  }
-
-  console.log(`📡 Mirroring order ${order.id} → station ${sid}`);
+  if (!sid) continue;
 
   try {
+    // Fetch full station document to extract ownerId (manager)
+    const stationRef = doc(this.firestore, `stations/${sid}`);
+    const stationSnap = await getDoc(stationRef);
+    const stationData = stationSnap.exists() ? (stationSnap.data() as any) : null;
+
+    const managerId = stationData?.ownerId || null;
+
+    // 🔹 Save order under station orders
     const stationOrderRef = doc(this.firestore, `stations/${sid}/orders/${order.id}`);
-    await setDoc(stationOrderRef, {
-      ...order,
-      stationId: sid,
-      stationName: st.stationName,
-      deliveryFee: st.deliveryFee,
-      subtotal: st.subtotal,
-      total: st.total,
-    }, { merge: true });
-
-    console.log(`✅ Order ${order.id} successfully mirrored to station ${sid}`);
-
-    // 🔔 Push notify manager
-    try {
-      await this.notifications.sendPush({
-        title: '📦 New Order Received',
-        body: `Order #${order.id} placed by ${this.contact.fullName || 'a customer'}`,
-        topic: `manager_${sid}`,
-        orderId: order.id,
+    await setDoc(
+      stationOrderRef,
+      {
+        ...order,
         stationId: sid,
+        stationName: st.stationName,
+        deliveryFee: st.deliveryFee,
+        subtotal: st.subtotal,
+        total: st.total,
+        managerId: managerId ?? null, // ✅ keep manager link
+      },
+      { merge: true }
+    );
+
+    // 🔔 Notify manager in Firestore if managerId exists
+    if (managerId) {
+      await this.notifications.addManagerNotification(managerId, {
+        type: 'new_order',
+        message: `🆕 New order received for ${st.stationName}`,
+        relatedId: order.id,
+        read: false,
+        createdAt: serverTimestamp(), // ✅ fix for Firestore schema
       });
-      console.log(`📨 Push sent to manager_${sid}`);
-    } catch (err) {
-      console.error(`⚠️ Failed to send push to manager_${sid}`, err);
     }
 
+    // 🔔 Fallback for push notifications
+    await this.notifications.sendPush({
+      title: '📦 New Order Received',
+      body: `Order #${order.id} placed by ${this.contact.fullName || 'a customer'}`,
+      topic: `manager_${sid}`,
+      orderId: order.id,
+      stationId: sid,
+    });
   } catch (err) {
     console.error(`❌ Failed to mirror order ${order.id} to station ${sid}`, err);
   }
 }
 
+    // ✅ 11. Final push to each station topic
     for (const st of stationsPayload) {
       try {
         await this.notifications.sendPush({
@@ -789,10 +1135,15 @@ for (const st of stationsPayload) {
       }
     }
 
+    // ✅ 12. Cleanup + Redirect
     await this.cartService.clearCart();
     localStorage.removeItem('checkoutStations');
     localStorage.removeItem('checkoutContact');
     localStorage.removeItem('checkoutPayment');
+
+    this.proofFile = null;
+    this.proofPreviewUrl = '';
+    this.gcashReferenceNumber = '';
 
     await this.presentToast('✅ Order placed successfully!');
     this.router.navigate(['/order-success'], {
@@ -803,9 +1154,8 @@ for (const st of stationsPayload) {
     console.error('❌ Order save failed:', err);
     await this.presentToast('Failed to place order. Please try again.');
 
-    // 🛠 Auto-fix fallback: reset invalid coords if save fails
     if (this.contact.lat && this.contact.lng) {
-      this.setCustomerMarker([this.contact.lat, this.contact.lng]); // ✅ wrapped as array
+      this.setCustomerMarker([this.contact.lat, this.contact.lng]);
     }
   }
 }
@@ -836,6 +1186,22 @@ for (const st of stationsPayload) {
     }
   }
 
+    private displayCheckoutPhone(value: string): string {
+    if (!value) return '';
+
+    let cleaned = value.replace(/\D/g, '');
+
+    if (cleaned.startsWith('63')) {
+      cleaned = '0' + cleaned.slice(2);
+    }
+
+    if (!cleaned.startsWith('0') && cleaned.length === 10 && cleaned.startsWith('9')) {
+      cleaned = '0' + cleaned;
+    }
+
+    return cleaned.slice(0, 11);
+  }
+
   private async presentToast(message: string) {
     const t = await this.toastCtrl.create({
       message,
@@ -848,6 +1214,15 @@ for (const st of stationsPayload) {
  // Apply a chosen saved address into checkout contact
 async applyAddress(addr: any) {
   if (!addr) return;
+
+    const phone =
+    addr.phone ??
+    addr.phoneNumber ??
+    addr.contactNumber ??
+    addr.mobile ??
+    addr.mobileNumber ??
+    addr.tel ??
+    '';
 
   // Overwrite old contact fully
   this.contact = {

@@ -4,6 +4,7 @@ import { IonicModule, ModalController } from '@ionic/angular';
 import { RouterModule, Router } from '@angular/router';
 import { UserService, AppUser } from '../services/user.service';
 import { Subscription } from 'rxjs';
+import { NotificationService } from '../services/notification.service';
 
 // ✅ Correct import
 import { EditPersonalInfoModal } from './modals/edit-personal-info.modal';
@@ -17,6 +18,7 @@ import { EditPersonalInfoModal } from './modals/edit-personal-info.modal';
 })
 export class AccountPage implements OnInit, OnDestroy {
   private userSub?: Subscription;
+  private notifSub?: Subscription;
 
   profilePic: string = 'assets/profile-placeholder.png';
   displayName: string | null = null;
@@ -26,13 +28,18 @@ export class AccountPage implements OnInit, OnDestroy {
   gender: string | null = null;
   dob: string | null = null;
 
+  // 🔴 Unread Notifications
+  unreadCount = 0;
+
   constructor(
     private userService: UserService,
     private router: Router,
-    private modalCtrl: ModalController
+    private modalCtrl: ModalController,
+    private notifSvc: NotificationService
   ) {}
 
   ngOnInit() {
+    // 👤 Subscribe to user profile updates
     this.userSub = this.userService.user$.subscribe((user: AppUser | null) => {
       if (!user) {
         this.displayName = null;
@@ -67,22 +74,31 @@ export class AccountPage implements OnInit, OnDestroy {
         this.provider = null;
       }
     });
+
+    // 🔴 Subscribe to unread notifications counter
+    this.notifSub = this.notifSvc.getUnreadCount$().subscribe((count) => {
+      this.unreadCount = count;
+    });
   }
 
   ngOnDestroy() {
     this.userSub?.unsubscribe();
+    this.notifSub?.unsubscribe();
   }
 
   // ✅ Navigation helpers
   goToOrders() {
     this.router.navigate(['/orders']);
   }
+
   goToFavorites() {
     this.router.navigate(['/favorites']);
   }
+
   goToAddresses() {
     this.router.navigate(['/addresses']);
   }
+
   goToRegisterStation() {
     this.router.navigate(['/register-station']);
   }

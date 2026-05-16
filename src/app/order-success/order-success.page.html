@@ -5,14 +5,14 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-
   <!-- ✅ Success Header -->
   <div class="success-header ion-text-center">
     <ion-icon name="checkmark-circle" color="success" class="success-icon"></ion-icon>
     <h2 class="title-strong">Order Placed Successfully!</h2>
-    <p class="muted">
-      Your order <strong>#{{ order?.id || 'AUTO-ID' }}</strong> has been placed.
-    </p>
+    <!-- 🔴 ASAP Badge -->
+<div *ngIf="getTime(order?.items?.[0]) === 'ASAP'" class="asap-success">
+  <ion-badge color="danger">ASAP DELIVERY</ion-badge>
+</div>
   </div>
 
   <!-- ✅ Order Info -->
@@ -29,120 +29,142 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- ✅ Stations -->
-  <ion-card *ngIf="order?.stations?.length" class="soft-card">
-    <ion-card-header>
-      <ion-card-title>Station Details</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <div *ngFor="let st of order?.stations" class="station-block">
-        <div class="station-name">{{ st.stationName }}</div>
-        <div class="station-address muted">{{ st.stationAddress || '—' }}</div>
-
-        <div *ngIf="st.deliveryWindow" class="muted">
-          Delivery Window: {{ st.deliveryWindow | titlecase }}
-        </div>
-
-        <div [class]="'expected-time text-' + getExpectedColor(st)">
-          Expected Delivery: {{ getExpectedTime(st) }}
-        </div>
-
-        <ion-item-divider></ion-item-divider>
-      </div>
-      <p class="note muted small">
-        *Times may vary due to traffic, road conditions, or last-minute orders
-      </p>
-    </ion-card-content>
-  </ion-card>
-
-  <!-- ✅ Items -->
-  <ion-card class="soft-card">
-    <ion-card-header>
-      <ion-card-title>Order Summary</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <ion-list>
-        <ion-item *ngFor="let it of order?.items">
-          <ion-thumbnail slot="start">
-            <img [src]="it.imageUrl || 'assets/placeholder.png'" alt="{{ it.name || 'Product' }}" />
-          </ion-thumbnail>
-
-          <ion-label>
-            <h3>{{ it.name }}</h3>
-            <p>x{{ it.quantity }} • ₱{{ it.price }}</p>
-            <small *ngIf="it.deliveryMode === 'scheduled'">
-              Scheduled – {{ it.deliveryWindow || 'Unassigned' }}
-            </small>
-            <small *ngIf="it.deliveryMode && it.deliveryMode !== 'scheduled'">
-              {{ it.deliveryMode | titlecase }}
-            </small>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-
-      <ion-item lines="full"></ion-item>
-
-      <!-- Totals -->
-      <div class="totals" *ngIf="order?.charges as charges; else noCharges">
-        <div class="row-between">
-          <span>Subtotal</span>
-          <strong>₱{{ charges.subtotal | number:'1.0-2' }}</strong>
-        </div>
-        <div class="row-between">
-          <span>Delivery Fee</span>
-          <strong>₱{{ charges.deliveryFee | number:'1.0-2' }}</strong>
-        </div>
-        <div class="row-between total-line">
-          <span>Total</span>
-          <strong class="grand-total">₱{{ charges.total | number:'1.0-2' }}</strong>
+<!-- Station Details -->
+<ion-card *ngIf="order?.stations?.length" class="soft-card">
+  <ion-card-header>
+    <ion-card-title>Station Details</ion-card-title>
+  </ion-card-header>
+  <ion-card-content>
+    <div *ngFor="let st of order?.stations" class="station-block">
+      <div class="station-header">
+        <ion-avatar class="station-logo">
+          <img
+            [src]="st.logoUrl || 'assets/AquaRoute Droplet Logo.png'"
+            (error)="onImageError($event, 'station')"
+            alt="Station Logo"
+          />
+        </ion-avatar>
+        <div class="station-info">
+          <div class="station-name">{{ st.stationName }}</div>
+          <div class="station-address muted">{{ st.stationAddress || '—' }}</div>
         </div>
       </div>
-      <ng-template #noCharges>
-        <div class="row-between total-line">
-          <span>Total</span>
-          <strong class="grand-total">₱0</strong>
-        </div>
+
+      <div class="order-meta">
+        <p *ngIf="getTime(st)">
+  <strong>Time:</strong>
+  {{
+    getTime(st) === 'ASAP'
+      ? 'ASAP (Deliver Now)'
+      : getTime(st)
+  }}
+</p>
+      </div>
+    </div>
+  </ion-card-content>
+</ion-card>
+
+
+<!-- ✅ Order and Delivery Summary -->
+<ion-card class="soft-card">
+  <ion-card-header>
+    <ion-card-title>Order and Delivery Summary</ion-card-title>
+  </ion-card-header>
+
+  <ion-card-content>
+
+    <!-- 🧾 Product Details -->
+    <ion-list>
+      <ion-item *ngFor="let it of order?.items" class="ods-item">
+        <!-- Product image -->
+<ion-thumbnail slot="start" class="ods-thumb">
+  <img
+    [src]="it.imageUrl || 'assets/water-placeholder.png'"
+    (error)="onImageError($event, 'product')"
+    alt="{{ it.name || 'Product' }}"
+  />
+</ion-thumbnail>
+        <!-- Product name, price, quantity -->
+        <ion-label>
+          <div class="ods-name">{{ it.name }}</div>
+          <div class="ods-price-qty">
+            <span class="ods-price">₱{{ it.price }}</span>
+            <span class="ods-qty">x{{ it.quantity }}</span>
+          </div>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <!-- 🧾 Mode, Slot, Time, Water Type, Container Swap -->
+    <div class="ods-lines">
+      <div><strong>Mode:</strong> <span>{{ getMode(order?.items?.[0]) }}</span></div>
+      <div><strong>Slot:</strong> <span>{{ getSlot(order?.items?.[0]) }}</span></div>
+      <div *ngIf="getTime(order?.items?.[0])">
+        <strong>Time:</strong> <span>
+        {{
+          getTime(order?.items?.[0]) === 'ASAP'
+            ? 'ASAP (Deliver Now)'
+            : formatSchedule(getTime(order?.items?.[0]))
+        }}
+      </span>
+      </div>
+      <div><strong>Water Type:</strong> <span>{{ getWaterType(order?.items?.[0]) || '—' }}</span></div>
+      <div *ngIf="hasContainerSwap(order?.items?.[0])">
+        <strong>Container Swap:</strong> <span>Yes</span>
+      </div>
+    </div>
+
+    <!-- 🚚 Delivery Information -->
+    <div class="ods-lines">
+      <div><strong>Name:</strong> <span>{{ order?.delivery?.fullName || '—' }}</span></div>
+      <div *ngIf="customerPhone"><strong>Phone:</strong> <span>{{ customerPhone }}</span></div>
+      <div *ngIf="order?.delivery?.address">
+        <strong>Address:</strong>
+        <span>{{ order?.delivery?.address }}</span>
+      </div>
+    </div>
+
+    <ion-item lines="full" class="ods-divider"></ion-item>
+
+    <!-- 💰 Totals -->
+    <div class="ods-totals" *ngIf="order?.charges as charges; else noCharges">
+      <div class="row-between">
+        <span>Subtotal</span>
+        <strong>₱{{ charges.subtotal | number:'1.0-2' }}</strong>
+      </div>
+
+      <div class="row-between" *ngIf="order?.mode === 'delivery'">
+  <span>Delivery Rate</span>
+  <strong>{{ getDeliveryRate() }}</strong>
+</div>
+
+      <div class="row-between" *ngIf="order?.mode === 'delivery'; else noFee">
+        <span>Delivery Fee</span>
+        <strong>₱{{ charges.deliveryFee | number:'1.0-2' }}</strong>
+      </div>
+      <ng-template #noFee>
+        <div class="row-between"><span>Delivery Fee</span><strong>₱0.00</strong></div>
       </ng-template>
-    </ion-card-content>
-  </ion-card>
 
-  <!-- ✅ Delivery & Payment -->
-  <ion-card class="soft-card">
-    <ion-card-header>
-      <ion-card-title>Delivery & Payment</ion-card-title>
-    </ion-card-header>
-    <ion-card-content>
-      <div class="row-between">
-        <span><strong>Name:</strong></span>
-        <span>{{ order?.delivery?.fullName || '—' }}</span>
+      <div class="row-between total-line">
+        <span>Total</span>
+        <strong class="grand-total">₱{{ charges.total | number:'1.0-2' }}</strong>
       </div>
-      <div class="row-between">
-        <span><strong>Address:&nbsp;</strong></span>
-        <span>{{ order?.delivery?.address || '—' }}</span>
-      </div>
+    </div>
 
-
-      <div class="row-between">
-        <span><strong>Payment</strong></span>
-        <span class="highlight">{{ order?.payment?.method || '—' }}</span>
+    <ng-template #noCharges>
+      <div class="row-between total-line">
+        <span>Total</span>
+        <strong class="grand-total">₱0</strong>
       </div>
+    </ng-template>
 
-      <div class="row-between">
-        <span><strong>Status</strong></span>
-        <span class="highlight">{{ order?.payment?.status || '—' }}</span>
-      </div>
-
-      <!-- ✅ Notes -->
-      <div class="row-between">
-        <span><strong>Notes:</strong></span>
-        <span>{{ order?.delivery?.notes || '—' }}</span>
-      </div>
-    </ion-card-content>
-  </ion-card>
+  </ion-card-content>
+</ion-card>
 
 </ion-content>
 
-<!-- ✅ Footer Actions -->
+<!-- ✅ Footer -->
 <ion-footer>
   <ion-toolbar>
     <div class="footer-buttons ion-padding-horizontal ion-padding-vertical">
@@ -150,8 +172,7 @@
         expand="block"
         color="primary"
         [routerLink]="['/track-order']"
-        [queryParams]="{ id: order?.id }"
-      >
+        [queryParams]="{ id: order?.id }">
         Track Order
       </ion-button>
 
@@ -159,8 +180,7 @@
         My Orders
       </ion-button>
 
-      <!-- 🔄 FIXED: Back to Home now points to root -->
-      <ion-button expand="block" fill="clear" routerLink="/">
+      <ion-button expand="block" fill="clear" routerLink="/landing-page">
         Back to Home
       </ion-button>
     </div>

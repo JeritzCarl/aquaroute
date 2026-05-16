@@ -7,15 +7,28 @@
 }
 
 .aqua-header {
-  --background: linear-gradient(90deg, #3b82f6, #2563eb);
+  --background: #2f80ed;
   --color: #fff;
-  text-align: center;
-
-  ion-title {
-    font-weight: 700;
-    font-size: 20px;
-  }
+  border-radius: 0 0 18px 18px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  position: relative;
+  padding: 0 10px;
 }
+
+  .aqua-title {
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
 
 /* === Profile Section === */
 .profile-section {
@@ -140,4 +153,19 @@ ion-tab-bar {
       font-size: 22px;
     }
   }
+}
+
+.notif-badge {
+  position: absolute;
+  top: 2px;
+  right: 20px;
+  transform: translateY(-1px);
+  font-size: 10px;
+  border-radius: 50%;
+  height: 16px;
+  min-width: 16px;
+  padding: 0 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

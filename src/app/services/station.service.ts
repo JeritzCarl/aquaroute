@@ -11,6 +11,7 @@ import {
   setDoc,
   serverTimestamp,
   getDoc,
+  updateDoc,
 } from '@angular/fire/firestore';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -46,19 +47,20 @@ export class StationService {
     );
   }
 
+  // ✅ NEW → Get a single station (raw observable, no normalization)
+  getById$(stationId: string): Observable<any> {
+    const ref = doc(this.firestore, `stations/${stationId}`);
+    return docData(ref, { idField: 'id' });
+  }
+
   // ------------------------------------------------
   // 🔹 Courier Management
   // ------------------------------------------------
-
-  // ✅ Create / Register a courier with full profile
   async createCourier(stationId: string, courierId: string, data: any) {
     const user = this.auth.currentUser;
-
-    // 🔹 Default avatar if none available
     const defaultAvatar =
       'https://firebasestorage.googleapis.com/v0/b/YOUR_BUCKET/o/default-avatar.png?alt=media';
 
-    // 🔹 Fetch station name if not explicitly passed
     let stationName = data.stationName || null;
     if (!stationName && stationId) {
       const stationSnap = await getDoc(doc(this.firestore, `stations/${stationId}`));
@@ -77,8 +79,6 @@ export class StationService {
         phone: data.phone || null,
         stationName,
         createdAt: serverTimestamp(),
-
-        // ✅ Always ensure a photoUrl exists
         photoUrl: user?.photoURL || data.photoUrl || defaultAvatar,
       },
       { merge: true }
@@ -98,7 +98,7 @@ export class StationService {
   }
 
   // ------------------------------------------------
-  // 🔹 Normalize Product
+  // 🔹 Product Normalization & Fetch
   // ------------------------------------------------
   private normalizeProduct(p: any): Product {
     return {
@@ -109,14 +109,11 @@ export class StationService {
       stock: p.stock ?? 0,
       addons: p.addons ?? [],
       optionGroups: p.optionGroups ?? [],
-
-      // 🔹 New survey-driven fields
       waterType: p.waterType ?? undefined,
       containerSize: p.containerSize ?? undefined,
     };
   }
 
-  // ✅ Get all products for a station (subcollection)
   getProducts(stationId: string): Observable<Product[]> {
     const productsRef = collection(this.firestore, `stations/${stationId}/products`);
     return collectionData(productsRef, { idField: 'id' }).pipe(
@@ -124,7 +121,6 @@ export class StationService {
     );
   }
 
-  // ✅ Get products if stored in root "products" collection
   getProductsByStation(stationId: string): Observable<Product[]> {
     const productsRef = collection(this.firestore, 'products');
     const q = query(productsRef, where('stationId', '==', stationId));
@@ -133,7 +129,6 @@ export class StationService {
     );
   }
 
-  // ✅ Get a single product by ID (subcollection)
   getProductById(stationId: string, productId: string): Observable<Product> {
     const productDocRef = doc(this.firestore, `stations/${stationId}/products/${productId}`);
     return docData(productDocRef, { idField: 'id' }).pipe(
@@ -142,68 +137,63 @@ export class StationService {
   }
 
   // ------------------------------------------------
-  // 🔹 Normalize Station (with defaults + lat/lng)
+  // 🔹 Station Normalization
   // ------------------------------------------------
-private normalizeStation(s: any): Station {
-  // ✅ Validate coords strictly inside Tuguegarao
-  const inTuguegarao = (lat: number, lng: number) =>
-    lat >= 17.58 && lat <= 17.68 && lng >= 121.69 && lng <= 121.75;
+  private normalizeStation(s: any): Station {
+    const inTuguegarao = (lat: number, lng: number) =>
+      lat >= 17.58 && lat <= 17.68 && lng >= 121.69 && lng <= 121.75;
 
-  let lat: number | undefined;
-  let lng: number | undefined;
+    let lat: number | undefined;
+    let lng: number | undefined;
 
-  if (typeof s.lat === 'number' && typeof s.lng === 'number' && inTuguegarao(s.lat, s.lng)) {
-    lat = s.lat;
-    lng = s.lng;
-  } else if (Array.isArray(s.deliveryArea) && s.deliveryArea.length) {
-    const sum = s.deliveryArea.reduce((a: any, p: any) => ({
-      lat: a.lat + p.lat, lng: a.lng + p.lng
-    }), { lat: 0, lng: 0 });
-    const c = { lat: sum.lat / s.deliveryArea.length, lng: sum.lng / s.deliveryArea.length };
-    if (inTuguegarao(c.lat, c.lng)) {
-      lat = c.lat; lng = c.lng;
+    if (typeof s.lat === 'number' && typeof s.lng === 'number' && inTuguegarao(s.lat, s.lng)) {
+      lat = s.lat;
+      lng = s.lng;
+    } else if (Array.isArray(s.deliveryArea) && s.deliveryArea.length) {
+      const sum = s.deliveryArea.reduce(
+        (a: any, p: any) => ({ lat: a.lat + p.lat, lng: a.lng + p.lng }),
+        { lat: 0, lng: 0 }
+      );
+      const c = { lat: sum.lat / s.deliveryArea.length, lng: sum.lng / s.deliveryArea.length };
+      if (inTuguegarao(c.lat, c.lng)) {
+        lat = c.lat;
+        lng = c.lng;
+      }
     }
+
+    if (!lat || !lng) {
+      console.warn(`⚠️ Station ${s.stationName || s.id} missing valid coords, forcing Tuguegarao center`);
+      lat = 17.6131;
+      lng = 121.7270;
+    }
+
+    return {
+      ...s,
+      id: s.id,
+      lat,
+      lng,
+      distanceKm: s.distanceKm ?? this.mockDistance(),
+      minPrice: s.minPrice ?? this.mockMinPrice(),
+      promo: s.promo ?? this.mockPromo(),
+      deliveryEstimate: s.deliveryEstimate ?? '30–45 mins',
+      rating: s.rating ?? 4.5,
+      reviewCount: s.reviewCount ?? Math.floor(Math.random() * 50) + 1,
+      services: s.services ?? ['delivery', 'pickup', 'scheduled'],
+      payments: s.payments ?? ['cod', 'gcash'],
+      containers: s.containers ?? ['5L', '10L', '20L'],
+      waterTypes: s.waterTypes ?? ['Purified', 'Alkaline'],
+    };
   }
 
-  // ✅ Final fallback → Tuguegarao center
-  if (!lat || !lng) {
-    console.warn(`⚠️ Station ${s.stationName || s.id} missing valid coords, forcing Tuguegarao center`);
-    lat = 17.6131; lng = 121.7270;
-  }
-
-  return {
-    ...s,
-    id: s.id,
-    lat, lng,
-    distanceKm: s.distanceKm ?? this.mockDistance(),
-    minPrice: s.minPrice ?? this.mockMinPrice(),
-    promo: s.promo ?? this.mockPromo(),
-    deliveryEstimate: s.deliveryEstimate ?? '30–45 mins',
-    rating: s.rating ?? 4.5,
-    reviewCount: s.reviewCount ?? Math.floor(Math.random() * 50) + 1,
-    services: s.services ?? ['delivery', 'pickup', 'scheduled'],
-    payments: s.payments ?? ['cod', 'gcash'],
-    containers: s.containers ?? ['5L', '10L', '20L'],
-    waterTypes: s.waterTypes ?? ['Purified', 'Alkaline'],
-  };
-}
   // ------------------------------------------------
-  // 🔹 Mock helpers (for when Firestore has no coords/data)
+  // 🔹 Mock helpers
   // ------------------------------------------------
-  private mockLat(): number {
-    return 17.613 + Math.random() * 0.01; // Tuguegarao-ish lat
-  }
-
-  private mockLng(): number {
-    return 121.727 + Math.random() * 0.01; // Tuguegarao-ish lng
-  }
-
   private mockDistance(): number {
-    return parseFloat((Math.random() * 4.5 + 0.5).toFixed(1)); // 0.5 – 5 km
+    return parseFloat((Math.random() * 4.5 + 0.5).toFixed(1));
   }
 
   private mockMinPrice(): number {
-    return Math.floor(Math.random() * 30) + 20; // PHP 20 – 50
+    return Math.floor(Math.random() * 30) + 20;
   }
 
   private mockPromo(): string | null {

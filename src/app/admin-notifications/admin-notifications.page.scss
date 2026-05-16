@@ -1,0 +1,153 @@
+/* HEADER */
+.aqua-header {
+  --background: transparent;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
+}
+
+.aqua-toolbar {
+  --background: #2f80ed;
+  --color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  position: relative;
+}
+
+.aqua-title {
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  text-align: center;
+  margin: 0;
+  line-height: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.toolbar-actions {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+
+  ion-button {
+    --padding-start: 6px;
+    --padding-end: 6px;
+
+    ion-icon {
+      font-size: 22px;
+      color: #fff;
+    }
+  }
+}
+
+/* CONTENT */
+.notifications-content {
+  --background: #f7f9fc;
+  padding-bottom: 80px;
+}
+
+/* Notification Item */
+ion-item {
+  border-radius: 14px;
+  margin: 10px 14px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+  --background: #fff;
+  transition: background 0.2s ease;
+}
+
+ion-item.unread {
+  background: #eef4ff;
+  border-left: 4px solid #2f80ed;
+}
+
+.notif-icon {
+  font-size: 26px;
+  color: #2f80ed;
+}
+
+.title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  line-height: 1.4;
+}
+
+.meta {
+  font-size: 13px;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* Chip for unread */
+.chip-unread {
+  height: 18px;
+  margin-left: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  --background: #2f80ed;
+  --color: #fff;
+}
+
+/* Mark All Button */
+.mark-all-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  --color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  text-align: center;
+  margin-top: 140px;
+  animation: fadeIn 0.4s ease;
+
+  .empty-icon {
+    font-size: 64px;
+    color: #bfc8d3;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    color: #1a1a1a;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  p {
+    color: #777;
+    font-size: 14px;
+  }
+}
+
+/* LOADING STATE */
+.loading-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+
+  ion-spinner {
+    width: 44px;
+    height: 44px;
+    color: #2f80ed;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}

@@ -1,0 +1,42 @@
+<ion-header class="aqua-header">
+  <ion-toolbar color="primary">
+        <ion-buttons slot="start">
+      <ion-back-button defaultHref="/admin" text=""></ion-back-button>
+    </ion-buttons>
+    <ion-title>Admin Activity Logs</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding admin-logs-content">
+  <h2 class="section-title">Recent Actions</h2>
+
+  <ion-list *ngIf="logs$ | async as logs; else noLogs">
+    <ion-card *ngFor="let log of logs" class="log-card">
+      <ion-card-header>
+        <ion-card-title>
+          <ion-icon
+            [name]="log.action.includes('Deleted') ? 'trash-outline' :
+                     log.action.includes('Verified') ? 'checkmark-circle-outline' :
+                     'close-circle-outline'"
+            [color]="log.action.includes('Deleted') ? 'danger' :
+                     log.action.includes('Verified') ? 'success' : 'warning'">
+          </ion-icon>
+          {{ log.action }}
+        </ion-card-title>
+      </ion-card-header>
+      <ion-card-content>
+        <p><strong>Station:</strong> {{ log.stationName }}</p>
+        <p><strong>Admin:</strong> {{ log.adminEmail }}</p>
+        <p><strong>Date:</strong> {{ formatDate(log.timestamp) }}</p>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+
+  <ng-template #noLogs>
+    <div class="empty-state">
+      <ion-icon name="time-outline" class="empty-icon"></ion-icon>
+      <h2>No Logs Yet</h2>
+      <p>Admin actions will appear here.</p>
+    </div>
+  </ng-template>
+</ion-content>

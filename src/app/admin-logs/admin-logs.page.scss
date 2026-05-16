@@ -1,0 +1,54 @@
+.aqua-header {
+  --background: transparent;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
+}
+
+ion-title {
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  text-align: center;
+  margin: 0;
+  line-height: 1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.log-card {
+  margin-bottom: 10px;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+ion-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.empty-state {
+  text-align: center;
+  margin-top: 100px;
+
+  .empty-icon {
+    font-size: 60px;
+    color: #bfc8d3;
+    margin-bottom: 10px;
+  }
+
+  h2 {
+    color: #1a1a1a;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  p {
+    color: #777;
+    font-size: 14px;
+  }
+}

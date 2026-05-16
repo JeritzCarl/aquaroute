@@ -1,28 +1,176 @@
+/* ─────────────── HEADER ─────────────── */
+.profile-header {
+  border-bottom-left-radius: 20px;
+  border-bottom-right-radius: 20px;
+  overflow: hidden;
+
+  ion-toolbar {
+    --background: linear-gradient(90deg, #0077ff, #00b4ff);
+    color: #fff;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+  }
+
+  .page-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 18px;
+    color: #fff;
+    width: 100%;
+    margin-left: -5%;
+  }
+}
+
+/* ─────────────── PROFILE CARD ─────────────── */
 .profile-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
-  padding: 20px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  margin-top: 24px;
 
   ion-avatar {
-    width: 100px;
-    height: 100px;
-    margin-bottom: 12px;
+    width: 110px;
+    height: 110px;
+    margin-bottom: 14px;
+    border: 3px solid #0099ff;
+    box-shadow: 0 2px 8px rgba(0, 153, 255, 0.2);
   }
 
-  h2 {
-    font-size: 22px;
-    font-weight: 800;
-    margin: 8px 0 4px;
-  }
+  .profile-info {
+    text-align: center;
 
-  p {
-    margin: 2px 0;
-    font-weight: 600;
+    h2 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #2c3e50;
+      margin: 8px 0 4px;
+    }
+
+    .email {
+      color: #555;
+      font-weight: 600;
+    }
+
+    .phone {
+      color: #007bff;
+      font-weight: 600;
+      margin-top: 4px;
+    }
   }
 }
 
+/* ─────────────── OPTIONS LIST ─────────────── */
 .options-list {
-  margin-top: 20px;
+  margin-top: 24px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+
+  ion-item {
+    font-weight: 600;
+
+    ion-icon {
+      font-size: 22px;
+      margin-right: 10px;
+    }
+
+    ion-label {
+      font-weight: 700;
+    }
+  }
+}
+
+/* Responsive tweaks */
+@media (max-width: 480px) {
+  .profile-card {
+    padding: 20px 12px;
+    ion-avatar {
+      width: 90px;
+      height: 90px;
+    }
+  }
+}
+
+.aqua-alert {
+  --background: #ffffff;
+  --border-radius: 16px;
+  font-family: 'Inter', sans-serif;
+}
+
+.aqua-cancel {
+  color: #2f80ed;
+  font-weight: 600;
+}
+
+.aqua-logout {
+  color: #e63946;
+  font-weight: 700;
+}
+
+
+/* ─────────────── PAYMENT CARD ─────────────── */
+.payment-card {
+  margin-top: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+
+  ion-card-header {
+    padding-bottom: 4px;
+  }
+
+  ion-card-title {
+    color: #2c3e50;
+    font-size: 18px;
+    font-weight: 800;
+  }
+
+  ion-card-subtitle {
+    color: #6b7280;
+    font-size: 13px;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+
+  ion-card-content {
+    padding-top: 8px;
+  }
+}
+
+.payment-item {
+  --background: #f8fbff;
+  --border-radius: 12px;
+  margin-bottom: 12px;
+
+  ion-label {
+    color: #2c3e50;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  ion-input {
+    --padding-top: 10px;
+    --padding-bottom: 10px;
+    --padding-start: 0;
+    font-weight: 600;
+    color: #1f2937;
+  }
+}
+
+.payment-hint {
+  font-size: 12px;
+  color: #6b7280;
+  margin: 6px 4px 14px;
+  line-height: 1.5;
+}
+
+.save-payment-btn {
+  --background: linear-gradient(90deg, #0077ff, #00b4ff);
+  --border-radius: 12px;
+  font-weight: 700;
+  height: 46px;
 }

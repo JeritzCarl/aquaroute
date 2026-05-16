@@ -1,0 +1,56 @@
+<ion-header class="aqua-header">
+  <ion-toolbar class="aqua-toolbar">
+    <!-- 🔙 Back Button -->
+    <ion-buttons slot="start">
+      <ion-back-button
+        defaultHref="/account"
+        text=""
+        icon="chevron-back-outline"
+        class="back-btn"
+      ></ion-back-button>
+    </ion-buttons>
+
+    <!-- ✅ Centered Title -->
+    <ion-title class="aqua-title">Favorites</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true" class="favorites-bg">
+  <!-- ✅ Favorites List -->
+  <ng-container *ngIf="!loading && stations.length > 0; else empty">
+    <ion-list lines="none">
+      <ion-card *ngFor="let s of stations" class="station-card" (click)="viewStation(s.id)">
+        <ion-card-content class="card-body">
+          <div class="station-row">
+            <!-- Avatar -->
+            <ion-avatar class="station-avatar">
+              <img [src]="s.logoUrl || 'assets/station1.png'" alt="Station Logo" />
+            </ion-avatar>
+
+            <!-- Station Name + Heart -->
+            <div class="station-details">
+              <div class="station-header">
+                <h2 class="station-name">{{ s.stationName || s.name }}</h2>
+                <ion-icon
+                  class="fav-icon"
+                  [name]="s.isFav ? 'heart' : 'heart-outline'"
+                  [class.active]="s.isFav"
+                  (click)="toggleFavorite(s.id); $event.stopPropagation()"
+                ></ion-icon>
+              </div>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </ion-list>
+  </ng-container>
+
+  <!-- ✅ Empty State -->
+  <ng-template #empty>
+    <div class="empty-state">
+      <ion-icon name="heart-outline"></ion-icon>
+      <p>No favorites yet</p>
+      <p class="hint">Start exploring and tap the heart icon on a station to add it here.</p>
+    </div>
+  </ng-template>
+</ion-content>

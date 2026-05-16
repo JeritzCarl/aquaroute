@@ -1,0 +1,108 @@
+<!-- src/app/manager-completed/manager-completed.page.html -->
+
+<ion-header class="orders-header ion-no-border">
+  <ion-toolbar class="aqua-toolbar small-header">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/manager"></ion-back-button>
+    </ion-buttons>
+
+    <ion-title class="aqua-title">Completed Orders</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ng-container *ngIf="!loading">
+
+    <!-- Tabs -->
+    <ion-segment class="order-segment" [value]="viewMode" (ionChange)="onSegmentChange($event)">
+      <ion-segment-button value="today"><ion-label>Today</ion-label></ion-segment-button>
+      <ion-segment-button value="history"><ion-label>Order History</ion-label></ion-segment-button>
+    </ion-segment>
+
+    <!-- ───────────────────────
+         TODAY VIEW
+    ─────────────────────── -->
+    <ng-container *ngIf="viewMode === 'today'">
+
+      <!-- Summary -->
+      <ion-card *ngIf="todayOrders.length > 0" class="summary-card">
+        <ion-card-content>
+          <div class="summary-grid">
+            <div>
+              <p>Total Revenue</p>
+              <h2>₱{{ totalRevenue | number: '1.0-2' }}</h2>
+            </div>
+            <div>
+              <p>Avg. Delivery Time</p>
+              <h2>{{ averageDuration }} mins</h2>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- Orders -->
+      <ng-container *ngIf="todayOrders.length > 0; else noToday">
+        <ion-card *ngFor="let order of todayOrders" class="order-card">
+          <ion-card-header>
+            <ion-card-title>Order #{{ order.id }}</ion-card-title>
+            <ion-chip color="success">Delivered</ion-chip>
+          </ion-card-header>
+
+          <ion-card-content>
+            <p><b>Customer:</b> {{ order.delivery?.fullName || 'N/A' }}</p>
+            <p><b>Address:</b> {{ order.delivery?.address || 'N/A' }}</p>
+            <p>
+              <b>Courier:</b> {{ order.courier?.name || 'N/A' }}
+              <span *ngIf="order.courier?.vehicle"> ({{ order.courier?.vehicle }}) </span>
+            </p>
+            <p *ngIf="order._deliveredAt">
+              <b>Delivered:</b> {{ order._deliveredAt | date:'MMM d, y, h:mm a' }}
+            </p>
+            <p><b>Total:</b> ₱{{ order.charges?.total || order.totalAmount || 0 }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ng-container>
+
+      <ng-template #noToday>
+        <div class="empty-state">
+          <ion-icon name="document-text-outline"></ion-icon>
+          <p>No deliveries completed today</p>
+        </div>
+      </ng-template>
+    </ng-container>
+
+    <!-- ───────────────────────
+         ORDER HISTORY VIEW
+    ─────────────────────── -->
+    <ng-container *ngIf="viewMode === 'history'">
+      <section *ngIf="dailyLogs.length > 0; else noHistory" class="daily-logs-section">
+        <h3 class="section-title">Order History</h3>
+
+        <ion-card *ngFor="let day of dailyLogs" class="day-log-card" (click)="openDayLog(day.date!)">
+          <ion-card-header>
+            <ion-card-title>{{ day.date | date: 'fullDate' }}</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="log-summary-grid">
+              <div>
+                <p>Total Deliveries</p>
+                <h3>{{ day.totalDeliveries || 0 }}</h3>
+              </div>
+              <div>
+                <p>Total Earnings</p>
+                <h3>₱{{ day.totalEarnings || 0 | number: '1.0-2' }}</h3>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </section>
+
+      <ng-template #noHistory>
+        <div class="empty-state">
+          <ion-icon name="document-text-outline"></ion-icon>
+          <p>No order history yet</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </ng-container>
+</ion-content>

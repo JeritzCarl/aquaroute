@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { NgModule, isDevMode } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
 
@@ -15,24 +15,27 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicStorageModule } from '@ionic/storage-angular';
 
+import { ServiceWorkerModule } from '@angular/service-worker';
+
 @NgModule({
-  declarations: [AppComponent], // ✅ only AppComponent here
+  declarations: [AppComponent],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
     AppRoutingModule,
     FormsModule,
 
-    // ✅ Storage
     IonicStorageModule.forRoot(),
+     ServiceWorkerModule.register('ngsw-worker.js', {
+       enabled: !isDevMode(),
+       registrationStrategy: 'registerWhenStable:30000'
+     }),
   ],
   providers: [
-    // ✅ Firebase initialization
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideFirestore(() => getFirestore()),
     provideAuth(() => getAuth()),
 
-    // ✅ Ionic router strategy
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
   ],
   bootstrap: [AppComponent],

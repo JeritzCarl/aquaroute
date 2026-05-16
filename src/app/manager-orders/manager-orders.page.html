@@ -1,102 +1,361 @@
-<!-- src/app/manager-orders/manager-orders.page.html -->
+<!-- ─────────────── HEADER ─────────────── -->
 <ion-header class="orders-header ion-no-border">
   <ion-toolbar class="aqua-toolbar">
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/manager"></ion-back-button>
     </ion-buttons>
-
     <ion-title class="aqua-title">Station Orders</ion-title>
   </ion-toolbar>
 </ion-header>
 
+<!-- ─────────────── CONTENT ─────────────── -->
 <ion-content class="ion-padding">
-  <ng-container *ngIf="myOrders$ | async as orders">
-    <ng-container *ngIf="orders.length > 0; else noOrders">
-      <ion-card *ngFor="let order of orders" class="order-card">
-        <ion-card-header>
-          <ion-card-title>Order #{{ order.id }}</ion-card-title>
-          <ion-chip [color]="chipColor(order.status)">
-            {{ order.status }}
-          </ion-chip>
-        </ion-card-header>
+  <ng-container *ngIf="groupedOrders as groups">
+
+    <!-- ============ ACTIVE ORDERS ============ -->
+    <ng-container *ngIf="groups.active.length > 0; else noOrders">
+      <ion-card
+        *ngFor="let order of groups.active"
+        class="order-card"
+        [class.cancelled]="order.status === 'Cancelled'">
+
+        <!-- HEADER -->
+<ion-card-header>
+  <div class="card-header-row">
+    <div class="card-menu-left">
+      <ion-button
+        fill="clear"
+        size="small"
+        color="medium"
+        id="order-menu-trigger-{{ order.id }}"
+      >
+        <ion-icon name="ellipsis-vertical-outline"></ion-icon>
+      </ion-button>
+
+      <ion-popover
+        trigger="order-menu-trigger-{{ order.id }}"
+        triggerAction="click"
+        side="bottom"
+        alignment="start"
+      >
+        <ng-template>
+          <ion-content class="order-menu-popover">
+            <ion-list lines="none">
+              <ion-item
+                button
+                detail="false"
+                *ngIf="['Pending','Order Confirmed','Preparing','Waiting for Courier'].includes(order.status)"
+                (click)="closePopoverAndDelete(order, $event)"
+              >
+                <ion-icon name="trash-outline" slot="start" color="danger"></ion-icon>
+                <ion-label color="danger">Delete Invalid Order</ion-label>
+              </ion-item>
+            </ion-list>
+          </ion-content>
+        </ng-template>
+      </ion-popover>
+    </div>
+
+    <ion-card-title>Order #{{ order.id }}</ion-card-title>
+  </div>
+</ion-card-header>
+
+        <!-- ASAP above Pending -->
+        <div class="status-stack">
+          <div *ngIf="getScheduleValue(order) === 'ASAP'" class="asap-badge">
+            <ion-badge color="danger">ASAP</ion-badge>
+          </div>
+
+          <div class="status-center">
+            <ion-chip class="status-chip" [ngClass]="statusClass(order.status)">
+              {{ order.status }}
+            </ion-chip>
+          </div>
+        </div>
 
         <ion-card-content>
-          <!-- ✅ delivery guarded -->
-          <ng-container *ngIf="order.delivery">
-            <p><b>👤 Customer:</b> {{ order.delivery.fullName }}</p>
-            <p><b>📍 Address:</b> {{ order.delivery.address }}</p>
-          </ng-container>
 
-          <!-- ✅ createdAt guarded -->
-          <p *ngIf="order.createdAt">
-            <b>🕒 Placed:</b> {{ order.createdAt.toDate() | date: 'short' }}
-          </p>
+          <!-- MODE BADGE (Top Label) -->
+          <div class="mode-row">
+            <ion-badge
+              class="mode-badge"
+              [ngClass]="getOrderMode(order) === 'pickup' ? 'pickup-mode' : 'delivery-mode'">
+              {{ getOrderMode(order) | uppercase }}
+            </ion-badge>
+          </div>
 
-          <!-- Courier Info -->
+          <!-- CUSTOMER INFO -->
+          <p><b>👤 Customer:</b> {{ order.delivery.fullName }}</p>
+          <p><b>📍 Address:</b> {{ order.delivery.address }}</p>
+          <p *ngIf="order.delivery.phone"><b>📞 Phone:</b> {{ order.delivery.phone }}</p>
+
+          <!-- PAYMENT INFO -->
+          <div class="payment-section" *ngIf="order.payment">
+            <p><b>💳 Payment Method:</b> {{ order.payment.method || '—' }}</p>
+            <p><b>💰 Payment Status:</b> {{ order.payment.status || '—' }}</p>
+
+            <p *ngIf="order.payment.referenceNumber">
+              <b>🔢 Reference Number:</b> {{ order.payment.referenceNumber }}
+            </p>
+
+          <div *ngIf="order.payment.proofUrl" class="proof-section">
+            <p><b>🧾 Proof of Payment:</b></p>
+
+            <img
+              [src]="order.payment.proofUrl"
+              alt="Proof of Payment"
+              class="proof-img"
+            />
+
+            <ion-button
+              size="small"
+              fill="clear"
+              (click)="openProof(order.payment.proofUrl)">
+              View Full Image
+            </ion-button>
+          </div>
+          </div>
+
+          <!-- ORDER DETAILS (Unified Box) -->
+          <div class="order-details" *ngIf="order.delivery">
+            <div class="details-box">
+
+          <!-- Container Swap -->
+          <div class="detail-row" *ngIf="order.charges">
+            <span class="detail-label">Container Swap</span>
+            <span class="detail-value">
+              {{ order.charges.containerSwap ? 'Yes' : 'No' }}
+            </span>
+          </div>
+
+          <!-- Mode -->
+          <div class="detail-row">
+            <span class="detail-label">Mode</span>
+            <span class="detail-value">{{ getOrderMode(order) | titlecase }}</span>
+          </div>
+
+<div class="detail-row">
+  <span class="detail-label">Window</span>
+  <span class="detail-value">
+    {{ formatWindow(getWindowValue(order)) }}
+  </span>
+</div>
+
+<div class="detail-row">
+  <span class="detail-label">Schedule</span>
+  <span class="detail-value">
+    {{ formatSchedule(getScheduleValue(order)) }}
+  </span>
+</div>
+
+<div class="detail-row" *ngIf="getOrderMode(order) === 'delivery'">
+  <span class="detail-label">Delivery Rate</span>
+  <span class="detail-value">
+    {{ getScheduleValue(order) === 'ASAP' ? '₱10 / gallon' : '₱5 / gallon' }}
+  </span>
+</div>
+
+<div class="detail-row">
+  <span class="detail-label">Water Type</span>
+  <span class="detail-value">{{ getWaterType(order) }}</span>
+</div>
+
+</div>
+</div>
+
+<!-- Items Ordered -->
+<div class="items-section" *ngIf="order.items?.length">
+  <h4>Items Ordered</h4>
+  <ion-list lines="none">
+    <ion-item *ngFor="let it of order.items">
+      <ion-label>{{ it.name }} (x{{ it.quantity || 0 }})</ion-label>
+      <ion-note slot="end">₱{{ (it.price || 0) * (it.quantity || 0) }}</ion-note>
+    </ion-item>
+
+    <!-- Delivery Fee (show only for delivery) -->
+    <ion-item *ngIf="getOrderMode(order) === 'delivery'; else noFee">
+      <ion-label>Delivery Fee</ion-label>
+      <ion-note slot="end">
+        ₱{{ order.charges.deliveryFee || 0 }}
+      </ion-note>
+    </ion-item>
+
+    <!-- ₱0.00 for Pickup -->
+    <ng-template #noFee>
+      <ion-item>
+        <ion-label>Delivery Fee</ion-label>
+        <ion-note slot="end">₱0.00</ion-note>
+      </ion-item>
+    </ng-template>
+
+    <!-- Total -->
+    <ion-item *ngIf="order.charges?.total" class="total-line">
+      <ion-label><strong>Total</strong></ion-label>
+      <ion-note slot="end">
+        <strong>₱{{ order.charges.total }}</strong>
+      </ion-note>
+    </ion-item>
+  </ion-list>
+</div>
+
+          <!-- COURIER INFO -->
           <p *ngIf="order.courier">
-            <b>Courier:</b> {{ order.courier.name }}
-            ({{ order.courier.vehicle }})
+            <b>🚚 Courier:</b> {{ order.courier.name }}
+            <span *ngIf="order.courier.vehicle">({{ order.courier.vehicle }})</span>
             <span *ngIf="order.courier.eta">– ETA: {{ order.courier.eta }}</span>
           </p>
 
-          <!-- Items -->
-          <ion-list lines="none" class="order-items" *ngIf="order.items?.length">
-            <ion-item *ngFor="let item of order.items">
-              <ion-label>
-                {{ item.name }} (x{{ item.quantity || 0 }})
-              </ion-label>
-              <ion-note slot="end">₱{{ (item.price || 0) * (item.quantity || 0) }}</ion-note>
-            </ion-item>
-          </ion-list>
+<!-- ACTION BUTTONS -->
+<div class="actions" *ngIf="order.status !== 'Cancelled' && !order.cancelReason">
 
-          <!-- Actions -->
-          <div class="actions">
-            <ion-button
-              fill="outline"
-              color="secondary"
-              *ngIf="order.status === 'New' || order.status === 'Pending'"
-              (click)="updateOrderStatus(order, 'Preparing')"
-            >
-              Preparing
-            </ion-button>
+  <!-- PAYMENT VERIFICATION ACTIONS -->
+  <ng-container *ngIf="order.payment?.method === 'GCASH' && order.payment?.status === 'Pending Verification'">
+    <ion-button
+      fill="outline"
+      color="success"
+      (click)="confirmPayment(order)">
+      Confirm Payment
+    </ion-button>
 
-            <ion-button
-              fill="outline"
-              color="tertiary"
-              *ngIf="order.status === 'Preparing'"
-              (click)="updateOrderStatus(order, 'Out for Delivery')"
-            >
-              Out for Delivery
-            </ion-button>
+    <ion-button
+      fill="outline"
+      color="danger"
+      (click)="rejectPayment(order)">
+      Reject Payment
+    </ion-button>
+  </ng-container>
 
-            <ion-button
-              fill="outline"
-              color="success"
-              *ngIf="order.status === 'Out for Delivery'"
-              (click)="updateOrderStatus(order, 'Delivered')"
-            >
-              Delivered
-            </ion-button>
+  <!-- Confirm -->
+  <ion-button
+    fill="outline"
+    color="primary"
+    *ngIf="order.status === 'Pending' && (order.payment?.method !== 'GCASH' || order.payment?.status === 'Paid')"
+    (click)="updateOrderStatus(order, 'Order Confirmed')">
+    Confirm Order
+  </ion-button>
 
-            <!-- ✅ Corrected: openAssignCourier -->
-            <ion-button
-              fill="outline"
-              color="primary"
-              (click)="openAssignCourier(order)"
-            >
-              Assign Courier
-            </ion-button>
-          </div>
+  <!-- Preparing -->
+  <ion-button
+    fill="outline"
+    color="secondary"
+    *ngIf="order.status === 'Order Confirmed'"
+    (click)="updateOrderStatus(order, 'Preparing')">
+    Preparing
+  </ion-button>
+
+  <!-- Pickup Flow -->
+  <ion-button
+    fill="outline"
+    color="tertiary"
+    *ngIf="order.status === 'Preparing' && getOrderMode(order) === 'pickup'"
+    (click)="updateOrderStatus(order, 'Ready for Pickup')">
+    Ready for Pickup
+  </ion-button>
+
+  <!-- After marking Ready for Pickup, user confirms pickup via their app -->
+  <ion-note *ngIf="order.status === 'Ready for Pickup' && getOrderMode(order) === 'pickup'" color="medium">
+    Waiting for customer confirmation...
+  </ion-note>
+
+<!-- Move to Waiting for Courier -->
+<ion-button
+  fill="outline"
+  color="warning"
+  *ngIf="order.status === 'Preparing' && getOrderMode(order) === 'delivery' && !order.courier"
+  (click)="movePreparingOrderToCourierQueue(order)">
+  Waiting for Courier
+</ion-button>
+
+<!-- Assign Courier -->
+<ion-button
+  fill="outline"
+  color="primary"
+  *ngIf="order.status === 'Waiting for Courier' && getOrderMode(order) === 'delivery'"
+  (click)="openAssignCourier(order)">
+  Assign Courier
+</ion-button>
+
+<!-- Assigned note -->
+<ion-note
+  color="medium"
+  *ngIf="order.status === 'Assigned to Courier' && getOrderMode(order) === 'delivery'">
+  Courier assigned. Waiting for courier to start delivery.
+</ion-note>
+
+  <!-- Decline Order -->
+  <ion-button
+    fill="outline"
+    color="danger"
+    *ngIf="order.status === 'Pending'"
+    (click)="declineOrder(order)">
+    <ion-icon name="close-circle-outline" slot="start"></ion-icon>
+    Decline
+  </ion-button>
+</div>
         </ion-card-content>
       </ion-card>
     </ng-container>
+
+    <!-- ============ CANCELLED ORDERS ============ -->
+    <div *ngIf="groups.cancelled.length > 0" class="cancelled-section">
+      <h4>❌ Cancelled Orders</h4>
+      <ion-card *ngFor="let order of groups.cancelled" class="order-card cancelled">
+        <ion-card-header>
+          <ion-card-title>Order #{{ order.id }}</ion-card-title>
+        </ion-card-header>
+
+        <div class="status-center">
+          <ion-chip color="danger">Cancelled</ion-chip>
+        </div>
+
+        <ion-card-content>
+          <div class="label-row">
+            <ion-badge
+              class="mode-badge"
+              [color]="(order.mode || 'delivery') === 'pickup' ? 'tertiary' : 'primary'">
+              {{ (order.mode || 'delivery') | uppercase }}
+            </ion-badge>
+          </div>
+
+          <p><b>👤 Customer:</b> {{ order.delivery.fullName }}</p>
+          <p><b>📍 Address:</b> {{ order.delivery.address }}</p>
+          <p *ngIf="order.delivery.phone"><b>📞 Phone:</b> {{ order.delivery.phone }}</p>
+          <!-- PAYMENT INFO -->
+<div class="payment-section" *ngIf="order.payment">
+  <p><b>💳 Payment Method:</b> {{ order.payment.method || '—' }}</p>
+  <p><b>💰 Payment Status:</b> {{ order.payment.status || '—' }}</p>
+
+  <p *ngIf="order.payment.referenceNumber">
+    <b>🔢 Reference Number:</b> {{ order.payment.referenceNumber }}
+  </p>
+
+<div *ngIf="order.payment.proofUrl" class="proof-section">
+  <p><b>🧾 Proof of Payment:</b></p>
+
+  <img
+    [src]="order.payment.proofUrl"
+    alt="Proof of Payment"
+    class="proof-img"
+  />
+
+  <ion-button
+    size="small"
+    fill="clear"
+    (click)="openProof(order.payment.proofUrl)">
+    View Full Image
+  </ion-button>
+</div>
+</div>
+        </ion-card-content>
+      </ion-card>
+    </div>
   </ng-container>
 
-  <!-- Always visible fallback -->
+  <!-- NO ORDERS -->
   <ng-template #noOrders>
     <div class="empty-state">
       <ion-icon name="document-text-outline"></ion-icon>
-      <p>No orders yet</p>
+      <p>No active orders</p>
     </div>
   </ng-template>
 </ion-content>

@@ -1,6 +1,7 @@
 // src/app/app-routing.module.ts
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { AdminGuard } from './services/admin.guard';
 
 const routes: Routes = [
   {
@@ -19,10 +20,6 @@ const routes: Routes = [
     loadComponent: () => import('./login/login.page').then(m => m.LoginPage)
   },
   {
-    path: 'number-input',
-    loadComponent: () => import('./number-input/number-input.page').then(m => m.NumberInputPage)
-  },
-  {
     path: 'landing-page',
     loadComponent: () => import('./landing-page/landing-page.page').then(m => m.LandingPage)
   },
@@ -33,10 +30,6 @@ const routes: Routes = [
   {
     path: 'account',
     loadComponent: () => import('./account/account.page').then(m => m.AccountPage)
-  },
-  { 
-    path: 'verify',
-    loadComponent: () => import('./verify/verify.page').then(m => m.VerifyPage)
   },
   {
     path: 'auth-options',
@@ -62,7 +55,8 @@ const routes: Routes = [
   // Admin / Manager / Courier (now unguarded)
   {
     path: 'admin',
-    loadComponent: () => import('./admin/admin.page').then(m => m.AdminPage)
+    loadComponent: () => import('./admin/admin.page').then(m => m.AdminPage),
+    canActivate: [AdminGuard],
   },
   {
     path: 'manager',
@@ -132,21 +126,59 @@ const routes: Routes = [
   },
   { 
     path: 'add-address', 
-    loadComponent: () =>  import('./add-address/add-address.page').then(m => m.AddAddressPage) 
+    loadComponent: () => import('./add-address/add-address.page').then(m => m.AddAddressPage),
   },
   {
   path: 'manager-orders',
-  loadComponent: () => import('./manager-orders/manager-orders.page').then(m => m.ManagerOrdersPage)
+  loadComponent: () => import('./manager-orders/manager-orders.page').then(m => m.ManagerOrdersPage),
+  },
+  {
+  path: 'manager-completed',
+  loadComponent: () => import('./manager-completed/manager-completed.page').then(m => m.ManagerCompletedPage),
+  },
+  {
+  path: 'courier-history',
+  loadComponent: () => import('./courier-history/courier-history.page').then(m => m.CourierHistoryPage),
+  },
+  {
+  path: 'manager-daily-log/:date',
+  loadComponent: () => import('./manager-daily-log/manager-daily-log.page').then(m => m.ManagerDailyLogPage),
+  },
+  {
+  path: 'courier-daily-log/:date',
+  loadComponent: () => import('./courier-daily-log/courier-daily-log.page').then(m => m.CourierDailyLogPage),
+  },
+  {
+  path: 'manager-notifications',
+  loadComponent: () => import('./manager-notifications/manager-notifications.page').then(m => m.ManagerNotificationsPage),
+  },
+  {
+  path: 'courier-notifications',
+  loadComponent: () => import('./courier-notifications/courier-notifications.page').then(m => m.CourierNotificationsPage),
+  },
+  {
+  path: 'admin-notifications',
+  loadComponent: () => import('./admin-notifications/admin-notifications.page').then(m => m.AdminNotificationsPage),
+  },
+  { 
+  path: 'favorites',
+  loadComponent: () => import('./favorites/favorites.page').then(m => m.FavoritesPage) 
+  },
+  {
+  path: 'rating/:orderId',
+  loadComponent: () => import('./rating/rating.page').then(m => m.RatingPage),
+  },
+  {
+  path: 'admin-logs',
+  loadComponent: () => import('./admin-logs/admin-logs.page').then(m => m.AdminLogsPage)
+  },
+  {
+  path: 'ml-visualization',
+  loadComponent: () =>import('./ml-visualization/ml-visualization.page').then(m => m.MlVisualizationPage),
   },
 
 
-
-
-
-
-  // { path: '**', redirectTo: 'landing-page' },
 ];
-
 
 
 

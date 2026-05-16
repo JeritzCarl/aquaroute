@@ -1,228 +1,147 @@
 import { Component, AfterViewInit, Input, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import * as L from 'leaflet';
-import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
+import { LatLng, GeoService } from '../services/geo.service';
 
 @Component({
   selector: 'app-route-map',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule],
   template: `<div class="map-container" id="map"></div>`,
   styles: [`
     .map-container {
       width: 100%;
-      height: 350px;
-      border-radius: 12px;
+      height: 360px;
+      border-radius: 14px;
       overflow: hidden;
-      background: #f2f4f7;
+      background: #eef3f7;
     }
   `]
 })
 export class RouteMapComponent implements AfterViewInit, OnDestroy, OnChanges {
-  @Input() start: string = '';              // Station / starting point
-  @Input() end: string = '';                // Optional destination
-  @Input() waypoints: string[] = [];        // Delivery addresses
-  @Input() courierActive: boolean = false;  // Live tracking toggle
+  // 🔹 Inputs
+  @Input() courier?: LatLng | null;
+  @Input() orders?: any[] = [];
+  @Input() legs: Array<{ from: LatLng; to: LatLng }> = []; // optimized legs (blue route)
 
   private map!: L.Map;
   private markers: L.Marker[] = [];
-  private courierMarker: L.Marker | null = null;
-  private watchId: number | null = null;
-  private lastRenderSignature = '';
+  private courierMarker?: L.Marker;
+  private polylines: L.Polyline[] = [];
+  private lastSig = '';
 
-  constructor(private http: HttpClient) {}
+  private readonly DEFAULT_CENTER: [number, number] = [17.6131, 121.7269];
+  private readonly DEFAULT_ZOOM = 13;
 
-  async ngAfterViewInit() {
-    this.initMap();
-  }
+  constructor(private geo: GeoService) {}
 
-  ngOnChanges(changes: SimpleChanges): void {
-    if (!this.map) return;
-
-    const sig = JSON.stringify({
-      start: this.start,
-      end: this.end,
-      waypoints: this.waypoints,
-      active: this.courierActive
-    });
-
-    if (sig === this.lastRenderSignature) return;
-    this.lastRenderSignature = sig;
-
-    clearTimeout((this as any)._refreshTimer);
-    (this as any)._refreshTimer = setTimeout(() => this.refreshMap(), 600);
-  }
-
-  // ───────────────────────────────────────────────
-  // Initialize Map
-  // ───────────────────────────────────────────────
-  private async initMap() {
-    this.map = L.map('map').setView([17.6131, 121.7269], 13);
+  ngAfterViewInit() {
+    this.map = L.map('map', { zoomControl: true }).setView(this.DEFAULT_CENTER, this.DEFAULT_ZOOM);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; OpenStreetMap contributors',
+      attribution: '© OpenStreetMap contributors'
     }).addTo(this.map);
 
-    await this.renderAll();
+    setTimeout(() => this.render(), 500);
   }
 
-  private async refreshMap() {
+  ngOnChanges(_: SimpleChanges) {
+    if (!this.map) return;
+    const sig = JSON.stringify({
+      c: this.courier,
+      o: this.orders?.length || 0,
+      l: this.legs?.length || 0,
+    });
+    if (sig === this.lastSig) return;
+    this.lastSig = sig;
+    this.render();
+  }
+
+  private async render() {
+    // 🔹 Clear previous markers/lines
     this.markers.forEach(m => m.remove());
+    this.polylines.forEach(p => p.remove());
+    if (this.courierMarker) this.courierMarker.remove();
     this.markers = [];
-    if (this.courierMarker) {
-      this.courierMarker.remove();
-      this.courierMarker = null;
+    this.polylines = [];
+    this.courierMarker = undefined;
+
+    const bounds = L.latLngBounds([]);
+
+    // 🟢 Courier marker (live GPS)
+    if (this.courier?.lat && this.courier?.lng) {
+      const courierIcon = L.icon({
+        iconUrl: 'assets/pins/courier-icon.png',
+        iconSize: [34, 34],
+        iconAnchor: [17, 34],
+      });
+      this.courierMarker = L.marker([this.courier.lat, this.courier.lng], { icon: courierIcon })
+        .addTo(this.map)
+        .bindPopup(`<b>🚴 Courier (Live GPS)</b>`);
+      bounds.extend(this.courierMarker.getLatLng());
     }
-    await this.renderAll();
-  }
 
-  // ───────────────────────────────────────────────
-  // Render Station, Deliveries, and Courier
-  // ───────────────────────────────────────────────
-  private async renderAll() {
-    const coordsList: L.LatLngExpression[] = [];
-
-    // 🟦 Station Marker (Blue)
-    if (this.start) {
-      const formattedStart = this.formatAddress(this.start);
-      const s = await this.geocodeCached(formattedStart);
-      if (s) {
-        const stationMarker = L.marker([s.lat, s.lng], {
-          icon: L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/484/484167.png',
-            iconSize: [30, 30],
-          })
-        }).addTo(this.map).bindPopup(`🏠 Station<br>${this.start}`);
-        this.markers.push(stationMarker);
-        coordsList.push([s.lat, s.lng]);
-      } else {
-        console.warn('⚠️ Could not geocode station:', this.start);
+    // 📦 Delivery points (from orders)
+    const deliveries: LatLng[] = [];
+    this.orders?.forEach((o, idx) => {
+      const lat = o?.delivery?.lat ?? o?.delivery?.latLng?.lat;
+      const lng = o?.delivery?.lng ?? o?.delivery?.latLng?.lng;
+      if (lat && lng) {
+        const pt = { lat: Number(lat), lng: Number(lng) };
+        deliveries.push(pt);
+        const icon = L.icon({
+          iconUrl: 'assets/pins/customer-icon.png',
+          iconSize: [28, 28],
+          iconAnchor: [14, 28],
+        });
+        const m = L.marker([pt.lat, pt.lng], { icon })
+          .addTo(this.map)
+          .bindPopup(`<b>📦 Delivery #${idx + 1}</b>`);
+        this.markers.push(m);
+        bounds.extend(m.getLatLng());
       }
-    }
+    });
 
-    // 🟧 Delivery Markers (Orange)
-    for (const [i, w] of this.waypoints.entries()) {
-      const formatted = this.formatAddress(w);
-      const r = await this.geocodeCached(formatted);
-      if (r) {
-        const deliveryMarker = L.marker([r.lat, r.lng], {
-          icon: L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/854/854878.png',
-            iconSize: [28, 28],
-          })
-        }).addTo(this.map).bindPopup(`📦 Delivery ${i + 1}<br>${w}`);
-        this.markers.push(deliveryMarker);
-        coordsList.push([r.lat, r.lng]);
-      }
-    }
-
-    // 🟩 Optional End Marker (Green)
-    if (this.end && this.end.trim() && this.end !== this.start) {
-      const formattedEnd = this.formatAddress(this.end);
-      const e = await this.geocodeCached(formattedEnd);
-      if (e) {
-        const endMarker = L.marker([e.lat, e.lng], {
-          icon: L.icon({
-            iconUrl: 'https://cdn-icons-png.flaticon.com/512/149/149060.png',
-            iconSize: [30, 30],
-          })
-        }).addTo(this.map).bindPopup(`🏁 Destination<br>${this.end}`);
-        this.markers.push(endMarker);
-        coordsList.push([e.lat, e.lng]);
-      }
-    }
-
-    // 🟢 Courier Live Marker
-    this.startCourierTracking();
-
-    // Fit all markers into view
-    if (coordsList.length) {
-      const group = L.featureGroup(this.markers);
-      this.map.fitBounds(group.getBounds().pad(0.25));
-    } else {
-      this.map.setView([17.6131, 121.7269], 13);
-    }
-  }
-
-  // ───────────────────────────────────────────────
-  // Live GPS Tracking (Courier)
-  // ───────────────────────────────────────────────
-  private startCourierTracking() {
-    if (!('geolocation' in navigator)) return;
-    if (this.watchId) navigator.geolocation.clearWatch(this.watchId);
-
-    this.watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        if (!this.courierMarker) {
-          this.courierMarker = L.circleMarker([lat, lng], {
-            radius: 7,
-            color: '#2ecc71',
-            fillColor: '#27ae60',
-            fillOpacity: 0.9,
-          }) as unknown as L.Marker;
-          this.courierMarker.addTo(this.map).bindPopup('🟢 Courier Location');
-        } else {
-          this.courierMarker.setLatLng([lat, lng]);
-        }
-
-        if (this.courierActive) {
-          this.map.setView([lat, lng], 14);
-        }
-      },
-      (err) => console.warn('⚠️ GPS error:', err),
-      { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 }
-    );
-  }
-
-  // ───────────────────────────────────────────────
-  // Improved Address Formatting (Tuguegarao bias)
-  // ───────────────────────────────────────────────
-  private formatAddress(raw: string): string {
-    let base = raw.trim();
-
-    // Always bias geocoding to Tuguegarao City
-    if (!/tuguegarao/i.test(base)) {
-      base += ', Tuguegarao City';
-    }
-    if (!/cagayan/i.test(base)) {
-      base += ', Cagayan, Cagayan Valley, Philippines';
-    }
-    return base;
-  }
-
-  // ───────────────────────────────────────────────
-  // Geocoding with Cache (Accurate Tuguegarao Fix)
-  // ───────────────────────────────────────────────
-  private async geocodeCached(query: string): Promise<{ lat: number; lng: number } | null> {
-    const key = `geo_${query.toLowerCase().replace(/\s+/g, '_')}`;
-    const cached = localStorage.getItem(key);
-    if (cached) {
+    // 🩵 Draw both routes
+    const waypoints = [this.courier, ...deliveries].filter(Boolean) as LatLng[];
+    if (waypoints.length > 1) {
+      // ⚫ 1. Longest (alternate) route — gray dashed
       try {
-        return JSON.parse(cached);
-      } catch {}
+        const longRoute = await this.geo.getRoute(waypoints[0], waypoints[waypoints.length - 1]);
+        const grayLine = L.polyline(longRoute.coordinates as [number, number][], {
+          color: '#808080',
+          weight: 4,
+          dashArray: '6,6',
+          opacity: 0.6
+        }).addTo(this.map);
+        grayLine.bindPopup(`<b>⚫ Alternate (Long Route)</b>`);
+        this.polylines.push(grayLine);
+        bounds.extend(grayLine.getBounds());
+      } catch (err) {
+        console.warn('⚠️ Long route fetch failed:', err);
+      }
+
+      // 🟦 2. Optimized (recommended) route — blue solid
+      if (this.legs?.length) {
+        const optCoords: [number, number][] = this.legs.map(
+          l => [l.from.lat, l.from.lng] as [number, number]
+        );
+        const blueLine = L.polyline(optCoords as L.LatLngExpression[], {
+          color: '#2F80ED',
+          weight: 5,
+          opacity: 0.9
+        }).addTo(this.map);
+        blueLine.bindPopup(`<b>🟦 Recommended (Optimized) Route</b>`);
+        this.polylines.push(blueLine);
+        bounds.extend(blueLine.getBounds());
+      }
     }
 
-    try {
-      // Bias to Tuguegarao and prioritize results near it
-      const url = `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=ph&q=${encodeURIComponent(query)}&viewbox=121.67,17.64,121.75,17.58&bounded=1`;
-      const res = await this.http.get<any[]>(url).toPromise();
-      if (res && res.length > 0) {
-        const { lat, lon } = res[0];
-        const coords = { lat: parseFloat(lat), lng: parseFloat(lon) };
-        localStorage.setItem(key, JSON.stringify(coords));
-        console.log(`📍 Geocoded "${query}" →`, coords);
-        return coords;
-      }
-    } catch (err) {
-      console.warn('⚠️ Geocode failed for', query, err);
-    }
-    return null;
+    // 🗺️ Fit map to bounds
+    if (bounds.isValid()) this.map.fitBounds(bounds.pad(0.25));
+    else this.map.setView(this.DEFAULT_CENTER, this.DEFAULT_ZOOM);
   }
 
-  ngOnDestroy(): void {
+  ngOnDestroy() {
     if (this.map) this.map.remove();
-    if (this.watchId) navigator.geolocation.clearWatch(this.watchId);
   }
 }

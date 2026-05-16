@@ -1,0 +1,66 @@
+<ion-header class="aqua-header">
+  <ion-toolbar class="aqua-toolbar">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/courier" text="" icon="arrow-back-outline"></ion-back-button>
+    </ion-buttons>
+
+    <ion-title class="aqua-title">Courier Notifications</ion-title>
+
+    <ion-buttons slot="end" class="toolbar-actions">
+      <!-- ✅ Mark all read -->
+      <ion-button fill="clear" (click)="markAllAsRead()" title="Mark all as read">
+        <ion-icon name="checkmark-done-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="notifications-content ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <!-- 🔄 Loading -->
+  <div *ngIf="loading" class="loading-state">
+    <ion-spinner></ion-spinner>
+  </div>
+
+  <!-- 🔔 Notifications -->
+  <ion-list *ngIf="!loading && notifications.length">
+    <ion-item
+      lines="none"
+      *ngFor="let n of notifications"
+      [class.unread]="!n.read"
+      (click)="openRelated(n)"
+    >
+      <ion-icon [name]="getIcon(n.type)" slot="start" class="notif-icon"></ion-icon>
+      <ion-label>
+        <h2 class="title">
+          {{ n.title || n.message }}
+          <ion-chip *ngIf="!n.read" color="primary" class="chip-unread">NEW</ion-chip>
+        </h2>
+        <!-- ✅ show proper timestamp fallback -->
+        <p class="meta">
+          {{ (n.createdAt?.toDate ? n.createdAt.toDate() : n.createdAt) | date:'short' }}
+        </p>
+      </ion-label>
+
+      <!-- 🗑 Delete -->
+      <ion-button
+        slot="end"
+        fill="clear"
+        color="danger"
+        (click)="deleteNotification(n); $event.stopPropagation()"
+      >
+        <ion-icon name="trash-outline"></ion-icon>
+      </ion-button>
+    </ion-item>
+  </ion-list>
+
+  <!-- 💤 Empty -->
+  <div *ngIf="!loading && !notifications.length" class="empty-state">
+    <ion-icon name="notifications-off-outline" class="empty-icon"></ion-icon>
+    <h2>No Notifications</h2>
+    <p>Delivery updates and assignments will appear here.</p>
+  </div>
+</ion-content>

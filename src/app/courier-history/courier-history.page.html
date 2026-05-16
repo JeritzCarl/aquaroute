@@ -1,0 +1,123 @@
+<ion-header class="history-header ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/courier"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Courier History</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- SEGMENT -->
+  <ion-segment [value]="viewMode" (ionChange)="onSegmentChange($event)" class="order-segment">
+    <ion-segment-button value="today">
+      <ion-label>TODAY</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="logs">
+      <ion-label>LOGS</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <!-- TODAY TAB -->
+  <ng-container *ngIf="viewMode === 'today'">
+    <div *ngIf="loading" class="center-text">
+      <ion-spinner name="dots"></ion-spinner>
+      <p>Loading today's deliveries...</p>
+    </div>
+
+    <ng-container *ngIf="!loading">
+      <ion-card class="summary-card">
+        <ion-card-content>
+          <div class="summary-grid">
+            <div>
+              <p>Total Deliveries</p>
+              <h2>{{ totalDeliveries }}</h2>
+            </div>
+            <div>
+              <p>Total Earnings</p>
+              <h2>₱{{ totalEarnings | number: '1.0-2' }}</h2>
+            </div>
+            <div>
+              <p>Avg. Duration</p>
+              <h2>{{ averageDuration }} mins</h2>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <!-- ORDER LIST -->
+      <ion-list *ngIf="history.length > 0; else noToday">
+        <ion-item *ngFor="let o of history" lines="none" class="history-item">
+          <ion-icon name="bicycle-outline" slot="start"></ion-icon>
+          <ion-label>
+            <h2>{{ o.customerName || o.delivery?.fullName || 'Customer' }}</h2>
+            <p>{{ o.flatAddress || o.delivery?.address || 'No address' }}</p>
+            <p><b>Total:</b> ₱{{ o.totalAmount || o.charges?.total || 0 }}</p>
+            <p *ngIf="o.deliveredAt || o.completedAt || o.archivedAt">
+              <b>Delivered:</b>
+              {{
+                (
+                  o.deliveredAt?.toDate ? o.deliveredAt.toDate() :
+                  o.deliveredAt ? o.deliveredAt :
+                  o.completedAt?.toDate ? o.completedAt.toDate() :
+                  o.completedAt ? o.completedAt :
+                  o.archivedAt?.toDate ? o.archivedAt.toDate() :
+                  o.archivedAt
+                ) | date: 'MMM d, y, h:mm a'
+              }}
+            </p>
+            <ion-badge color="success">Delivered</ion-badge>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <ng-template #noToday>
+        <div class="empty-state">
+          <ion-icon name="time-outline"></ion-icon>
+          <p>No deliveries completed today.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </ng-container>
+
+  <!-- LOGS TAB -->
+  <ng-container *ngIf="viewMode === 'logs'">
+    <div *ngIf="loading" class="center-text">
+      <ion-spinner name="dots"></ion-spinner>
+      <p>Loading delivery logs...</p>
+    </div>
+
+    <ng-container *ngIf="!loading && dailyLogs.length > 0">
+      <ion-card
+        *ngFor="let log of dailyLogs"
+        class="day-log-card"
+        (click)="openDayLog(log.date)"
+      >
+        <ion-card-header>
+          <ion-card-title>{{ log.date | date: 'fullDate' }}</ion-card-title>
+        </ion-card-header>
+        <ion-card-content>
+          <div class="log-summary-grid">
+            <div>
+              <p>Deliveries</p>
+              <h3>{{ log.totalDeliveries }}</h3>
+            </div>
+            <div>
+              <p>Earnings</p>
+              <h3>₱{{ log.totalEarnings | number: '1.0-2' }}</h3>
+            </div>
+            <div>
+              <p>Avg. Time</p>
+              <h3>{{ log.averageDuration }}m</h3>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </ng-container>
+
+    <div *ngIf="!loading && dailyLogs.length === 0" class="empty-state">
+      <ion-icon name="document-outline"></ion-icon>
+      <p>No delivery logs available yet.</p>
+    </div>
+  </ng-container>
+</ion-content>

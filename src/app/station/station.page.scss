@@ -1,127 +1,165 @@
-/* Station Header */
+/* 🌊 Station Header */
 .station-header {
   background: linear-gradient(180deg, #2b6ef6, #3c8ff9);
   border-radius: 0 0 30px 30px;
-  text-align: center;
-  padding: 70px 16px 30px;
   color: #fff;
+  text-align: center;
   position: relative;
+  padding: 50px 16px 30px; /* reduced from 70px */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 
+  /* 🧭 Back Button */
   .back-btn {
     position: absolute;
-    top: 20px;
-    left: 12px;
+    top: 28px; /* aligns vertically with logo top */
+    left: 16px;
+    z-index: 10;
+
+    ion-button {
+      --background: transparent;
+      --box-shadow: none;
+      --padding-start: 0;
+      --padding-end: 0;
+      --border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    ion-icon {
+      font-size: 26px;
+      color: #fff;
+    }
   }
 
+  /* 🛒 Cart Button */
   .cart-btn {
     position: absolute;
-    top: 20px;
-    right: 12px;
+    top: 28px;
+    right: 16px;
+    z-index: 10;
+
+    ion-button {
+      --background: transparent;
+      --box-shadow: none;
+      --padding-start: 0;
+      --padding-end: 0;
+      --border-radius: 50%;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cart-icon {
+      font-size: 26px;
+      color: #fff;
+    }
+
+    .cart-badge {
+      position: absolute;
+      top: 0px;
+      right: 0px;
+      background: #e63946;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 50%;
+      padding: 2px 6px;
+    }
   }
 
-  .cart-icon {
-    font-size: 30px;
-    color: #fff;
-  }
-
-  .cart-badge {
-    position: absolute;
-    top: -4px;
-    right: -6px;
-    background: #e63946;
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    border-radius: 50%;
-    padding: 2px 6px;
-  }
-
+  /* 🟦 Station Logo (aligned with buttons) */
   .station-logo {
-    width: 110px;
-    height: 110px;
-    margin: 0 auto 12px;
+    width: 100px;
+    height: 100px;
+    margin-top: 15px; /* brings it up to align vertically */
     border-radius: 50%;
     background: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 
     img {
-      width: 90%;
-      height: 90%;
+      width: 88%;
+      height: 88%;
       object-fit: cover;
       border-radius: 50%;
     }
   }
 
-  h2 {
-    font-size: 22px;
+  /* Station Title */
+  h2.station-title {
+    font-size: 20px;
     font-weight: 700;
-    margin: 8px 0 6px;
+    margin: 10px 0 6px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+
+    .status-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 8px;
+    }
   }
 
+  /* Hours / Rating / Address / Phone / Distance */
+  .hours,
   .rating,
   .address,
   .phone,
-  .estimate,
   .distance {
-    font-size: 14px;
-    margin: 2px 0;
+    font-size: 13.5px;
+    margin: 3px 0;
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
+    opacity: 0.95;
   }
 
-  .promo {
-    margin-top: 8px;
-    font-weight: 600;
-    font-size: 14px;
-    background: #ff9800;
-    color: #fff;
-    display: inline-block;
-    padding: 4px 10px;
-    border-radius: 8px;
+  ion-icon {
+    font-size: 15px;
   }
 
-  .services {
-    margin: 12px 0;
-
-    ion-chip {
-      font-weight: 600;
-      margin: 0 4px;
-    }
-  }
-
-  .payments {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
-    margin: 8px 0;
-
-    ion-icon {
-      font-size: 22px;
-      color: #fff;
-    }
-  }
-
+  /* Message Button */
   ion-button {
-    margin-top: 12px;
+    margin-top: 14px;
     --border-radius: 12px;
+    --background: #ffffff;
+    --color: #2b6ef6;
     font-weight: 600;
+    letter-spacing: 0.4px;
+    width: 90%;
+    max-width: 380px;
+  }
+
+  /* Closed Note */
+  .closed-note {
+    font-size: 13px;
+    margin-top: 6px;
+    opacity: 0.85;
   }
 }
 
-/* Section Title */
+/* 🧾 Section Title */
 .section-title h2 {
   font-size: 18px;
   font-weight: 700;
   margin: 18px 16px 10px;
 }
 
-/* Product Cards */
+/* 💧 Product Cards */
 .product-card {
   margin: 12px;
   border-radius: 12px;
@@ -135,6 +173,11 @@
 
   &:hover {
     transform: translateY(-2px);
+  }
+
+  &.disabled {
+    opacity: 0.45;
+    pointer-events: none;
   }
 
   .product-content {
@@ -184,3 +227,51 @@
     }
   }
 }
+
+
+/* ❤️ Favorite Button Styling + Animation */
+.fav-btn {
+  position: absolute;
+  top: 28px;
+  right: 62px;
+  z-index: 10;
+
+  ion-button {
+    --background: transparent;
+    --box-shadow: none;
+    --padding-start: 0;
+    --padding-end: 0;
+    --border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .fav-icon {
+    font-size: 26px;
+    transition: transform 0.25s cubic-bezier(0.36, 1.25, 0.45, 1),
+      color 0.25s ease;
+  }
+
+  .fav-active {
+    color: #e74c3c;
+    transform: scale(1.25);
+  }
+
+  .fav-idle {
+    color: #ffffff;
+    transform: scale(1);
+  }
+}
+
+.station-logo img,
+.product-content img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  background: #f5f7fa center center / contain no-repeat;
+}
+

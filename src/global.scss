@@ -26,19 +26,15 @@
 @import "@ionic/angular/css/flex-utils.css";
 @import "~leaflet/dist/leaflet.css";
 
-
 /**
  * Ionic Dark Mode
  * -----------------------------------------------------
  * For more info, please see:
  * https://ionicframework.com/docs/theming/dark-mode
  */
-
 /* @import "@ionic/angular/css/palettes/dark.always.css"; */
 /* @import "@ionic/angular/css/palettes/dark.class.css"; */
 @import "@ionic/angular/css/palettes/dark.system.css";
-
-
 
 /* Force Ionic iOS mode (rounded style) */
 :root {
@@ -85,7 +81,7 @@ ion-title .logo {
 /* Bottom Tabs */
 ion-tab-bar {
   border-radius: 18px 18px 0 0;
-  box-shadow: 0 -2px 10px rgba(0,0,0,0.12);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
@@ -95,10 +91,12 @@ ion-tab-button {
   --ripple-color: var(--ion-color-primary);
 }
 
-
-
 /* Avoid iOS auto-zoom on inputs */
-input, textarea, select { font-size: 16px; }
+input,
+textarea,
+select {
+  font-size: 16px;
+}
 
 /* Optional: nudge sticky footers while the keyboard is open */
 body.keyboard-open ion-footer .checkout-footer {
@@ -106,4 +104,154 @@ body.keyboard-open ion-footer .checkout-footer {
   /* Or use the measured height if you want:
   padding-bottom: calc(var(--keyboard-height, 0px) * 0.15 + env(safe-area-inset-bottom));
   */
+}
+
+/* 🌙 FINAL DARK MODE FIX — Consistent Surfaces & Contrast */
+body.dark,
+html.dark,
+:root.dark {
+  /* Core palette */
+  --ion-background-color: #0f0f0f !important;
+  --ion-text-color: #f3f3f3 !important;
+  --ion-card-background: #1b1b1b !important;
+  --ion-item-background: #1b1b1b !important;
+  --ion-toolbar-background: linear-gradient(90deg, #2f80ed, #256adf) !important;
+  --ion-toolbar-color: #ffffff !important;
+  --ion-tab-bar-background: #161616 !important;
+  --ion-tab-bar-color: #c5c5c5 !important;
+  --ion-tab-bar-color-selected: #2f80ed !important;
+
+  /* Smooth fade between themes */
+  * {
+    transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  }
+
+  /* Base surfaces */
+  ion-content {
+    --background: var(--ion-background-color) !important;
+    color: var(--ion-text-color) !important;
+  }
+
+  ion-header,
+  ion-toolbar,
+  ion-footer {
+    background: var(--ion-toolbar-background) !important;
+    color: var(--ion-toolbar-color) !important;
+  }
+
+  /* Cards & Containers */
+  ion-card {
+    background: var(--ion-card-background) !important;
+    color: var(--ion-text-color) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+  }
+
+  ion-list,
+  ion-item {
+    --background: var(--ion-item-background) !important;
+    color: var(--ion-text-color) !important;
+  }
+
+  /* Typography */
+  ion-label,
+  ion-text,
+  p,
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: var(--ion-text-color) !important;
+  }
+
+  /* Buttons */
+  ion-button {
+    --color: #fff !important;
+  }
+
+  /* Searchbar & chips */
+  ion-searchbar {
+    --background: #252525 !important;
+    --color: #fff !important;
+  }
+
+  ion-chip {
+    --background: #252525 !important;
+    --color: #eaeaea !important;
+  }
+
+  /* Inputs, modals, and date pickers */
+  ion-input,
+  ion-textarea,
+  ion-select,
+  ion-datetime {
+    color: #fff !important;
+    --background: #202020 !important;
+  }
+
+  ion-modal,
+  ion-alert,
+  .modal-wrapper,
+  .alert-wrapper {
+    --background: #1b1b1b !important;
+    color: #f5f5f5 !important;
+  }
+
+  /* Date picker popup */
+  ion-datetime {
+    --background: #1e1e1e !important;
+    --wheel-highlight-background: #2f80ed !important;
+  }
+
+  /* Tabs */
+  ion-tab-bar {
+    background: var(--ion-tab-bar-background) !important;
+    color: var(--ion-tab-bar-color) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  ion-tab-button {
+    --color: var(--ion-tab-bar-color);
+    --color-selected: var(--ion-tab-bar-color-selected);
+  }
+
+  /* Forms and lists spacing fix */
+  ion-item-divider {
+    background: #1a1a1a !important;
+    color: #e0e0e0 !important;
+  }
+
+  /* Toasts */
+  .toast-wrapper {
+    background: #2b2b2b !important;
+    color: #fff !important;
+  }
+
+  /* Specific fix: notification cards */
+  ion-card.notification-card {
+    background: #1b1b1b !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  }
+
+  /* Specific fix: modals in profile/settings/date pickers */
+  ion-card-content,
+  ion-card-header {
+    background: transparent !important;
+    color: var(--ion-text-color) !important;
+  }
+
+  /* Secondary surfaces for better layering */
+  .card-inner,
+  .settings-section,
+  .profile-card {
+    background: #1a1a1a !important;
+    color: var(--ion-text-color) !important;
+    border-radius: 14px;
+  }
+
+  /* Fix placeholder color */
+  ::placeholder {
+    color: #ccc !important;
+  }
 }

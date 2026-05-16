@@ -9,10 +9,6 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   updateProfile,
-  RecaptchaVerifier,
-  signInWithPhoneNumber,
-  PhoneAuthProvider,
-  signInWithCredential,
   browserLocalPersistence,
   setPersistence,
   onAuthStateChanged,
@@ -33,13 +29,16 @@ import {
   serverTimestamp,
 } from '@angular/fire/firestore';
 import { Capacitor } from '@capacitor/core';
+import { authState } from '@angular/fire/auth';
+import { docData } from '@angular/fire/firestore';
+import { switchMap, map } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 type Role = 'admin' | 'manager' | 'courier' | 'user';
 
 interface AppUser {
   uid: string;
   email?: string | null;
-  phoneNumber?: string | null;
   displayName?: string | null;
   photoURL?: string | null;
   provider?: string;
@@ -51,8 +50,8 @@ interface AppUser {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private verificationId?: string;
   private lastRoutedUid: string | null = null;
+  private initializing = true;
 
   constructor(
     private auth: Auth,
@@ -60,48 +59,135 @@ export class AuthService {
     private router: Router,
     private zone: NgZone
   ) {
-    setPersistence(this.auth, browserLocalPersistence).catch(console.error);
+    
+setPersistence(this.auth, browserLocalPersistence).catch(console.error);
 
-    onAuthStateChanged(this.auth, async (fbUser) => {
-      try {
-        try { await getRedirectResult(this.auth); } catch {}
+// ──────────────────────────────────────────────
+// ✅ Final Auth Listener (stable for all roles)
+// ──────────────────────────────────────────────
+onAuthStateChanged(this.auth, async (fbUser) => {
+  try {
+    // Handle redirect results for mobile/social logins
+    try {
+      await getRedirectResult(this.auth);
+    } catch {}
 
-        if (!fbUser) {
-          if (this.lastRoutedUid !== null) {
-            this.lastRoutedUid = null;
-            this.zone.run(() =>
-              this.router.navigateByUrl('/login', { replaceUrl: true })
-            );
-          }
-          return;
+    if (this.initializing) return;
+
+if (!fbUser) {
+  this.lastRoutedUid = null;
+
+  const currentUrl = this.router.url;
+  const isPublicPage =
+    currentUrl === '/login' ||
+    currentUrl === '/home' ||
+    currentUrl === '/landing-page' ||
+    currentUrl === '/auth-options' ||
+    currentUrl === '/register' ||
+    currentUrl === '/email-login' ||
+    currentUrl === '/reset-password' ||
+    currentUrl === '/reset-success';
+
+  if (!isPublicPage) {
+    this.zone.run(() =>
+      this.router.navigateByUrl('/login', { replaceUrl: true })
+    );
+  }
+  return;
+}
+
+    // 🔹 Skip duplicate sessions
+    if (this.lastRoutedUid === fbUser.uid) return;
+    // ✅ Stop re-routing if user is already on a protected page
+const currentUrl = this.router.url;
+if (
+  currentUrl.startsWith('/admin') ||
+  currentUrl.startsWith('/manager') ||
+  currentUrl.startsWith('/courier')
+) {
+  console.log('[Auth] Already on protected page — skip re-routing');
+  return;
+}
+    this.lastRoutedUid = fbUser.uid;
+
+    // 🔹 Ensure Firestore doc exists / update
+    await this.ensureUserDoc(fbUser);
+
+    // 🔹 Prepare to verify role
+    const ref = doc(this.db, `users/${fbUser.uid}`);
+    let verifiedRole: string | null = null;
+
+    // 🔁 Try several times to catch Firestore updates
+    for (let i = 0; i < 10; i++) {
+      const snap = await getDoc(ref);
+      if (snap.exists()) {
+        const data = snap.data() as any;
+        if (data.role && data.role !== 'user') {
+          verifiedRole = data.role;
+          break;
         }
-
-        if (fbUser.uid !== this.lastRoutedUid) {
-          const appUser = await this.ensureUserDoc(fbUser);
-          this.lastRoutedUid = fbUser.uid;
-          this.zone.run(() => this.routeByRole(appUser));
-        }
-      } catch (e) {
-        console.error('Auth init error:', e);
-        this.zone.run(() =>
-          this.router.navigateByUrl('/landing-page', { replaceUrl: true })
-        );
       }
-    });
+      await new Promise((r) => setTimeout(r, 400));
+    }
+
+    // ✅ Route correctly (with safe delay + verified fallback)
+    if (verifiedRole) {
+      sessionStorage.setItem('lastRole', verifiedRole);
+      this.zone.run(() =>
+        this.routeByRole({ ...fbUser, role: verifiedRole } as any)
+      );
+    } else {
+      console.warn('[Auth] No verified role yet — waiting for Firestore...');
+      // ⏳ Wait and re-check Firestore doc before defaulting
+      setTimeout(async () => {
+        const latestSnap = await getDoc(ref);
+        if (latestSnap.exists()) {
+          const data = latestSnap.data() as any;
+          const finalRole = data.role || 'user';
+          sessionStorage.setItem('lastRole', finalRole);
+          this.zone.run(() =>
+            this.routeByRole({ ...fbUser, role: finalRole } as any)
+          );
+        } else {
+          this.zone.run(() =>
+            this.router.navigateByUrl('/login', { replaceUrl: true })
+          );
+        }
+      }, 800); // small wait to avoid instant redirect flicker
+    }
+  } catch (e) {
+    console.error('Auth init error:', e);
+    this.zone.run(() =>
+      this.router.navigateByUrl('/login', { replaceUrl: true })
+    );
+  }
+});
+
+// ⏳ Release initialization lock
+setTimeout(() => (this.initializing = false), 800);
   }
 
-  get currentUser(): User | null {
-    return this.auth.currentUser;
-  }
+  // ──────────────────────────────────────────────
+// 🔹 Step 2C — Reactive user/role streams for AdminGuard
+// ──────────────────────────────────────────────
+user$ = authState(this.auth);
+
+userRole$ = this.user$.pipe(
+  switchMap(user => {
+    if (!user) return of(null);
+    const ref = doc(this.db, `users/${user.uid}`);
+    return docData(ref).pipe(map((data: any) => data?.role ?? null));
+  })
+);
 
   private async withPersistence<T>(fn: () => Promise<T>): Promise<T> {
     await setPersistence(this.auth, browserLocalPersistence);
     return fn();
   }
 
-  // ---------------------------
+  // ───────────────────────────────────────────────────────────────
   // User doc ensure + role resolve
-  // ---------------------------
+  // ───────────────────────────────────────────────────────────────
   private async ensureUserDoc(user: User, provider: string = 'email'): Promise<AppUser> {
     const ref = doc(this.db, `users/${user.uid}`);
     const snap = await getDoc(ref);
@@ -109,7 +195,6 @@ export class AuthService {
     const base: Partial<AppUser> = {
       uid: user.uid,
       email: (user.email || '').toLowerCase(),
-      phoneNumber: user.phoneNumber || '',
       displayName: user.displayName || '',
       photoURL: user.photoURL || '',
       provider,
@@ -154,70 +239,94 @@ export class AuthService {
       role,
       active: (snap.exists() ? (snap.data() as any).active : true) ?? true,
       ...base,
-      ...(snap.exists() ? {} : { createdAt: serverTimestamp() })
+      ...(snap.exists() ? {} : { createdAt: serverTimestamp() }),
     };
 
     await setDoc(ref, newDoc, { merge: true });
     return newDoc;
   }
 
-  // ---------------------------
+  // ───────────────────────────────────────────────────────────────
   // Routing by role
-  // ---------------------------
-  private routeByRole(u: AppUser) {
-    if ((u.role === 'manager' || u.role === 'courier') && u.active === false) {
-      this.router.navigateByUrl('/pending-approval', { replaceUrl: true });
-      return;
-    }
-
-    switch (u.role) {
-      case 'admin':
-        this.router.navigateByUrl('/admin-dashboard', { replaceUrl: true });
-        break;
-      case 'manager':
-        this.router.navigateByUrl('/manager', { replaceUrl: true });
-        break;
-      case 'courier':
-        this.router.navigateByUrl('/courier', { replaceUrl: true });
-        break;
-      default:
-        // ✅ All normal users go to landing-page
-        this.router.navigateByUrl('/landing-page', { replaceUrl: true });
-        break;
-    }
+  // ───────────────────────────────────────────────────────────────
+private routeByRole(u: AppUser) {
+  if (u.active === false) {
+    this.router.navigateByUrl('/account-disabled', { replaceUrl: true });
+    return;
   }
 
-  // ---------------------------
-  // Provider & email/phone auth
-  // ---------------------------
-  async loginWithGoogle() {
-    return this.withPersistence(async () => {
-      const provider = new GoogleAuthProvider();
-      (provider as any).setCustomParameters({ prompt: 'select_account' });
+  switch (u.role) {
+    case 'admin':
+      this.router.navigateByUrl('/admin', { replaceUrl: true });
+      break;
+    case 'manager':
+      this.router.navigateByUrl('/manager', { replaceUrl: true });
+      break;
+    case 'courier':
+      this.router.navigateByUrl('/courier', { replaceUrl: true });
+      break;
+    case 'user':
+    default:
+      this.router.navigateByUrl('/landing-page', { replaceUrl: true });
+      break;
+  }
+}
 
-      const platform = Capacitor.getPlatform();
-      try {
-        if (platform === 'android' || platform === 'ios') {
-          await signInWithRedirect(this.auth, provider);
-          return;
-        } else {
-          const res = await signInWithPopup(this.auth, provider);
-          await this.ensureUserDoc(res.user, 'google');
-          return res.user;
+  // ───────────────────────────────────────────────────────────────
+  // Authentication Methods
+  // ───────────────────────────────────────────────────────────────
+async loginWithGoogle() {
+  return this.withPersistence(async () => {
+    const provider = new GoogleAuthProvider();
+    (provider as any).setCustomParameters({ prompt: 'select_account' });
+
+    const platform = Capacitor.getPlatform();
+    try {
+      if (platform === 'android' || platform === 'ios') {
+        await signInWithRedirect(this.auth, provider);
+        return;
+      } else {
+        const res = await signInWithPopup(this.auth, provider);
+        let appUser = await this.ensureUserDoc(res.user, 'google');
+
+        // ⏳ Retry until role appears
+        let tries = 0;
+        while ((!appUser.role || appUser.role === 'user') && tries < 5) {
+          await new Promise((r) => setTimeout(r, 500));
+          appUser = await this.ensureUserDoc(res.user, 'google');
+          tries++;
         }
-      } catch (err: any) {
-        const code = String(err?.code || '');
-        const isWeb = platform === 'web';
-        const msg = isWeb
-          ? 'Google Sign-In failed on web. Ensure Google provider is enabled and "localhost" is in Authorized domains.'
-          : (code.includes('failed-precondition')
-             ? 'Google Sign-In failed-precondition on device. Add SHA-1/SHA-256 to Firebase Android app and update android/app/google-services.json; also allow ionic://localhost in Auth settings.'
-             : 'Google Sign-In failed on device.');
-        console.error('[AuthService] Google login error:', err);
-        throw new Error(msg);
-      }
-    });
+
+// ✅ Final Firestore role verification before routing
+const verifiedSnap = await getDoc(doc(this.db, `users/${res.user.uid}`));
+if (verifiedSnap.exists()) {
+  const verifiedData = verifiedSnap.data() as any;
+
+  if (verifiedData.active === false) {
+    await fbSignOut(this.auth);
+    throw new Error('Your account has been disabled by the admin.');
   }
+
+  const verifiedRole = verifiedData.role;
+  if (verifiedRole && verifiedRole !== appUser.role) {
+    appUser.role = verifiedRole;
+  }
+
+  if (typeof verifiedData.active !== 'undefined') {
+    appUser.active = verifiedData.active;
+  }
+}
+
+// ✅ Route only when confirmed
+this.zone.run(() => this.routeByRole(appUser));
+        return res.user;
+      }
+    } catch (err: any) {
+      console.error('[AuthService] Google login error:', err);
+      throw new Error('Google Sign-In failed. Please check your Firebase configuration.');
+    }
+  });
+}
 
   async loginWithFacebook() {
     return this.withPersistence(async () => {
@@ -229,13 +338,49 @@ export class AuthService {
     });
   }
 
-  async emailLogin(email: string, password: string) {
-    return this.withPersistence(async () => {
-      const res = await signInWithEmailAndPassword(this.auth, email, password);
-      await this.ensureUserDoc(res.user, 'email');
-      return res.user;
-    });
+  // ───────────────────────────────────────────────────────────────
+  // Email/Password Authentication
+  // ───────────────────────────────────────────────────────────────
+async emailLogin(email: string, password: string) {
+  return this.withPersistence(async () => {
+    const res = await signInWithEmailAndPassword(this.auth, email, password);
+
+    // Wait until Firestore doc is fully ready with correct role
+    let appUser = await this.ensureUserDoc(res.user, 'email');
+
+    // ⏳ Retry until role is not null (max 5 tries)
+    let tries = 0;
+    while ((!appUser.role || appUser.role === 'user') && tries < 5) {
+      await new Promise((r) => setTimeout(r, 500));
+      appUser = await this.ensureUserDoc(res.user, 'email');
+      tries++;
+    }
+
+// ✅ Final Firestore role verification before routing
+const verifiedSnap = await getDoc(doc(this.db, `users/${res.user.uid}`));
+if (verifiedSnap.exists()) {
+  const verifiedData = verifiedSnap.data() as any;
+
+  if (verifiedData.active === false) {
+    await fbSignOut(this.auth);
+    throw new Error('Your account has been disabled by the admin.');
   }
+
+  const verifiedRole = verifiedData.role;
+  if (verifiedRole && verifiedRole !== appUser.role) {
+    appUser.role = verifiedRole;
+  }
+
+  if (typeof verifiedData.active !== 'undefined') {
+    appUser.active = verifiedData.active;
+  }
+}
+
+// ✅ Route only when confirmed
+this.zone.run(() => this.routeByRole(appUser));
+    return res.user;
+  });
+}
 
   async emailRegister(name: string, email: string, password: string) {
     return this.withPersistence(async () => {
@@ -246,36 +391,35 @@ export class AuthService {
     });
   }
 
-  async sendPhoneOTP(rawPhone: string, recaptchaId: string) {
-    return this.withPersistence(async () => {
-      const recaptcha = new RecaptchaVerifier(this.auth, recaptchaId, { size: 'invisible' });
-      const phone = this.toE164(rawPhone);
-      const result = await signInWithPhoneNumber(this.auth, phone, recaptcha);
-      this.verificationId = result.verificationId;
-      return true;
-    });
-  }
-
-  async verifyPhoneOTP(code: string) {
-    if (!this.verificationId) throw new Error('Missing verificationId');
-    const credential = PhoneAuthProvider.credential(this.verificationId, code);
-    const res = await signInWithCredential(this.auth, credential);
-    await this.ensureUserDoc(res.user, 'phone');
-    this.verificationId = undefined;
-    return res.user;
-  }
-
-  async signOut() {
+// ───────────────────────────────────────────────────────────────
+// ✅ Full Logout (No Back Navigation, No Flicker)
+// ───────────────────────────────────────────────────────────────
+async signOut() {
+  try {
+    // 🔹 Sign out of Firebase first
     await fbSignOut(this.auth);
-    this.lastRoutedUid = null;
-    this.router.navigateByUrl('/login', { replaceUrl: true });
-  }
 
-  private toE164(input: string) {
-    const cleaned = (input || '').replace(/\D/g, '');
-    if (cleaned.startsWith('63')) return `+${cleaned}`;
-    if (cleaned.startsWith('0')) return `+63${cleaned.substring(1)}`;
-    if (cleaned.startsWith('9')) return `+63${cleaned}`;
-    return `+63${cleaned}`;
+    // 🔹 Reset cached role + session flags
+    this.lastRoutedUid = null;
+    sessionStorage.removeItem('lastRole');
+    localStorage.clear();
+
+    // 🔹 Hard delay to ensure all listeners release
+    await new Promise((r) => setTimeout(r, 200));
+
+    // 🔹 Route safely
+    this.zone.run(() => {
+      this.router.navigateByUrl('/login', { replaceUrl: true });
+    });
+
+    // 🔹 Hard reload to fully kill residual session
+    setTimeout(() => {
+      window.location.replace('/login');
+    }, 300);
+
+    console.log('✅ Fully signed out and redirected to login.');
+  } catch (err) {
+    console.error('❌ Sign-out failed:', err);
   }
+}
 }

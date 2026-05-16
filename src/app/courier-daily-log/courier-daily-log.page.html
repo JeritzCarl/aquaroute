@@ -1,0 +1,73 @@
+<ion-header class="history-header ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/courier-history"></ion-back-button>
+    </ion-buttons>
+    <!-- ✅ Always render a LOCAL date object (displayDate) -->
+    <ion-title>{{ displayDate | date: 'fullDate' }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <!-- LOADING -->
+  <div *ngIf="loading" class="center-text">
+    <ion-spinner name="dots"></ion-spinner>
+    <p>Loading daily log...</p>
+  </div>
+
+  <!-- SUMMARY -->
+  <ng-container *ngIf="!loading">
+    <ion-card class="summary-card">
+      <ion-card-content>
+        <div class="summary-grid">
+          <div>
+            <p>Total Deliveries</p>
+            <h2>{{ totalDeliveries }}</h2>
+          </div>
+          <div>
+            <p>Total Earnings</p>
+            <h2>₱{{ totalEarnings | number: '1.0-2' }}</h2>
+          </div>
+          <div>
+            <p>Avg. Duration</p>
+            <h2>{{ averageDuration }} mins</h2>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- LIST -->
+    <ion-list *ngIf="orders.length > 0; else noOrders">
+      <ion-item *ngFor="let o of orders" lines="none" class="history-item">
+        <ion-icon name="cube-outline" slot="start"></ion-icon>
+        <ion-label>
+          <h2>{{ o.customerName || o.delivery?.fullName || 'Customer' }}</h2>
+          <p>{{ o.flatAddress || o.delivery?.address || 'No address' }}</p>
+          <p><b>Total:</b> ₱{{ o.totalAmount || o.charges?.total || 0 }}</p>
+
+          <p *ngIf="o.deliveredAt || o.completedAt || o.archivedAt">
+            <b>Delivered:</b>
+            {{
+              (
+                o.deliveredAt?.toDate ? o.deliveredAt.toDate() :
+                o.deliveredAt ? o.deliveredAt :
+                o.completedAt?.toDate ? o.completedAt.toDate() :
+                o.completedAt ? o.completedAt :
+                o.archivedAt?.toDate ? o.archivedAt.toDate() :
+                o.archivedAt
+              ) | date: 'MMM d, y, h:mm a'
+            }}
+          </p>
+          <ion-badge color="success">Delivered</ion-badge>
+        </ion-label>
+      </ion-item>
+    </ion-list>
+
+    <ng-template #noOrders>
+      <div class="empty-state">
+        <ion-icon name="document-text-outline"></ion-icon>
+        <p>No deliveries found for this date.</p>
+      </div>
+    </ng-template>
+  </ng-container>
+</ion-content>

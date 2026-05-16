@@ -1,52 +1,86 @@
 .home-background {
-  --background: #4ec9f3;
+  --background: linear-gradient(180deg, #4ec9f3 0%, #2f80ed 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100vh;
+  position: relative;
 
+  /* Back button */
   ion-buttons {
-    margin-top: 30px;
     position: absolute;
-    right: 80%;
-    bottom: 90%;
-    transform: translate(-50%, -50%);
-    border: transparent;
-    background: transparent;
+    top: 24px;
+    left: 16px;
+    z-index: 10;
+
+    ion-back-button {
+      color: #003366;
+      --icon-font-size: 22px;
+    }
   }
 
+  /* Page container */
   .container {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    align-items: center;
     justify-content: space-between;
+    height: 100%;
     padding: 40px 16px;
   }
 
-  .logo-section {
-    text-align: center;
-    margin-top: 10%;
+.logo-section {
+  text-align: center;
+  margin-top: 10%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px; /* 🔹 ensures tagline hugs AQUAROUTE perfectly */
 
-    img {
-      width: 90%;
-      max-width: 350px;
-      height: auto;
-      margin-bottom: 8px;
-    }
-
-    .tagline {
-      font-size: 22px;
-      font-weight: 600;
-      color: #003366;
-      margin-top: -130px;
-    }
+  /* AQUAROUTE text */
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 64px;
+    font-weight: 700;
+    color: #003366;
+    letter-spacing: 1px;
+    line-height: 1;
+    margin: 0;
+    padding: 0;
   }
 
+  /* ✅ tagline now locked right under AQUAROUTE */
+  .tagline {
+    font-family: 'Inter', sans-serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: #003366;
+    margin-top: -130px; /* remove all top/bottom margins */
+    padding-bottom: 10%;
+    line-height: 1.2;
+  }
+}
+
+
+  /* ────────────────────────────────
+     Card Section
+     ──────────────────────────────── */
   .card-section {
     width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 130px;
   }
 
   .login-card {
-    padding: 16px;
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
     border-radius: 20px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
     background: #ffffff;
+
 
     ion-button {
       --background: #fff;
@@ -67,6 +101,7 @@
       }
     }
 
+    /* Custom buttons */
     .custom-btn {
       display: flex;
       align-items: center;
@@ -81,6 +116,7 @@
       }
     }
 
+    /* Button color themes */
     .google-btn {
       --color: #000;
     }
@@ -90,9 +126,10 @@
     }
 
     .email-btn {
-      --color: #d93025;
+      --color: #2f80ed;
     }
 
+    /* “or” divider text */
     .or-text {
       text-align: center;
       margin: 12px 0;
@@ -100,6 +137,7 @@
       font-weight: 500;
     }
 
+    /* Terms and policy text */
     .terms-text {
       font-size: 15px;
       color: #676666;
@@ -142,7 +180,7 @@
       }
 
       .email-btn {
-        --color: #d93025;
+        --color: #2f80ed;
       }
 
       .or-text {

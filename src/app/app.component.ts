@@ -4,10 +4,8 @@ import { Capacitor } from '@capacitor/core';
 import { Keyboard, KeyboardResize, KeyboardStyle } from '@capacitor/keyboard';
 import { StatusBar, Style as StatusBarStyle } from '@capacitor/status-bar';
 import { NotificationService } from './services/notification.service';
-
-import { Router } from '@angular/router';
-import { Auth, onAuthStateChanged } from '@angular/fire/auth';
-import { Firestore, doc, getDoc } from '@angular/fire/firestore';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
@@ -19,20 +17,15 @@ export class AppComponent {
   constructor(
     private platform: Platform,
     private notify: NotificationService,
-    private router: Router,
-    private auth: Auth,
-    private db: Firestore
+    private authSvc: AuthService
   ) {
     this.platform.ready().then(() => {
       this.configureNativeUI();
       this.initPushNotifications();
-      this.handleAuthRouting(); // ✅ role-aware navigation
+      this.initGoogleAuth();
     });
   }
 
-  // ──────────────────────────────────────────────
-  // Native UI configs (Keyboard + StatusBar)
-  // ──────────────────────────────────────────────
   private async configureNativeUI() {
     if (!Capacitor.isNativePlatform()) return;
 
@@ -48,9 +41,6 @@ export class AppComponent {
     }
   }
 
-  // ──────────────────────────────────────────────
-  // Push Notifications
-  // ──────────────────────────────────────────────
   private async initPushNotifications() {
     try {
       await this.notify.initPush();
@@ -59,61 +49,19 @@ export class AppComponent {
     }
   }
 
-  // ──────────────────────────────────────────────
-  // Auth Routing (role-aware, no more welcome/location-setup)
-  // ──────────────────────────────────────────────
-  private handleAuthRouting() {
-    onAuthStateChanged(this.auth, async (user) => {
-      if (!user) {
-        if (!this.router.url.startsWith('/landing')) {
-          this.router.navigateByUrl('/landing', { replaceUrl: true });
-        }
-        return;
-      }
-
-      try {
-        const ref = doc(this.db, 'users', user.uid);
-        const snap = await getDoc(ref);
-        const data = snap.data();
-
-        if (!data) return; // no profile, stay put
-
-        const role = data['role'] || 'customer';
-        const current = this.router.url;
-
-        // Neutral = landing, home, or root
-        const isNeutral = current === '/' || current === '/home' || current.startsWith('/landing');
-
-        // ─────────────── MANAGER ───────────────
-        if (role === 'manager') {
-          if (isNeutral) {
-            this.router.navigateByUrl('/manager', { replaceUrl: true });
-          } else {
-            console.log('✅ Manager staying on', current);
-          }
-        }
-
-        // ─────────────── COURIER ───────────────
-        else if (role === 'courier') {
-          if (isNeutral) {
-            this.router.navigateByUrl('/courier', { replaceUrl: true });
-          } else {
-            console.log('✅ Courier staying on', current);
-          }
-        }
-
-        // ─────────────── CUSTOMER (default) ───────────────
-        else {
-          if (isNeutral) {
-            this.router.navigateByUrl('/station', { replaceUrl: true });
-          } else {
-            console.log('✅ Customer staying on', current);
-          }
-        }
-      } catch (err) {
-        console.error('⚠️ Auth routing failed:', err);
-        this.router.navigateByUrl('/landing', { replaceUrl: true });
-      }
-    });
+  private initGoogleAuth() {
+    if (Capacitor.isNativePlatform()) {
+      // @ts-ignore
+      GoogleAuth.initialize({
+        clientId: '480500507580-ifmdm4uvt146pevj1fdo59s2dnl6db5e.apps.googleusercontent.com',
+        // @ts-ignore
+        androidClientId: '480500507580-pf50pmqe5cggsoilmnramoe2jeo1umod.apps.googleusercontent.com',
+        scopes: ['profile', 'email'],
+        grantOfflineAccess: true,
+      });
+      console.log('✅ GoogleAuth initialized (native)');
+    } else {
+      console.log('ℹ️ Web mode: GoogleAuth skipped');
+    }
   }
 }

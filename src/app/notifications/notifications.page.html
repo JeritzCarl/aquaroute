@@ -1,62 +1,125 @@
- <ion-toolbar>
-    <ion-title>Notifications</ion-title>
+<!-- ─────────────── HEADER ─────────────── -->
+<ion-header class="aqua-header">
+  <ion-toolbar class="aqua-toolbar">
+    <ion-title class="aqua-title">Notifications</ion-title>
   </ion-toolbar>
+</ion-header>
 
+<!-- ─────────────── CONTENT ─────────────── -->
+<ion-content class="notifications-content ion-padding">
+  <!-- 🔄 Pull-to-Refresh -->
+  <ion-refresher slot="fixed" (ionRefresh)="refresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
 
-<ion-content class="ion-padding">
+  <!-- ⏳ Loading Spinner -->
+  <div *ngIf="loading" class="loading-state">
+    <ion-spinner color="primary"></ion-spinner>
+  </div>
 
-  <ion-list>
-    <!-- Example notification -->
-    <ion-item lines="none">
-      <ion-icon name="alert-circle-outline" slot="start" color="primary"></ion-icon>
-      <ion-label>
-        <h2>Your order #1234 is on the way</h2>
-        <p>Expected delivery: 3:30 PM</p>
-      </ion-label>
-    </ion-item>
+  <!-- ✅ Mark All as Read -->
+  <div *ngIf="!loading && notifications.length" class="notif-header-actions">
+    <ion-button expand="block" color="primary" (click)="markAllRead()">
+      <ion-icon name="checkmark-done-outline" slot="start"></ion-icon>
+      Mark All as Read
+    </ion-button>
+  </div>
 
-    <ion-item lines="none">
-      <ion-icon name="checkmark-circle-outline" slot="start" color="success"></ion-icon>
-      <ion-label>
-        <h2>Order #1220 delivered</h2>
-        <p>Delivered at 9:45 AM today</p>
-      </ion-label>
-    </ion-item>
+  <!-- 📩 Notifications List -->
+  <ion-list *ngIf="!loading && notifications.length">
+    <ion-item-sliding *ngFor="let n of notifications">
 
-    <ion-item lines="none">
-      <ion-icon name="gift-outline" slot="start" color="tertiary"></ion-icon>
-      <ion-label>
-        <h2>Promo available at AquaPure Station</h2>
-        <p>Get ₱20 off your next order</p>
-      </ion-label>
-    </ion-item>
+      <ion-item
+        button
+        lines="none"
+        (click)="openRelated(n)"
+        [class.unread]="!n.read"
+        [class.declined]="n.subtype === 'declined' || n.status === 'Cancelled'">
+
+        <!-- 🔔 Icon -->
+        <ion-icon [name]="getIcon(n.type)" slot="start" class="notif-icon"></ion-icon>
+
+        <!-- 🔹 Label Block -->
+        <ion-label>
+          <h2
+            class="title"
+            [ngClass]="{ 'declined-title': n.subtype === 'declined' || n.status === 'Cancelled' }">
+
+            <!-- 🔹 Order Reference -->
+            <strong *ngIf="n.orderId">Order #{{ n.orderId }}:</strong>
+
+            <!-- 🔹 Declined Title -->
+            <span *ngIf="n.subtype === 'declined' || n.status === 'Cancelled'">
+              Order Declined
+            </span>
+
+            <!-- 🔹 Default Title -->
+            <span *ngIf="!(n.subtype === 'declined' || n.status === 'Cancelled')">
+              {{ n.title || n.message || 'Notification' }}
+            </span>
+
+            <!-- 🔹 NEW badge -->
+            <ion-chip *ngIf="!n.read" color="primary" class="chip-unread">NEW</ion-chip>
+          </h2>
+
+          <!-- 🕒 Meta Details -->
+          <p class="meta">
+            <!-- 🔻 Declined message -->
+            <ion-text *ngIf="n.subtype === 'declined' || n.status === 'Cancelled'" color="danger">
+              {{ n.message || 'Your order was declined by the station.' }}
+            </ion-text>
+
+            <!-- 🔸 Default message -->
+            <ion-text *ngIf="!(n.subtype === 'declined' || n.status === 'Cancelled')" color="medium">
+              {{ n.status || n.type || 'Update' }}
+            </ion-text>
+
+            •
+            <span>
+              {{ n.createdAt?.toDate ? (n.createdAt.toDate() | date:'MMM d, h:mm a') : (n.createdAt | date:'MMM d, h:mm a') }}
+            </span>
+          </p>
+          <div *ngIf="n.proofImageUrl" class="proof-preview">
+        <img [src]="n.proofImageUrl" alt="Delivery Proof" class="proof-img" />
+        <p class="proof-label">Proof of Delivery</p>
+      </div>
+        </ion-label>
+      </ion-item>
+
+      <!-- 🗑️ Swipe to Delete -->
+      <ion-item-options side="end">
+        <ion-item-option color="danger" (click)="confirmDelete(n)">
+          <ion-icon slot="icon-only" name="trash-outline"></ion-icon>
+        </ion-item-option>
+      </ion-item-options>
+    </ion-item-sliding>
   </ion-list>
 
+  <!-- 🚫 Empty State -->
+  <div *ngIf="!loading && !notifications.length" class="empty-state">
+    <ion-icon name="notifications-off-outline" class="empty-icon"></ion-icon>
+    <h2>No Notifications</h2>
+    <p>You’ll see your order and delivery updates here.</p>
+  </div>
 </ion-content>
 
-<!-- ✅ Proper footer -->
+<!-- ─────────────── FOOTER ─────────────── -->
 <ion-footer>
   <ion-tab-bar slot="bottom">
-    <ion-tab-button 
-      [routerLink]="['/landing-page']" 
-      routerDirection="root"
-      routerLinkActive="tab-selected">
+    <ion-tab-button [routerLink]="['/landing-page']" routerDirection="root" routerLinkActive="tab-selected">
       <ion-icon name="location"></ion-icon>
       <ion-label>Stations</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button 
-      [routerLink]="['/notifications']" 
-      routerDirection="root"
-      routerLinkActive="tab-selected">
+    <ion-tab-button [routerLink]="['/notifications']" routerDirection="root" routerLinkActive="tab-selected">
       <ion-icon name="notifications"></ion-icon>
+      <ion-badge *ngIf="unreadCount > 0" color="danger" class="notif-badge">
+        {{ unreadCount }}
+      </ion-badge>
       <ion-label>Notifications</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button 
-      [routerLink]="['/account']" 
-      routerDirection="root"
-      routerLinkActive="tab-selected">
+    <ion-tab-button [routerLink]="['/account']" routerDirection="root" routerLinkActive="tab-selected">
       <ion-icon name="person"></ion-icon>
       <ion-label>Account</ion-label>
     </ion-tab-button>

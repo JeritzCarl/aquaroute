@@ -74,3 +74,32 @@ ion-item[lines="none"] {
   height: 50px;
   letter-spacing: 0.5px;
 }
+
+
+/* ============================
+   VALIDATION + INPUT POLISH
+============================ */
+ion-note[color="danger"] {
+  font-size: 13px;
+  margin-left: 8px;
+  margin-top: -8px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+ion-item {
+  --highlight-color-focused: #2563eb;
+  --border-radius: 12px;
+  margin-bottom: 6px;
+}
+
+ion-input, ion-select {
+  font-size: 15px;
+}
+
+.save-btn {
+  margin-top: 22px;
+  --border-radius: 12px;
+  --background: #2563eb;
+  font-weight: 600;
+}

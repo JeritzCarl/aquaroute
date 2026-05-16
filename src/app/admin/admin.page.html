@@ -1,30 +1,239 @@
-<ion-header>
-  <ion-toolbar>
-    <ion-title>Admin Dashboard</ion-title>
+<ion-header class="aqua-header">
+  <ion-toolbar class="aqua-toolbar">
+    <ion-title class="aqua-title">Admin Dashboard</ion-title>
+
+    <ion-buttons slot="end" class="toolbar-actions">
+      <ion-button fill="clear" (click)="openNotifications()" aria-label="View Notifications">
+        <ion-icon name="notifications-outline"></ion-icon>
+      </ion-button>
+
+      <ion-button fill="clear" (click)="goToLogs()">
+        <ion-icon slot="start" name="document-text-outline"></ion-icon>
+      </ion-button>
+
+      <ion-button color="danger" fill="clear" (click)="confirmLogout()">
+        <ion-icon name="log-out-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
-  <h2>All Registered Stations</h2>
+<ion-content class="admin-content ion-padding">
+  <ion-searchbar
+    placeholder="Search across all records..."
+    [(ngModel)]="searchTerm"
+    (ionInput)="onSearchChange()"
+    class="admin-searchbar">
+  </ion-searchbar>
 
-  <!-- ✅ Show list of stations -->
-  <ion-list *ngIf="stations$ | async as stations; else noStations">
-    <ion-item *ngFor="let station of stations">
-      <ion-label>
-        <h2>{{ station.stationName }}</h2>
-        <p>Owner: {{ station.ownerName }}</p>
-        <p>Email: {{ station.email }}</p>
-        <p>Phone: {{ station.phone }}</p>
-      </ion-label>
+  <ion-segment
+    [(ngModel)]="filter"
+    (ionChange)="handleFilterChange()"
+    value="all"
+    class="filter-tabs">
+    <ion-segment-button value="pending">
+      <ion-label>Pending</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="approved">
+      <ion-label>Approved</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="disabled">
+      <ion-label>Disabled</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="rejected">
+      <ion-label>Rejected</ion-label>
+    </ion-segment-button>
+    <ion-segment-button value="all">
+      <ion-label>All</ion-label>
+    </ion-segment-button>
+  </ion-segment>
 
-      <ion-button fill="clear" color="danger" (click)="deleteStation(station.id)">
+  <!-- STATIONS VIEW -->
+  <ion-list *ngIf="filter !== 'all' && filter !== 'couriers' && displayedStations.length > 0">
+    <ion-card *ngFor="let station of displayedStations" class="station-card">
+      <ion-card-header>
+        <ion-card-title class="station-title">
+          {{ station.stationName || 'Unnamed Station' }}
+        </ion-card-title>
+      </ion-card-header>
+
+      <ion-card-content>
+        <p><strong>Owner:</strong> {{ station.ownerName }}</p>
+        <p><strong>Email:</strong> {{ station.ownerEmail }}</p>
+        <p><strong>Phone:</strong> {{ station.phone }}</p>
+        <p><strong>Alternate Contact:</strong> {{ station.alternateContactNumber || 'N/A' }}</p>
+        <p><strong>Address:</strong> {{ station.address }}</p>
+        <p><strong>Barangay:</strong> {{ station.barangay }}</p>
+        <p><strong>City:</strong> {{ station.city }}</p>
+        <p><strong>ZIP Code:</strong> {{ station.zipCode }}</p>
+        <p><strong>Business Permit No.:</strong> {{ station.businessPermitNumber || 'N/A' }}</p>
+        <p><strong>Valid ID Type:</strong> {{ station.ownerValidIdType || 'N/A' }}</p>
+        <p><strong>Valid ID Number:</strong> {{ station.ownerValidIdNumber || 'N/A' }}</p>
+
+        <div *ngIf="station.businessPermitImageUrl" class="doc-section">
+          <p><strong>Business Permit:</strong></p>
+          <img
+            [src]="station.businessPermitImageUrl"
+            alt="Business Permit"
+            class="doc-preview"
+          />
+        </div>
+
+        <div *ngIf="station.validIdImageUrl" class="doc-section">
+          <p><strong>Valid ID:</strong></p>
+          <img
+            [src]="station.validIdImageUrl"
+            alt="Valid ID"
+            class="doc-preview"
+          />
+        </div>
+
+        <p class="manual-note">
+          <strong>Document Verification:</strong>
+          Documents are uploaded and reviewed directly within the system for verification.
+        </p>
+
+        <p class="ion-margin-top">
+          <strong>Status:</strong>
+          <ion-badge [color]="getStatusColor(station.verificationStatus)">
+            {{ station.verificationStatus || 'pending' | titlecase }}
+          </ion-badge>
+        </p>
+
+        <ion-row class="ion-margin-top">
+          <ion-col size="6">
+            <ion-button
+              expand="block"
+              color="success"
+              (click)="approveStation(station)"
+              [disabled]="station.verificationStatus !== 'pending'">
+              Approve
+            </ion-button>
+          </ion-col>
+          <ion-col size="6">
+            <ion-button
+              expand="block"
+              color="danger"
+              (click)="rejectStation(station)"
+              [disabled]="station.verificationStatus !== 'pending'">
+              Reject
+            </ion-button>
+          </ion-col>
+        </ion-row>
+
+        <ion-row class="ion-margin-top">
+          <ion-col size="6">
+            <ion-button
+              expand="block"
+              color="warning"
+              (click)="enableStation(station)"
+              [disabled]="station.verificationStatus !== 'disabled'">
+              Re-enable
+            </ion-button>
+          </ion-col>
+          <ion-col size="6">
+            <ion-button
+              expand="block"
+              color="medium"
+              (click)="disableStation(station)"
+              [disabled]="station.verificationStatus === 'disabled' || station.verificationStatus === 'rejected' || station.verificationStatus === 'pending'">
+              Disable
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-card-content>
+
+      <ion-button
+        fill="clear"
+        color="danger"
+        (click)="deleteStation(station.id)"
+        class="delete-btn">
+        <ion-icon name="trash-outline" slot="start"></ion-icon>
         Delete
       </ion-button>
-    </ion-item>
+    </ion-card>
   </ion-list>
 
-  <!-- ✅ Fallback if no stations -->
-  <ng-template #noStations>
-    <p>No stations registered yet.</p>
-  </ng-template>
+  <!-- EMPTY STATE FOR STATION FILTERS -->
+  <ng-container *ngIf="filter !== 'all' && filter !== 'couriers' && displayedStations.length === 0">
+    <div class="empty-state">
+      <ion-icon name="business-outline" class="empty-icon"></ion-icon>
+      <h2>No Records Found</h2>
+      <p>No stations match this filter.</p>
+    </div>
+  </ng-container>
+
+  <!-- ALL VIEW -->
+  <ion-list *ngIf="filter === 'all'">
+    <ion-card *ngFor="let item of displayedAllRecords" class="person-card">
+      <ion-card-content>
+        <div class="record-header">
+          <strong>{{ item.title }}</strong>
+          <ion-badge [color]="getRecordTypeColor(item.type)">
+            {{ getRecordTypeLabel(item.type) }}
+          </ion-badge>
+        </div>
+
+        <small>{{ item.subtitle }}</small>
+
+        <!-- Station -->
+        <ng-container *ngIf="item.type === 'station'">
+          <p><strong>Owner:</strong> {{ item.raw['ownerName'] || 'N/A' }}</p>
+          <p><strong>Email:</strong> {{ item.raw['ownerEmail'] || 'N/A' }}</p>
+          <p><strong>Phone:</strong> {{ item.raw['phone'] || 'N/A' }}</p>
+          <p><strong>Status:</strong>
+            <ion-badge [color]="getStatusColor(item.raw['verificationStatus'])">
+              {{ item.raw['verificationStatus'] || 'pending' | titlecase }}
+            </ion-badge>
+          </p>
+        </ng-container>
+
+        <!-- User / Manager / Courier -->
+        <ng-container *ngIf="item.type !== 'station'">
+          <p><strong>Email:</strong> {{ item.raw['email'] || 'N/A' }}</p>
+          <p><strong>Phone:</strong> {{ item.raw['phoneNumber'] || 'N/A' }}</p>
+          <p><strong>Role:</strong> {{ item.raw['role'] || item.type }}</p>
+          <p><strong>Date Created:</strong> {{ formatDate(item.raw['createdAt']) }}</p>
+          <p><strong>Last Updated:</strong> {{ formatDate(item.raw['updatedAt']) }}</p>
+          <p><strong>Last Login:</strong> {{ formatDate(item.raw['lastLoginAt']) }}</p>
+          <p><strong>Status:</strong>
+            <ion-badge [color]="item.raw['active'] === false ? 'medium' : 'success'">
+              {{ item.raw['active'] === false ? 'Disabled' : 'Active' }}
+            </ion-badge>
+          </p>
+          <p><strong>User ID:</strong> {{ item.raw['id'] || item.id }}</p>
+
+          <ion-row class="ion-margin-top">
+            <ion-col size="6">
+              <ion-button
+                expand="block"
+                color="warning"
+                (click)="disablePerson(item.raw)"
+                [disabled]="item.raw['active'] === false">
+                Disable
+              </ion-button>
+            </ion-col>
+            <ion-col size="6">
+              <ion-button
+                expand="block"
+                color="success"
+                (click)="enablePerson(item.raw)"
+                [disabled]="item.raw['active'] !== false">
+                Re-enable
+              </ion-button>
+            </ion-col>
+          </ion-row>
+
+          <ion-button
+            expand="block"
+            color="danger"
+            fill="outline"
+            class="ion-margin-top"
+            (click)="deletePerson(item.raw)">
+            Delete
+          </ion-button>
+        </ng-container>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
 </ion-content>

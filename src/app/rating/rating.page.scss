@@ -1,0 +1,129 @@
+/* === AquaRoute Header === */
+.aqua-header-wrap {
+  --background: transparent;
+  border-bottom-left-radius: 16px;
+  border-bottom-right-radius: 16px;
+  overflow: hidden;
+}
+
+.aqua-header {
+  --background: linear-gradient(90deg, #3b82f6, #2563eb);
+  --color: #fff;
+  padding-top: env(safe-area-inset-top);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.aqua-header ion-title {
+  font-weight: 700;
+  font-size: 20px;
+  color: #fff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+}
+
+/* === Content Area === */
+ion-content {
+  background: #f7f9fc;
+}
+
+.order-id {
+  font-weight: 700;
+  font-size: 17px;
+  text-align: center;
+  color: #0a7bff;
+  margin-top: 12px;
+}
+
+.mode-label {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+  font-weight: 550;
+  margin-bottom: 16px;
+}
+
+/* === Rating Cards === */
+ion-card {
+  border-radius: 16px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 18px;
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 14px rgba(0, 0, 0, 0.12);
+  }
+
+  ion-card-header {
+    background: #f0f4ff;
+    border-radius: 16px 16px 0 0;
+  }
+
+  ion-card-title {
+    font-weight: 700;
+    font-size: 16px;
+    color: #2f80ed;
+  }
+}
+
+/* === Stars === */
+.stars {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.star-icon {
+  font-size: 30px;
+  color: #f1c40f;
+  margin: 0 4px;
+  cursor: pointer;
+  transition: transform 0.15s ease-in-out;
+
+  &:hover {
+    transform: scale(1.2);
+    color: #f39c12;
+  }
+}
+
+/* === Feedback Textarea === */
+ion-textarea {
+  border: 1px solid #dfe6f2;
+  border-radius: 10px;
+  padding: 8px;
+  background: #fff;
+  font-size: 14px;
+  --highlight-color-focused: #2f80ed;
+  transition: border 0.2s;
+
+  &:focus-within {
+    border-color: #2f80ed;
+    box-shadow: 0 0 0 2px rgba(47, 128, 237, 0.15);
+  }
+}
+
+/* === Submit Button === */
+ion-button {
+  margin-top: 6px;
+  border-radius: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 10px rgba(39, 174, 96, 0.25);
+  transition: all 0.2s ease-in-out;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(39, 174, 96, 0.35);
+  }
+}
+
+/* === Loading Spinner === */
+ion-spinner {
+  display: block;
+  margin: 50px auto 10px;
+  --color: #2f80ed;
+}

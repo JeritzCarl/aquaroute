@@ -1,59 +1,62 @@
 <ion-content [fullscreen]="true" class="email-login-bg">
-  <!-- Back Button -->
-  <ion-buttons>
-    <ion-back-button type="button" icon="chevron-back" defaultHref="/login"></ion-back-button>
+  <!-- Floating Back Button -->
+  <ion-buttons class="back-btn">
+    <ion-back-button type="button" icon="chevron-back-outline" defaultHref="/login"></ion-back-button>
   </ion-buttons>
 
-  <!-- Form Container -->
-  <div class="form-container">
+  <div class="login-container">
+    <!-- Logo Section -->
+    <div class="header-section">
+      <img src="assets/AquaRoute Word Logo.png" alt="AquaRoute Logo" class="logo" />
+      <p class="tagline">Deliver Smarter. Hydrate Faster.</p>
+    </div>
 
-    <h1 class="title">Log in with Email</h1>
-    <p class="subtitle">Enter your account details</p>
+    <!-- Login Card -->
+    <div class="login-card">
+      <h1 class="title">Log in with Email</h1>
+      <p class="subtitle">Enter your account details</p>
 
-    <!-- Form -->
-    <form (ngSubmit)="loginWithEmail()" #loginForm="ngForm" autocomplete="off" novalidate>
-      <ion-item class="input-item">
-        <ion-label position="stacked">Email</ion-label>
-        <ion-input
-          type="email"
-          [(ngModel)]="email"
-          name="email"
-          required
-          autocomplete="off"
-          placeholder="you@example.com"
-        ></ion-input>
-      </ion-item>
+      <form (ngSubmit)="loginWithEmail()" #loginForm="ngForm" autocomplete="off" novalidate>
+        <!-- Email -->
+        <ion-item class="input-item">
+          <ion-input
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            required
+            placeholder="you@example.com"
+          ></ion-input>
+        </ion-item>
 
-      <ion-item class="input-item">
-        <ion-label position="stacked">Password</ion-label>
-        <ion-input
-          type="password"
-          [(ngModel)]="password"
-          name="password"
-          required
-          autocomplete="new-password"
-          placeholder="Enter your password"
-        ></ion-input>
-      </ion-item>
+        <!-- Password with toggle -->
+        <ion-item class="input-item password-item">
+          <ion-input
+            [type]="showPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            required
+            placeholder="Enter your password"
+          ></ion-input>
+          <ion-icon
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+            class="toggle-icon"
+            slot="end"
+            (click)="togglePassword()"
+          ></ion-icon>
+        </ion-item>
 
-      <ion-button
-        expand="block"
-        class="login-btn"
-        type="submit"
-        [disabled]="!email || !password"
-      >
-        Log In
+        <ion-button expand="block" class="login-btn" type="submit" [disabled]="!email || !password">
+          Log In
+        </ion-button>
+      </form>
+
+      <ion-button fill="clear" size="small" (click)="goToResetPassword()">
+        Forgot Password?
       </ion-button>
-    </form>
 
-    <!-- Forgot password (centered under button) -->
-    <p class="forgot-password">
-      <a [routerLink]="['/reset-password']">Forgot Password?</a>
-    </p>
-
-    <!-- Signup link -->
-    <p class="signup-link">
-      Don’t have an account? <a [routerLink]="['/register']">Sign Up</a>
-    </p>
+      <p class="signup-link">
+        Don’t have an account? <a [routerLink]="['/register']">Sign Up</a>
+      </p>
+    </div>
   </div>
 </ion-content>

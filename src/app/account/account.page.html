@@ -1,6 +1,6 @@
 <ion-header class="aqua-header-wrap">
   <ion-toolbar class="aqua-header">
-    <ion-title>Account</ion-title>
+    <ion-title class="aqua-title">Account</ion-title>
   </ion-toolbar>
 </ion-header>
 
@@ -63,8 +63,9 @@
       <ion-label>Stations</ion-label>
     </ion-tab-button>
 
-    <ion-tab-button [routerLink]="['/notifications']" routerDirection="root" routerLinkActive="tab-selected">
+   <ion-tab-button [routerLink]="['/notifications']" routerDirection="root" routerLinkActive="tab-selected">
       <ion-icon name="notifications"></ion-icon>
+      <ion-badge *ngIf="unreadCount > 0" color="danger" class="notif-badge">{{ unreadCount }}</ion-badge>
       <ion-label>Notifications</ion-label>
     </ion-tab-button>
 

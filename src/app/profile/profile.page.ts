@@ -1,7 +1,7 @@
 // src/app/profile/profile.page.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { IonicModule, AlertController } from '@ionic/angular';
+import { IonicModule, AlertController, ToastController } from '@ionic/angular';
 import { RouterModule, Router } from '@angular/router';
 import {
   Auth,
@@ -19,6 +19,7 @@ import {
 import { Firestore, collection, deleteDoc, doc, getDocs } from '@angular/fire/firestore';
 import { UserService } from '../services/user.service';
 import { Subscription } from 'rxjs';
+import { NavController } from '@ionic/angular';
 
 @Component({
   selector: 'app-profile',
@@ -43,7 +44,9 @@ export class ProfilePage implements OnInit, OnDestroy {
     private router: Router,
     private alertCtrl: AlertController,
     private userService: UserService,
-    private firestore: Firestore
+    private firestore: Firestore,
+    private toastCtrl: ToastController,
+    private navCtrl: NavController,
   ) {}
 
   ngOnInit() {
@@ -91,28 +94,101 @@ export class ProfilePage implements OnInit, OnDestroy {
     });
   }
 
+  // ───────────────────────────────────────────────
+  // ✅ FIXED LOGOUT (Confirm + No Back Navigation)
+  // ───────────────────────────────────────────────
   async logout() {
-    await signOut(this.auth);
-    this.router.navigate(['/login']);
+    const alert = await this.alertCtrl.create({
+      header: 'Confirm Logout',
+      message: 'Are you sure you want to log out?',
+      cssClass: 'aqua-alert',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+          cssClass: 'aqua-cancel',
+          handler: () => console.log('Logout cancelled'),
+        },
+        {
+          text: 'Logout',
+          role: 'destructive',
+          cssClass: 'aqua-logout',
+          handler: async () => {
+            try {
+              // 🔹 Firebase sign out
+              await signOut(this.auth);
+
+              // 🔹 Clear cached state
+              this.userService.clearUser?.();
+              sessionStorage.clear();
+              localStorage.removeItem('lastOrderId');
+              localStorage.removeItem('lastStationId');
+
+              // 🔹 Toast feedback
+              const toast = await this.toastCtrl.create({
+                message: 'You have been logged out successfully.',
+                duration: 1500,
+                color: 'medium',
+              });
+              await toast.present();
+
+              // 🔹 Reset Ionic navigation stack
+              const outlet = document.querySelector('ion-router-outlet');
+              if (outlet) {
+                outlet.removeAttribute('animated');
+                outlet.removeAttribute('swipeGesture');
+              }
+
+              // 🔹 Navigate and replace URL to clear back stack
+              await this.router.navigateByUrl('/login', { replaceUrl: true });
+
+              // 🧱 Prevent Android back from reopening profile
+              window.history.pushState(null, '', '/login');
+              window.onpopstate = () => {
+                window.history.go(1);
+              };
+
+              // 🔹 Force full reload to ensure memory/session cleared
+              setTimeout(() => {
+                if (!this.auth.currentUser) {
+                  window.location.replace('/login');
+                }
+              }, 300);
+
+              console.log('✅ Logout completed (User side)');
+            } catch (err) {
+              console.error('❌ Logout failed:', err);
+              const toast = await this.toastCtrl.create({
+                message: 'Logout failed. Please try again.',
+                duration: 2000,
+                color: 'danger',
+              });
+              await toast.present();
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
   }
 
+  // ───────────────────────────────────────────────
+  // Account Deletion Logic (Unchanged)
+  // ───────────────────────────────────────────────
   async confirmDeleteAccount() {
     const alert = await this.alertCtrl.create({
       header: 'Delete Account',
-      message: 'Are you sure you want to permanently delete your account? This action cannot be undone.',
+      message:
+        'Are you sure you want to permanently delete your account? This action cannot be undone.',
       buttons: [
         { text: 'Cancel', role: 'cancel' },
-        {
-          text: 'Delete',
-          role: 'destructive',
-          handler: () => this.deleteAccount(),
-        },
+        { text: 'Delete', role: 'destructive', handler: () => this.deleteAccount() },
       ],
     });
     await alert.present();
   }
 
-  // 🔹 Delete all Firestore user data
   private async deleteUserData(uid: string) {
     try {
       await deleteDoc(doc(this.firestore, `users/${uid}`));
@@ -132,31 +208,29 @@ export class ProfilePage implements OnInit, OnDestroy {
     }
   }
 
-// 🔹 Handle reauthentication when required
-private async reauthenticate(user: User) {
-  if (user.providerData.some(p => p.providerId === 'password')) {
-    const password = prompt('Please re-enter your password to confirm account deletion:') || '';
-    const credential = EmailAuthProvider.credential(user.email!, password);
-    return reauthenticateWithCredential(user, credential);
-  }
-  if (user.providerData.some(p => p.providerId.includes('google'))) {
-    return reauthenticateWithPopup(user, new GoogleAuthProvider());
-  }
-  if (user.providerData.some(p => p.providerId.includes('facebook'))) {
-    return reauthenticateWithPopup(user, new FacebookAuthProvider());
-  }
-  if (user.providerData.some(p => p.providerId.includes('phone'))) {
-    const otp = prompt('Enter the SMS verification code sent to your phone:') || '';
-    const verificationId = localStorage.getItem('lastVerificationId');
-    if (!verificationId) throw new Error('No verificationId found. Please log in again before deleting your account.');
-    const credential: PhoneAuthCredential = PhoneAuthProvider.credential(verificationId, otp);
-    return reauthenticateWithCredential(user, credential);
-  }
+  private async reauthenticate(user: User) {
+    if (user.providerData.some((p) => p.providerId === 'password')) {
+      const password = prompt('Please re-enter your password to confirm account deletion:') || '';
+      const credential = EmailAuthProvider.credential(user.email!, password);
+      return reauthenticateWithCredential(user, credential);
+    }
+    if (user.providerData.some((p) => p.providerId.includes('google'))) {
+      return reauthenticateWithPopup(user, new GoogleAuthProvider());
+    }
+    if (user.providerData.some((p) => p.providerId.includes('facebook'))) {
+      return reauthenticateWithPopup(user, new FacebookAuthProvider());
+    }
+    if (user.providerData.some((p) => p.providerId.includes('phone'))) {
+      const otp = prompt('Enter the SMS verification code sent to your phone:') || '';
+      const verificationId = localStorage.getItem('lastVerificationId');
+      if (!verificationId)
+        throw new Error('No verificationId found. Please log in again before deleting your account.');
+      const credential: PhoneAuthCredential = PhoneAuthProvider.credential(verificationId, otp);
+      return reauthenticateWithCredential(user, credential);
+    }
 
-  // ✅ Added fallback
-  throw new Error('Unsupported provider. Cannot reauthenticate.');
-}
-
+    throw new Error('Unsupported provider. Cannot reauthenticate.');
+  }
 
   async deleteAccount() {
     const currentUser = this.auth.currentUser;
@@ -166,23 +240,31 @@ private async reauthenticate(user: User) {
     }
 
     try {
-      // 🔹 Step 1: Delete Firestore data
       await this.deleteUserData(currentUser.uid);
-
-      // 🔹 Step 2: Try deleting auth user directly
       await deleteUser(currentUser);
 
-      // 🔹 Step 3: Redirect
+      const toast = await this.toastCtrl.create({
+        message: 'Account deleted successfully.',
+        duration: 1500,
+        color: 'medium',
+      });
+      await toast.present();
+
       this.router.navigate(['/signup']);
     } catch (error: any) {
       if (error.code === 'auth/requires-recent-login') {
         console.warn('⚠️ Reauthentication required');
         try {
           await this.reauthenticate(currentUser);
-
-          // Retry Firestore delete + auth delete
           await this.deleteUserData(currentUser.uid);
           await deleteUser(currentUser);
+
+          const toast = await this.toastCtrl.create({
+            message: 'Account deleted successfully.',
+            duration: 1500,
+            color: 'medium',
+          });
+          await toast.present();
 
           this.router.navigate(['/signup']);
           return;

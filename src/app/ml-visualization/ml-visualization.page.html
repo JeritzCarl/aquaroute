@@ -1,0 +1,209 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/manager"></ion-back-button>
+    </ion-buttons>
+    <ion-title>ML Visualization</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ml-content">
+  <div class="summary-cards">
+    <ion-card>
+      <ion-card-content>
+        <div class="summary-label">Logged Deliveries</div>
+        <div class="summary-value">{{ totalLoggedDeliveries }}</div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <ion-card-content>
+        <div class="summary-label">Average Prediction Error</div>
+        <div class="summary-value">{{ averagePredictionError }} mins</div>
+      </ion-card-content>
+    </ion-card>
+
+    <ion-card>
+      <!-- <ion-card-content>
+        <div class="summary-label">Best Learned Barangay</div>
+        <div class="summary-value">{{ bestBarangay }}</div>
+      </ion-card-content> -->
+    </ion-card>
+  </div>
+
+  <ion-item>
+  <ion-label>View Details</ion-label>
+  <ion-select [(ngModel)]="selectedBarangay" (ionChange)="onBarangayDetailsChange()">
+    <ion-select-option value="ALL">All Deliveries</ion-select-option>
+    <ion-select-option *ngFor="let barangay of barangayOptions" [value]="barangay">
+      {{ barangay }}
+    </ion-select-option>
+  </ion-select>
+</ion-item>
+
+  <ion-card class="factors-card">
+    <ion-card-header>
+      <ion-card-title>Learned Delivery Details</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <div class="factor-description">
+        These values show actual learned delivery observations from completed logs, using
+        minutes, kilometers, and item counts instead of abstract multipliers.
+      </div>
+      <ion-item class="details-filter" lines="none">
+  <ion-label position="stacked">Delivery Details Scope</ion-label>
+  <ion-select [(ngModel)]="selectedBarangay" (ionChange)="onBarangayDetailsChange()">
+    <ion-select-option value="ALL">All Logged Deliveries</ion-select-option>
+    <ion-select-option *ngFor="let barangay of barangayOptions" [value]="barangay">
+      {{ barangay }}
+    </ion-select-option>
+  </ion-select>
+</ion-item>
+
+      <div class="factor-grid">
+        <div class="factor-item">
+          <div class="factor-label">Selected Scope</div>
+          <div class="factor-value">{{ selectedBarangay === 'ALL' ? 'All Logged Deliveries' : selectedBarangay }}</div>
+          <div class="factor-sub">
+            {{ selectedBarangay === 'ALL'
+              ? 'Combined details from all logged deliveries'
+              : 'Details filtered to the selected barangay only' }}
+          </div>
+        </div>
+
+        <div class="factor-item">
+          <div class="factor-label">Avg Delivery Time</div>
+          <div class="factor-value">{{ selectedBarangayAvgMinutes }} mins</div>
+          <div class="factor-sub">
+          {{ selectedBarangay === 'ALL'
+            ? 'Average duration across all logged deliveries'
+            : 'Average duration in this barangay' }}
+        </div>
+        </div>
+
+        <div class="factor-item">
+          <div class="factor-label">Avg Distance</div>
+          <div class="factor-value">{{ averageDistanceKm }} km</div>
+          <div class="factor-sub">
+          {{ selectedBarangay === 'ALL'
+            ? 'Average delivery distance across all logged deliveries'
+            : 'Average delivery distance in this barangay' }}
+        </div>
+        </div>
+
+        <div class="factor-item">
+          <div class="factor-label">Avg Item Count</div>
+          <div class="factor-value">{{ averageItemCount }}</div>
+          <div class="factor-sub">
+            {{ selectedBarangay === 'ALL'
+              ? 'Average items/gallons across all logged deliveries'
+              : 'Average items/gallons per delivery in this barangay' }}
+          </div>
+        </div>
+
+        <div class="factor-item">
+          <div class="factor-label">Morning Avg Time</div>
+          <div class="factor-value">{{ morningAverageMinutes }} mins</div>
+          <div class="factor-sub">Average delivery time in the morning</div>
+        </div>
+
+        <div class="factor-item">
+          <div class="factor-label">Afternoon Avg Time</div>
+          <div class="factor-value">{{ afternoonAverageMinutes }} mins</div>
+          <div class="factor-sub">Average delivery time in the afternoon</div>
+        </div>
+
+        <div class="factor-item">
+          <div class="factor-label">Evening Avg Time</div>
+          <div class="factor-value">{{ eveningAverageMinutes }} mins</div>
+          <div class="factor-sub">Average delivery time in the evening</div>
+        </div>
+
+        <div class="factor-item">
+        <div class="factor-label">{{ selectedBarangay === 'ALL' ? 'Total Trips Logged' : 'Barangay Trips Logged' }}</div>
+        <div class="factor-value">{{ selectedBarangayTrips }}</div>
+        <div class="factor-sub">
+          {{ selectedBarangay === 'ALL'
+            ? 'Completed deliveries included in the overall view'
+            : 'Completed deliveries used for this barangay' }}
+        </div>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-segment [value]="viewMode" (ionChange)="onViewChange($event)" class="ml-toggle">
+    <ion-segment-button value="barangay">
+      <ion-label>Barangay View</ion-label>
+    </ion-segment-button>
+
+    <ion-segment-button value="actual_vs_predicted">
+      <ion-label>Actual vs Predicted</ion-label>
+    </ion-segment-button>
+
+    <ion-segment-button value="feature_importance">
+      <ion-label>Feature Importance</ion-label>
+    </ion-segment-button>
+  </ion-segment>
+
+  <ion-card class="chart-card">
+    <ion-card-header>
+      <ion-card-title>{{ chartTitle }}</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+ <div class="chart-container">
+  <canvas #mlChartCanvas></canvas>
+</div>
+
+<div class="chart-empty-state" *ngIf="chartEmpty">
+        <ion-icon name="bar-chart-outline"></ion-icon>
+        <h3>No Data Yet</h3>
+        <p>{{ chartEmptyMessage }}</p>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card class="explanation-card">
+    <ion-card-header>
+      <ion-card-title>{{ chartLegendTitle }}</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <p class="chart-explanation-text">{{ chartLegendText }}</p>
+
+      <div class="axis-guide" *ngIf="!chartEmpty">
+        <div class="axis-item">
+          <span class="axis-label">X-axis:</span>
+          <span class="axis-value">{{ xAxisLabel }}</span>
+        </div>
+        <div class="axis-item">
+          <span class="axis-label">Y-axis:</span>
+          <span class="axis-value">{{ yAxisLabel }}</span>
+        </div>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <ion-card class="analysis-card">
+    <ion-card-header>
+      <ion-card-title>{{ chartAnalysisTitle }}</ion-card-title>
+    </ion-card-header>
+
+    <ion-card-content>
+      <p class="chart-analysis-text">{{ chartAnalysis }}</p>
+    </ion-card-content>
+  </ion-card>
+
+  <div class="legend-info">
+    <ion-icon name="analytics-outline"></ion-icon>
+    <p>
+      This page visualizes how AquaRoute learns from historical delivery logs.
+      It compares <b>actual vs predicted delivery times</b>, summarizes
+      <b>barangay-based delivery performance</b>, and presents
+      <b>real learned observations</b> such as average distance, item count,
+      and time-of-day delivery duration.
+    </p>
+  </div>
+</ion-content>

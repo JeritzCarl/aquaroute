@@ -1,11 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, ElementRef, AfterViewInit } from '@angular/core';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { Firestore, collection, query, where, getDocs } from '@angular/fire/firestore';
 import { AuthService } from '../services/auth.service';
-import { User } from '@angular/fire/auth';
 
 @Component({
   standalone: true,
@@ -14,16 +12,32 @@ import { User } from '@angular/fire/auth';
   styleUrls: ['./email-login.page.scss'],
   imports: [IonicModule, CommonModule, FormsModule, RouterModule],
 })
-export class EmailLoginPage {
+export class EmailLoginPage implements AfterViewInit {
   email: string = '';
   password: string = '';
+  showPassword: boolean = false;
 
   constructor(
     private authSvc: AuthService,
-    private firestore: Firestore,
     private router: Router,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private el: ElementRef
   ) {}
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  ngAfterViewInit() {
+    const inputs = this.el.nativeElement.querySelectorAll('ion-input');
+    inputs.forEach((input: HTMLIonInputElement) => {
+      input.addEventListener('focusin', () => {
+        setTimeout(() => {
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 150);
+      });
+    });
+  }
 
   ionViewDidEnter() {
     this.email = '';
@@ -37,28 +51,8 @@ export class EmailLoginPage {
     }
 
     try {
-      const user: User = await this.authSvc.emailLogin(this.email.trim(), this.password);
-
-      console.log('✅ Email login success:', user);
-
-      // ✅ If no phone → go to number-input
-      if (!user.phoneNumber) {
-        this.router.navigate(['/number-input'], {
-          queryParams: { fromEmail: 'true' },
-        });
-        return;
-      }
-
-      // ✅ If phone exists → check station ownership
-      const stationsRef = collection(this.firestore, 'stations');
-      const q = query(stationsRef, where('ownerId', '==', user.uid));
-      const snapshot = await getDocs(q);
-
-      if (!snapshot.empty) {
-        this.router.navigate(['/manager']);
-      } else {
-        this.router.navigate(['/landing-page']);
-      }
+      await this.authSvc.emailLogin(this.email.trim(), this.password);
+      this.showToast('Login successful.', 'success');
     } catch (error: any) {
       console.error('❌ Email login error:', error);
 
@@ -66,12 +60,27 @@ export class EmailLoginPage {
       if (error.code === 'auth/invalid-email') msg = 'Invalid email format.';
       else if (error.code === 'auth/user-not-found') msg = 'No account found with this email.';
       else if (error.code === 'auth/wrong-password') msg = 'Incorrect password.';
+      else if (error.message) msg = error.message;
 
       this.showToast(msg, 'danger');
     }
   }
 
-  private async showToast(message: string, color: 'success' | 'warning' | 'danger' = 'warning') {
+  goToResetPassword() {
+    const emailTrimmed = this.email.trim();
+    if (emailTrimmed) {
+      this.router.navigate(['/reset-password'], {
+        state: { email: emailTrimmed }
+      });
+    } else {
+      this.router.navigate(['/reset-password']);
+    }
+  }
+
+  private async showToast(
+    message: string,
+    color: 'success' | 'warning' | 'danger' = 'warning'
+  ) {
     const toast = await this.toastCtrl.create({
       message,
       duration: 2500,

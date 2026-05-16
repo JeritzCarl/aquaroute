@@ -1,75 +1,69 @@
-<ion-toolbar>
-  <ion-buttons slot="start">
-    <ion-back-button defaultHref="/account"></ion-back-button>
-  </ion-buttons>
-  <ion-title>Profile</ion-title>
-</ion-toolbar>
+<ion-header class="aqua-header">
+  <ion-toolbar class="aqua-toolbar">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/account"></ion-back-button>
+    </ion-buttons>
+    <ion-title class="aqua-title">Profile</ion-title>
+  </ion-toolbar>
+</ion-header>
 
-<ion-content>
-
-  <div class="profile-card">
-    <ion-avatar>
+<ion-content [fullscreen]="true" class="profile-bg">
+  <div class="profile-container">
+    <ion-avatar class="profile-avatar">
       <img [src]="profilePic" alt="Profile Picture" />
     </ion-avatar>
-    <div class="profile-info">
-      <h2 class="name">{{ displayName || 'Guest User' }}</h2>
-      <p class="email">{{ email || 'No email linked' }}</p>
-      <p class="phone" *ngIf="phoneNumber">📱 {{ phoneNumber }}</p>
-    </div>
-    <ion-button fill="clear" size="small" [routerLink]="['/edit-profile']">
-      <ion-icon name="create-outline"></ion-icon>
+
+    <h2 class="profile-name">{{ displayName || 'Guest User' }}</h2>
+    <p class="profile-email">{{ email || 'No email linked' }}</p>
+    <p *ngIf="phoneNumber" class="profile-phone">📱 {{ phoneNumber }}</p>
+
+    <ion-button class="edit-btn" fill="solid" color="primary" [routerLink]="['/edit-profile']">
+      <ion-icon name="create-outline" slot="start"></ion-icon>
+      Edit Profile
     </ion-button>
   </div>
 
-  <ion-list inset="true" class="options-list">
-    <ion-list-header>Connected Accounts</ion-list-header>
+  <!-- Connected Accounts -->
+  <ion-card class="connected-card" *ngIf="isGoogleLinked || isFacebookLinked || provider">
+    <ion-card-header>
+      <ion-card-title>Connected Accounts</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-item *ngIf="isGoogleLinked">
+        <ion-icon name="logo-google" slot="start" color="danger"></ion-icon>
+        <ion-label>Google</ion-label>
+        <ion-note slot="end">{{ email }}</ion-note>
+      </ion-item>
 
-    <ion-item *ngIf="isGoogleLinked">
-      <ion-icon name="logo-google" slot="start" color="danger"></ion-icon>
-      <ion-label>Google</ion-label>
-      <ion-note slot="end">{{ email }}</ion-note>
-    </ion-item>
+      <ion-item *ngIf="isFacebookLinked">
+        <ion-icon name="logo-facebook" slot="start" color="primary"></ion-icon>
+        <ion-label>Facebook</ion-label>
+        <ion-note slot="end">{{ email }}</ion-note>
+      </ion-item>
 
-    <ion-item *ngIf="isFacebookLinked">
-      <ion-icon name="logo-facebook" slot="start" color="primary"></ion-icon>
-      <ion-label>Facebook</ion-label>
-      <ion-note slot="end">{{ email }}</ion-note>
-    </ion-item>
+      <ion-item *ngIf="provider === 'Email'">
+        <ion-icon name="mail-outline" slot="start" color="tertiary"></ion-icon>
+        <ion-label>Email</ion-label>
+        <ion-note slot="end">{{ email }}</ion-note>
+      </ion-item>
 
-    <ion-item *ngIf="provider === 'Email'">
-      <ion-icon name="mail-outline" slot="start" color="tertiary"></ion-icon>
-      <ion-label>Email</ion-label>
-      <ion-note slot="end">{{ email }}</ion-note>
-    </ion-item>
+      <ion-item *ngIf="provider === 'Phone Number'">
+        <ion-icon name="call-outline" slot="start" color="success"></ion-icon>
+        <ion-label>Phone Number</ion-label>
+        <ion-note slot="end">{{ phoneNumber }}</ion-note>
+      </ion-item>
+    </ion-card-content>
+  </ion-card>
 
-    <ion-item *ngIf="provider === 'Phone Number'">
-      <ion-icon name="call-outline" slot="start" color="success"></ion-icon>
-      <ion-label>Phone Number</ion-label>
-      <ion-note slot="end">{{ phoneNumber }}</ion-note>
-    </ion-item>
-  </ion-list>
-
-  <ion-list inset="true" class="options-list">
-    <ion-list-header>Account</ion-list-header>
-    <ion-item button>
-      <ion-icon name="location-outline" slot="start"></ion-icon>
-      <ion-label>My Addresses</ion-label>
-    </ion-item>
-  </ion-list>
-
-  <ion-list inset="true" class="options-list">
-    <ion-item button lines="none" (click)="logout()" [routerLink]="['/home']">
+  <!-- Logout & Delete -->
+  <ion-card class="action-card">
+    <ion-item button lines="none" (click)="logout()">
       <ion-icon name="log-out-outline" slot="start" color="danger"></ion-icon>
       <ion-label color="danger">Log Out</ion-label>
     </ion-item>
-
     <ion-item button lines="none" (click)="confirmDeleteAccount()">
       <ion-icon name="trash-outline" slot="start" color="danger"></ion-icon>
       <ion-label color="danger">Delete Account</ion-label>
     </ion-item>
-  </ion-list>
+  </ion-card>
 </ion-content>
-
-
-
-  

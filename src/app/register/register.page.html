@@ -1,42 +1,90 @@
-    <ion-toolbar>
-    <ion-buttons slot="start">
-      <ion-back-button defaultHref="/register"></ion-back-button>
-    </ion-buttons>
-    <ion-title>Create Account</ion-title>
-  </ion-toolbar>
+<ion-content [fullscreen]="true" class="register-bg" scroll-y="true">
+  <!-- Floating Back Button -->
+  <ion-buttons class="back-btn">
+    <ion-back-button defaultHref="/auth-options"></ion-back-button>
+  </ion-buttons>
 
-<ion-content class="ion-padding register-bg">
-  <div class="form-container">
-    <h1 class="title">Welcome!</h1>
-    <p class="subtitle">Let’s create your AquaRoute account</p>
+  <div class="register-wrapper">
+    <!-- Header Section -->
+    <div class="header-section">
+      <img src="assets/AquaRoute Word Logo.png" alt="AquaRoute Logo" class="logo" />
+      <p class="tagline">Deliver Smarter. Hydrate Faster.</p>
+    </div>
 
-    <ion-item lines="full">
-      <ion-label position="floating">Full Name</ion-label>
-      <ion-input type="text" [(ngModel)]="fullName"></ion-input>
-    </ion-item>
+    <!-- Form Card -->
+    <div class="register-card">
+      <h1 class="title">Create your Account</h1>
+      <p class="subtitle">Join AquaRoute today</p>
 
-    <ion-item lines="full">
-      <ion-label position="floating">Email</ion-label>
-      <ion-input type="email" [(ngModel)]="email"></ion-input>
-    </ion-item>
+      <form (ngSubmit)="createAccount()" autocomplete="off" novalidate>
+        <ion-item class="input-item">
+          <ion-input
+            type="text"
+            [(ngModel)]="fullName"
+            name="fullName"
+            placeholder="Full Name"
+            required
+          ></ion-input>
+        </ion-item>
 
-    <ion-item lines="full">
-      <ion-label position="floating">Password</ion-label>
-      <ion-input type="password" [(ngModel)]="password"></ion-input>
-    </ion-item>
+        <ion-item class="input-item">
+          <ion-input
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="Email"
+            required
+          ></ion-input>
+        </ion-item>
 
-    <ion-item lines="full">
-      <ion-label position="floating">Confirm Password</ion-label>
-      <ion-input type="password" [(ngModel)]="confirmPassword"></ion-input>
-    </ion-item>
+        <ion-item class="input-item password-item">
+          <ion-input
+            [type]="showPassword ? 'text' : 'password'"
+            [(ngModel)]="password"
+            name="password"
+            placeholder="Password"
+            required
+            (ionInput)="checkPasswordStrength()"
+          ></ion-input>
+          <ion-icon
+            [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+            class="toggle-icon"
+            slot="end"
+            (click)="togglePassword()"
+          ></ion-icon>
+        </ion-item>
 
-    <ion-button expand="block" class="signup-btn" (click)="createAccount()">
-      Create Account
-    </ion-button>
+        <!-- Password Strength Bar -->
+        <div class="strength-bar" [ngClass]="passwordStrength"></div>
 
-    <p class="login-link">
-      Already have an account?
-      <a (click)="goToLogin()">Log In</a>
-    </p>
+
+        <ion-item class="input-item password-item">
+          <ion-input
+            [type]="showConfirm ? 'text' : 'password'"
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            placeholder="Confirm Password"
+            required
+          ></ion-input>
+          <ion-icon
+            [name]="showConfirm ? 'eye-off-outline' : 'eye-outline'"
+            class="toggle-icon"
+            slot="end"
+            (click)="toggleConfirm()"
+          ></ion-icon>
+        </ion-item>
+
+        <ion-button expand="block" class="signup-btn" type="submit">
+          Create Account
+        </ion-button>
+
+        <p *ngIf="nameError" class="error-msg">{{ nameError }}</p>
+        <p *ngIf="passwordError" class="error-msg">{{ passwordError }}</p>
+      </form>
+
+      <p class="login-link">
+        Already have an account? <a (click)="goToLogin()">Log In</a>
+      </p>
+    </div>
   </div>
 </ion-content>

@@ -15,7 +15,7 @@
   justify-content: center;
   position: relative;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-  overflow: hidden; /* fix overlapping edge */
+  overflow: hidden;
 }
 
 /* Centered title */
@@ -31,7 +31,7 @@
   transform: translateX(-50%);
 }
 
-/* Back button always visible, doesn’t push title */
+/* Back button always visible */
 ion-back-button {
   color: #fff;
   z-index: 10;
@@ -42,8 +42,32 @@ ion-back-button {
   border-radius: 14px;
   margin-bottom: 16px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  background: #fff;
+  transition: all 0.2s ease;
+}
+.order-card.cancelled {
+  opacity: 0.85;
+  background: #f9f9f9;
 }
 
+/* 🆕 Header right alignment (chip + badge) */
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-content: flex-end;
+}
+
+/* 🆕 Mode badge styling */
+.mode-badge {
+  font-weight: 600;
+  font-size: 11px;
+  border-radius: 6px;
+  padding: 4px 8px;
+  text-transform: uppercase;
+}
+
+/* Chip */
 ion-chip {
   font-weight: 600;
   margin-left: 8px;
@@ -56,18 +80,199 @@ ion-chip {
   ion-item {
     --background: transparent;
     font-size: 14px;
+
+    ion-label {
+      margin: 0;
+      font-weight: 600;
+    }
+
+    ion-note {
+      font-size: 16px;
+      font-weight: 700;
+      color: #000;
+      margin-top: 0;
+      display: flex;
+      align-items: center;
+    }
   }
 }
 
-/* Actions row */
-.actions {
-  margin-top: 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+/* ─────────────── Unified Order Details ─────────────── */
+.order-details {
+  margin-top: 14px;
+
+  .details-box {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e5e5;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2px 0;
+
+    &:not(:last-child) {
+      border-bottom: 1px dashed #e0e0e0;
+      padding-bottom: 4px;
+    }
+  }
+
+  .detail-label {
+    font-weight: 600;
+    color: #555;
+    letter-spacing: 0.3px;
+  }
+
+  .detail-value {
+    color: #111;
+    font-weight: 500;
+    text-align: right;
+    max-width: 50%;
+    overflow-wrap: anywhere;
+  }
 }
 
-/* Empty state polished */
+/* ─────────────── General Card Styling ─────────────── */
+.order-card ion-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.order-card p {
+  font-size: 13px;
+  color: #333;
+  margin: 2px 0;
+}
+
+/* Status chip colors based on dynamic class */
+.status-center {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+
+  .status-chip {
+    font-weight: 600;
+    text-transform: capitalize;
+    border-radius: 20px;
+    padding: 2px 10px;
+    font-size: 12px;
+    letter-spacing: 0.2px;
+  }
+
+  /* Style examples for clarity */
+  .ready-for-pickup {
+    background-color: #e0f7ea;
+    color: #2e7d32;
+  }
+
+  .out-for-delivery {
+    background-color: #e3f2fd;
+    color: #1565c0;
+  }
+
+  .preparing {
+    background-color: #fff8e1;
+    color: #f57c00;
+  }
+}
+
+/* ─────────────── Mode Badge ─────────────── */
+.mode-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 6px;
+  letter-spacing: 0.3px;
+
+  &.pickup-mode {
+    background-color: #e1bee7;
+    color: #6a1b9a;
+  }
+
+  &.delivery-mode {
+    background-color: #bbdefb;
+    color: #0d47a1;
+  }
+}
+
+/* ─────────────── Empty State ─────────────── */
+.empty-state {
+  text-align: center;
+  color: #777;
+  margin-top: 40px;
+
+  ion-icon {
+    font-size: 48px;
+    color: #ccc;
+    margin-bottom: 10px;
+  }
+}
+
+/* ─────────────── Cancelled Orders Section ─────────────── */
+.cancelled-section {
+  margin-top: 28px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 16px;
+
+  h4 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #c62828;
+    margin-bottom: 12px;
+  }
+
+  ion-card {
+    background: #fff5f5;
+    border: 1px solid #f8bbbb;
+    box-shadow: none;
+
+    ion-card-title {
+      color: #c62828;
+      font-weight: 700;
+    }
+
+    ion-chip {
+      background: #ffcdd2;
+      color: #b71c1c;
+      font-weight: 600;
+    }
+  }
+}
+
+/* ─────────────── Actions row ─────────────── */
+.actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  ion-button {
+    font-size: 13px;
+    --padding-start: 10px;
+    --padding-end: 10px;
+    border-radius: 8px;
+  }
+}
+
+/* 🆕 Compact section for bottom grouping */
+.compact-section {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed #ccc;
+  opacity: 0.9;
+}
+
+/* Empty state */
 .empty-state {
   text-align: center;
   margin-top: 100px;
@@ -88,4 +293,198 @@ ion-chip {
     font-weight: 500;
     margin: 0;
   }
+}
+
+/* Compact text alignment for small screens */
+@media (max-width: 480px) {
+  .order-details p {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .detail-value {
+      text-align: left;
+      margin-top: 2px;
+    }
+  }
+
+  .mode-badge {
+    font-size: 10px;
+    padding: 3px 6px;
+  }
+}
+
+/* center the status chip under the title */
+.status-center {
+  display: flex;
+  justify-content: center;
+  margin: 4px 0 2px;
+}
+
+/* row that holds the DELIVERY/PICKUP badge just above customer */
+.label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 2px;
+}
+
+.mode-badge {
+  font-weight: 700;
+  font-size: 11px;
+  border-radius: 6px;
+  padding: 4px 8px;
+  letter-spacing: .3px;
+}
+
+/* ──────────────── STATUS + MODE LAYOUT ──────────────── */
+.status-center {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
+.status-chip {
+  font-weight: 600;
+  border-radius: 20px;
+  padding: 2px 12px;
+  font-size: 13px;
+  color: #fff;
+
+  &.ready-for-pickup { background: #8bc34a; }
+  &.out-for-delivery { background: #03a9f4; }
+  &.preparing        { background: #ffb300; }
+  &.order-confirmed  { background: #42a5f5; }
+  &.pending          { background: #ffa000; }
+  &.delivered,
+  &.picked-up        { background: #4caf50; }
+}
+
+/* MODE badge row */
+.mode-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+
+  .mode-badge {
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 4px 10px;
+    letter-spacing: 0.5px;
+    font-size: 12px;
+    color: #fff;
+
+    &.delivery-mode {
+      background: #007bff;
+    }
+
+    &.pickup-mode {
+      background: #9c27b0;
+    }
+  }
+  .ready-for-pickup {
+  background: linear-gradient(90deg, #8bc34a, #aed581);
+  color: #fff !important;
+  box-shadow: 0 2px 6px rgba(139,195,74,0.4);
+}
+
+}
+
+
+.items-section {
+  margin-top: 12px;
+
+  h4 {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #222;
+  }
+
+  ion-item {
+    --background: transparent;
+    font-size: 14px;
+
+    ion-label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    ion-note {
+      font-weight: 700;
+      font-size: 14px;
+      color: #000;
+    }
+  }
+}
+
+
+/* ─────────────── Active tab styling ─────────────── */
+ion-tab-button.active {
+  --color: #007bff;
+  font-weight: 700;
+  border-top: 2px solid #007bff;
+}
+
+.proof-section {
+  margin-top: 10px;
+}
+
+.proof-img {
+  width: 100%;
+  max-width: 250px;
+  border-radius: 10px;
+  margin-top: 5px;
+  border: 1px solid #ddd;
+}
+
+.status-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 4px;
+  margin-bottom: 8px;
+}
+
+.asap-badge {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.asap-badge ion-badge {
+  font-weight: 700;
+  font-size: 11px;
+  border-radius: 6px;
+  padding: 4px 8px;
+  letter-spacing: 0.3px;
+}
+
+.asap-track {
+  margin-bottom: 10px;
+}
+
+.card-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.card-menu-left {
+  display: flex;
+  align-items: center;
+}
+
+.card-menu-left ion-button {
+  margin: 0;
+  --padding-start: 0;
+  --padding-end: 0;
+  min-height: 28px;
+}
+
+.order-menu-popover {
+  --background: #fff;
+}
+
+.order-menu-popover ion-item {
+  --min-height: 42px;
 }

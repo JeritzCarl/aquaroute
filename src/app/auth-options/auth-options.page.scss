@@ -1,54 +1,89 @@
-/* =======================================
-   Auth Options Page (Login Choices)
-   ======================================= */
-
-ion-content {
-  margin-top: 50%;
-}
-
-.options-bg {
-  --background: var(--ion-background-color);
+.auth-bg {
+  --background: linear-gradient(180deg, #4ec9f3 0%, #2f80ed 100%);
   display: flex;
   justify-content: center;
   align-items: center;
+  position: relative;
+}
+
+/* Floating back button */
+.back-btn {
+  position: absolute;
+  top: 24px;
+  left: 14px;
+  z-index: 10;
+
+  ion-back-button {
+    color: #ffffff;
+    font-size: 22px;
+    --icon-font-size: 24px;
+  }
 }
 
 .auth-container {
   width: 100%;
-  max-width: 400px;
-  margin: auto;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.header-section {
   text-align: center;
-  padding: 24px;
+  margin-bottom: 32px;
+
+  .logo {
+    width: 250px;
+    max-width: 90%;
+    margin-bottom: 8px;
+  }
+
+  .tagline {
+    font-size: 20px;
+    font-weight: 600;
+    color: #003366;
+    margin-top: -80px;
+  }
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  padding: 28px 20px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
 
   .title {
-    font-size: 26px;
+    font-size: 20px;
     font-weight: 800;
-    margin-bottom: 6px;
-    color: var(--ion-text-color);
+    color: #003366;
+    margin-bottom: 4px;
   }
 
   .subtitle {
     font-size: 15px;
-    font-weight: 600;
-    color: var(--aqua-subtext, #666);
-    margin-bottom: 24px;
+    color: #666;
+    margin-bottom: 20px;
   }
 
   ion-button {
     font-weight: 600;
-    font-size: 16px;
-    height: 50px;
+    font-size: 15px;
+    height: 48px;
     border-radius: 12px;
     margin-bottom: 14px;
     text-transform: none;
   }
 
-  /* Provider buttons */
   .google-btn {
     --background: #ffffff;
     --color: #444;
     border: 1px solid #ddd;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
   .facebook-btn {
@@ -56,23 +91,21 @@ ion-content {
     --color: #fff;
   }
 
-  .manual-btn {
-    --background: transparent;
-    --color: var(--ion-color-primary);
-    border: 1px solid var(--ion-color-primary);
+  .create-btn {
+    --color: #2f80ed;
+    --border-color: #2f80ed;
   }
 
-  /* Divider */
   .divider {
     position: relative;
     margin: 20px 0;
-    text-align: center;
     color: #888;
     font-size: 14px;
     font-weight: 500;
+    text-align: center;
 
     span {
-      background: var(--ion-background-color);
+      background: #fff;
       padding: 0 12px;
       position: relative;
       z-index: 2;
@@ -93,28 +126,35 @@ ion-content {
 
 /* 🌙 Dark Mode */
 @media (prefers-color-scheme: dark) {
-  .auth-container {
+  .auth-bg {
+    --background: linear-gradient(180deg, #1e1e1e, #2a2a2a);
+  }
+
+  .auth-card {
+    background: #1e1e1e;
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+
+    .title {
+      color: #e0e0e0;
+    }
+
     .subtitle {
-      color: var(--aqua-subtext, #aaa);
+      color: #aaa;
     }
 
     .google-btn {
       --background: #2a2a2a;
       --color: #f1f1f1;
       border: 1px solid #444;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
     }
 
-    .divider {
-      color: #aaa;
-
-      &::before {
-        background: #333;
-      }
-
-      span {
-        background: #121212;
-      }
+    .divider span {
+      background: #1e1e1e;
     }
+  }
+
+  .header-section .tagline {
+    color: #e0e0e0;
   }
 }

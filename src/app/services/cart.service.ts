@@ -14,6 +14,9 @@ import {
 } from '@angular/fire/firestore';
 import { Auth } from '@angular/fire/auth';
 
+// ────────────────────────────────
+// 🧩 Updated CartItem Interface (Fixed Type)
+// ────────────────────────────────
 export interface CartItem {
   lineId: string;
   productId: string;
@@ -24,28 +27,32 @@ export interface CartItem {
   price?: number;
   quantity: number;
   imageUrl?: string;
-
   choices?: any;
   addons?: any[];
-  deliveryMode?: 'delivery' | 'pickup' | 'scheduled';
-  deliveryWindow?: 'morning' | 'afternoon';
-  paymentMethod?: 'cod' | 'gcash';
+
+  // ✅ Unified fields for mode handling
+  mode?: 'delivery' | 'pickup' | 'scheduled';
+  slot?: 'morning' | 'afternoon';
+  scheduledAt?: string;
+  address?: string;
+
+  // 💧 New field (fixed type)
+  waterType?: string;
 
   unitPriceComputed?: number;
   lineTotal?: number;
-
-  selected?: boolean; // UI-only
+  selected?: boolean;
 }
 
+// ────────────────────────────────
+// 🔄 Firestore Converter
+// ────────────────────────────────
 const cartItemConverter = {
   toFirestore(item: CartItem): DocumentData {
     const { selected, ...rest } = item;
     return rest;
   },
-  fromFirestore(
-    snapshot: QueryDocumentSnapshot,
-    options: SnapshotOptions
-  ): CartItem {
+  fromFirestore(snapshot: QueryDocumentSnapshot, options: SnapshotOptions): CartItem {
     const data = snapshot.data(options) as CartItem;
     const normalizedPrice = data.unitPriceComputed ?? data.basePrice ?? data.price ?? 0;
 
@@ -55,28 +62,33 @@ const cartItemConverter = {
       price: data.price ?? data.basePrice ?? 0,
       unitPriceComputed: normalizedPrice,
       lineTotal: normalizedPrice * (data.quantity || 1),
-      paymentMethod: data.paymentMethod ?? 'cod',
-      deliveryMode: data.deliveryMode ?? 'delivery',
+
+      // ✅ Defaults
+      mode: data.mode ?? 'delivery',
+      slot: data.slot ?? 'morning',
+      scheduledAt: data.scheduledAt ?? '',
+      waterType: data.waterType ?? undefined,
       selected: false,
     };
   },
 };
 
+// ────────────────────────────────
+// 🛒 Cart Service
+// ────────────────────────────────
 @Injectable({ providedIn: 'root' })
 export class CartService {
   private cart: CartItem[] = [];
   private cartCount = new BehaviorSubject<number>(0);
-
   private checkoutItems: CartItem[] = [];
 
   cartCount$ = this.cartCount.asObservable();
 
   constructor(private db: Firestore, private auth: Auth) {
-    // 🔹 Load saved data on init
     this.loadFromLocalStorage();
   }
 
-  // ===== Local Storage Helpers =====
+  // ===== Local Storage =====
   private saveToLocalStorage() {
     localStorage.setItem('cart', JSON.stringify(this.cart));
     localStorage.setItem('checkoutItems', JSON.stringify(this.checkoutItems));
@@ -92,7 +104,7 @@ export class CartService {
     this.updateCartCount();
   }
 
-  // ===== Load user cart =====
+  // ===== Load Cart =====
   async loadCart() {
     if (!this.auth.currentUser) {
       this.cart = [];
@@ -105,7 +117,7 @@ export class CartService {
     const snap = await getDocs(ref);
     this.cart = snap.docs.map((d) => d.data());
     this.updateCartCount();
-    this.saveToLocalStorage(); // 🔹 Save after fetching
+    this.saveToLocalStorage();
     return this.cart;
   }
 
@@ -114,14 +126,15 @@ export class CartService {
     return this.cart;
   }
 
-  // ===== Add or merge item =====
+  // ===== Add or Merge =====
   async addToCart(item: CartItem) {
     if (!this.auth.currentUser) return;
     const uid = this.auth.currentUser.uid;
 
     if (!item.lineId) item.lineId = crypto.randomUUID();
-    if (!item.paymentMethod) item.paymentMethod = 'cod';
-    if (!item.deliveryMode) item.deliveryMode = 'delivery';
+    if (!item.mode) item.mode = 'delivery';
+    if (!item.slot) item.slot = 'morning';
+    if (!item.waterType) item.waterType = undefined;
 
     const unitPrice = item.unitPriceComputed ?? item.basePrice ?? item.price ?? 0;
     item.unitPriceComputed = unitPrice;
@@ -150,12 +163,10 @@ export class CartService {
     this.saveToLocalStorage();
   }
 
-  // ===== Update item =====
+  // ===== Update Item =====
   async updateItem(item: CartItem) {
     if (!this.auth.currentUser) return;
     const uid = this.auth.currentUser.uid;
-
-    if (!item.paymentMethod) item.paymentMethod = 'cod';
 
     const unitPrice = item.unitPriceComputed ?? item.basePrice ?? item.price ?? 0;
     item.unitPriceComputed = unitPrice;
@@ -165,13 +176,14 @@ export class CartService {
       doc(this.db, `users/${uid}/cart/${item.lineId}`),
       cartItemConverter.toFirestore(item)
     );
+
     const idx = this.cart.findIndex((i) => i.lineId === item.lineId);
     if (idx > -1) this.cart[idx] = { ...item };
     this.updateCartCount();
     this.saveToLocalStorage();
   }
 
-  // ===== Quantity Controls =====
+  // ===== Quantity =====
   async increaseQty(item: CartItem) {
     item.quantity++;
     item.lineTotal =
@@ -200,35 +212,29 @@ export class CartService {
     this.saveToLocalStorage();
   }
 
-async clearCart() {
-  const uid = this.auth.currentUser?.uid;
+  async clearCart() {
+    const uid = this.auth.currentUser?.uid;
 
-  // 🔹 Clear Firestore cart if user is logged in
-  if (uid && this.cart.length > 0) {
-    try {
-      const deletes = this.cart.map((item) =>
-        deleteDoc(doc(this.db, `users/${uid}/cart/${item.lineId}`))
-      );
-      await Promise.all(deletes); // wait for all deletions
-    } catch (e) {
-      console.warn('Failed to delete some cart items from Firestore:', e);
+    if (uid && this.cart.length > 0) {
+      try {
+        const deletes = this.cart.map((item) =>
+          deleteDoc(doc(this.db, `users/${uid}/cart/${item.lineId}`))
+        );
+        await Promise.all(deletes);
+      } catch (e) {
+        console.warn('Failed to delete some cart items:', e);
+      }
     }
+
+    this.cart = [];
+    this.checkoutItems = [];
+    this.updateCartCount();
+    localStorage.removeItem('cart');
+    localStorage.removeItem('checkoutItems');
+    this.saveToLocalStorage();
   }
 
-  // 🔹 Always clear local state
-  this.cart = [];
-  this.checkoutItems = [];
-  this.updateCartCount();
-
-  // 🔹 Remove related localStorage keys
-  localStorage.removeItem('cart');
-  localStorage.removeItem('checkoutItems');
-
-  // 🔹 Ensure empty arrays are saved to prevent ghost cart
-  this.saveToLocalStorage();
-}
-
-  // ===== Checkout Selection =====
+  // ===== Checkout Items =====
   async setCheckoutItems(items: CartItem[]) {
     this.checkoutItems = items;
     this.saveToLocalStorage();
@@ -241,7 +247,7 @@ async clearCart() {
 
   // ===== Count =====
   private updateCartCount() {
-    const count = this.cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+    const count = this.cart.reduce((sum, i) => sum + (i.quantity || 0), 0);
     this.cartCount.next(count);
   }
 }
